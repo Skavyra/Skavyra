@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* panels: paper background, ink text, gold as the one accent */
+    --background: 43 47% 97%;
+    --foreground: 0 0% 5%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 5%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 5%;
+    --primary: 0 0% 5%;
+    --primary-foreground: 42 44% 92%;
+    --secondary: 42 44% 92%;
+    --secondary-foreground: 0 0% 5%;
+    --muted: 42 44% 92%;
+    --muted-foreground: 30 5% 38%;
+    --accent: 42 72% 53%;
+    --accent-foreground: 0 0% 5%;
+    --destructive: 2 64% 48%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 142 48% 32%;
+    --warning: 34 90% 44%;
+    --border: 42 32% 86%;
+    --input: 42 32% 86%;
+    --ring: 42 72% 53%;
+    --radius: 0.75rem;
+  }
+
+  /* marketing hero, header and footer sit on ink */
+  .theme-ink {
+    --background: 0 0% 5%;
+    --foreground: 42 44% 92%;
+    --card: 240 3% 11%;
+    --card-foreground: 42 44% 92%;
+    --popover: 240 3% 11%;
+    --popover-foreground: 42 44% 92%;
+    --muted: 240 3% 11%;
+    --muted-foreground: 40 8% 68%;
+    --border: 240 3% 20%;
+    --input: 240 3% 20%;
+    --primary: 42 72% 53%;
+    --primary-foreground: 0 0% 5%;
+    --secondary: 240 3% 11%;
+    --secondary-foreground: 42 44% 92%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display font-bold tracking-[-0.02em];
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .section {
+    @apply py-fluid-md;
+  }
+
+  .tagline {
+    @apply text-[0.6875rem] font-semibold uppercase tracking-[0.32em];
+  }
+
+  .scroll-x {
+    @apply overflow-x-auto overscroll-x-contain;
+    scroll-snap-type: x mandatory;
+  }
+
+  .hide-scrollbar {
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .shimmer {
+    background: linear-gradient(90deg, hsl(var(--muted)) 0%, hsl(var(--border)) 50%, hsl(var(--muted)) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}

@@ -1,0 +1,42 @@
+# Dependencies
+/node_modules/
+
+# Next.js build output
+/.next/
+/out/
+/build/
+/dist/
+
+# Local environment variables and secrets
+.env*
+/.env.local
+!.env.example
+!.env.template
+
+# Local/full backend SQL export
+/supabase/skavyra_backend_full.sql
+
+# Vercel local settings
+.vercel/
+
+# TypeScript and test output
+*.tsbuildinfo
+/coverage/
+
+# Logs and diagnostic output
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Supabase local development state
+/supabase/.temp/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
