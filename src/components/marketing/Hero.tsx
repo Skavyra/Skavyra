@@ -7,6 +7,7 @@ import { HERO, HERO_FALLBACK_TRACKS } from "@/lib/content";
 import type { Course } from "@/types";
 
 import { ArcTracks, type ArcTrack } from "./ArcTracks";
+import { HeroHeadline } from "./HeroHeadline";
 
 /** Hero A, "Arc of tracks": centred badge, headline, two actions, and the arc of course cards. */
 export function Hero({ courses }: { courses: Pick<Course, "title" | "slug" | "category" | "duration_weeks">[] }) {
@@ -32,10 +33,7 @@ export function Hero({ courses }: { courses: Pick<Course, "title" | "slug" | "ca
           <span className="size-1.5 rounded-full bg-gold-300" aria-hidden="true" />
           {HERO.badge}
         </p>
-        <h1 className="mt-7 max-w-[15ch] text-fluid-hero font-bold tracking-[-0.035em] sm:max-w-none">
-          {HERO.titleStart} <br className="hidden sm:block" />
-          <span className="text-gold-300">{HERO.titleAccent}</span>
-        </h1>
+        <HeroHeadline titleStart={HERO.titleStart} titleAccent={HERO.titleAccent} />
         <p className="mt-6 max-w-[40rem] text-fluid-lg text-ivory/75">{HERO.body}</p>
         <div className="mt-9 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
           <Button asChild variant="gold" size="lg" className="h-14 px-7">

@@ -46,7 +46,7 @@ export function ArcTracks({ tracks }: { tracks: ArcTrack[] }) {
     <>
       {/* tablet and desktop: the arc */}
       <div
-        className="relative mx-auto hidden h-[250px] w-full max-w-[1440px] overflow-hidden md:block"
+        className="relative mx-auto hidden h-[250px] w-full max-w-[1440px] overflow-hidden [perspective:1200px] md:block"
         onMouseEnter={() => (paused.current = true)}
         onMouseLeave={() => (paused.current = false)}
         onFocusCapture={() => (paused.current = true)}
@@ -93,7 +93,7 @@ export function ArcTracks({ tracks }: { tracks: ArcTrack[] }) {
 function TrackCard({ track, active, tabbable }: { track: ArcTrack; active: boolean; tabbable: boolean }) {
   const body = (
     <div
-      className={cn(
+        className={cn(
         "flex h-[140px] flex-col justify-end gap-1.5 rounded-2xl border p-5 shadow-[0_18px_40px_-20px_rgba(0,0,0,0.8)] transition-colors duration-500",
         active ? "border-gold-300 bg-gold-300 text-ink" : "border-white/10 bg-charcoal text-ivory",
       )}

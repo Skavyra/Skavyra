@@ -20,12 +20,12 @@ export async function SiteHeader() {
   const home = user ? ROLE_HOME[primaryRole(user.roles)] : null;
 
   return (
-    <header className="theme-ink sticky top-0 z-40 border-b border-transparent bg-background/85 text-foreground backdrop-blur supports-[backdrop-filter]:bg-background/70">
+    <header className="theme-ink sticky top-0 z-40 border-b border-white/[0.07] bg-background/90 text-foreground shadow-[0_8px_30px_rgba(0,0,0,0.12)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/75">
       <div className="container flex h-16 items-center justify-between gap-6 lg:h-20">
         <Logo />
         <nav aria-label="Main" className="hidden items-center gap-9 md:flex">
           {HEADER_LINKS.map((l) => (
-            <Link key={l.label} href={l.href} className="text-[0.9375rem] font-medium text-foreground/85 transition-colors hover:text-gold-100">
+            <Link key={l.label} href={l.href} className="relative py-2 text-[0.9375rem] font-medium text-foreground/75 transition-colors after:absolute after:inset-x-0 after:bottom-0 after:h-px after:origin-left after:scale-x-0 after:bg-gold-300 after:transition-transform hover:text-gold-100 hover:after:scale-x-100">
               {l.label}
             </Link>
           ))}

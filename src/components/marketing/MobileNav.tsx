@@ -26,7 +26,7 @@ export function MobileNav({ links, home }: { links: { href: string; label: strin
               key={l.label}
               href={l.href}
               onClick={() => setOpen(false)}
-              className="border-b border-border py-4 text-lg font-semibold"
+              className="border-b border-border py-4 text-lg font-semibold transition-colors hover:pl-2 hover:text-gold-100"
             >
               {l.label}
             </Link>

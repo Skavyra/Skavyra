@@ -15,7 +15,7 @@ export function FaqAccordion({ items = FAQS }: { items?: { q: string; a: string 
           {columns.map((col, c) => (
             <Accordion key={c} type="single" collapsible defaultValue={c === 0 ? "q-0" : undefined} className="flex flex-col gap-3">
               {col.map((f, i) => (
-                <AccordionItem key={f.q} value={`q-${i}`}>
+                <AccordionItem key={f.q} value={`q-${i}`} className="overflow-hidden border-ink/10 bg-card shadow-[0_10px_28px_-26px_rgba(13,13,13,0.45)] transition-colors data-[state=open]:border-gold-500/50">
                   <AccordionTrigger>{f.q}</AccordionTrigger>
                   <AccordionContent>{f.a}</AccordionContent>
                 </AccordionItem>
