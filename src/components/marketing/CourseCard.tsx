@@ -17,7 +17,7 @@ export function CourseCard({ course, href }: { course: CourseCardData; href?: st
   return (
     <Link
       href={href ?? `/courses/${course.slug}`}
-      className="group flex h-full flex-col overflow-hidden rounded-2xl border bg-card shadow-[0_10px_30px_-26px_rgba(13,13,13,0.32)] transition duration-300 motion-safe:hover:-translate-y-1 hover:border-gold-300/80 hover:shadow-[0_22px_46px_-30px_rgba(142,103,24,0.6)] focus-visible:border-gold-300"
+      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-ink/10 bg-card shadow-[0_10px_30px_-26px_rgba(13,13,13,0.32)] transition duration-300 motion-safe:hover:-translate-y-1 hover:border-gold-300/80 hover:shadow-[0_22px_46px_-30px_rgba(142,103,24,0.6)] focus-visible:border-gold-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2"
     >
       <div className="relative aspect-[16/9] overflow-hidden bg-ink">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-t from-ink/45 via-transparent to-transparent" />

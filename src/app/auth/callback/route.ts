@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
+import { safeNextPath } from "@/lib/auth/redirect";
 
 /**
  * Where Supabase sends people back after confirming an email, resetting a
@@ -10,7 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
   const code = searchParams.get("code");
-  const next = searchParams.get("next");
+  const next = safeNextPath(searchParams.get("next"));
 
   if (!code) return NextResponse.redirect(`${origin}/login?error=callback`);
 
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
   if (error || !data.user) return NextResponse.redirect(`${origin}/login?error=callback`);
 
-  if (next) return NextResponse.redirect(`${origin}${next}`);
+  if (next) return NextResponse.redirect(new URL(next, origin));
 
   const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", data.user.id);
   const list = (roles ?? []).map((r) => r.role);

@@ -18,13 +18,13 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <Mark className="pointer-events-none absolute -bottom-24 -right-24 w-[34rem] opacity-20" seam="#0D0D0D" />
       </aside>
 
-      <main className="flex flex-col justify-center px-6 py-12 sm:px-12">
-        <div className="mx-auto w-full max-w-sm">
+      <main className="relative flex flex-col justify-center overflow-hidden bg-[radial-gradient(ellipse_at_85%_12%,rgba(242,199,92,0.13),transparent_34%),#FBF9F4] px-6 py-12 sm:px-12">
+        <div className="mx-auto w-full max-w-sm rounded-3xl border border-ink/10 bg-card/85 p-6 shadow-[0_28px_80px_-50px_rgba(13,13,13,0.35)] backdrop-blur-sm sm:p-8">
           <div className="lg:hidden">
             <Logo seam="#FBF9F4" />
           </div>
           <div className="mt-8 lg:mt-0">{children}</div>
-          <p className="mt-10 text-xs text-muted-foreground">
+          <p className="mt-8 text-xs leading-relaxed text-muted-foreground">
             By continuing you agree to our{" "}
             <Link href="/terms" className="underline hover:text-foreground">
               terms

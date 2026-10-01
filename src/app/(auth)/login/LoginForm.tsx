@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { GoogleButton } from "@/components/marketing/GoogleButton";
 import { Button } from "@/components/ui/button";
@@ -20,23 +20,39 @@ export function LoginForm({ next, notice }: { next?: string; notice?: string }) 
   const router = useRouter();
   const [error, setError] = useState<string | null>(notice ? (NOTICES[notice] ?? null) : null);
   const [pending, setPending] = useState(false);
+  const submitting = useRef(false);
 
   async function onSubmit(formData: FormData) {
+    if (submitting.current) return;
+    submitting.current = true;
     setPending(true);
     setError(null);
-    const supabase = createClient();
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email: String(formData.get("email") ?? "").trim(),
-      password: String(formData.get("password") ?? ""),
-    });
-    if (authError) {
-      setError(authError.message.toLowerCase().includes("invalid") ? "That email and password do not match." : authError.message);
+    try {
+      const supabase = createClient();
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: String(formData.get("email") ?? "").trim(),
+        password: String(formData.get("password") ?? ""),
+      });
+      if (authError) {
+        const message = authError.message.toLowerCase();
+        setError(message.includes("invalid") || message.includes("credentials")
+          ? "That email and password do not match. Check them and try again."
+          : message.includes("confirm") || message.includes("verified")
+            ? "Confirm your email before signing in. Check your inbox for the confirmation link."
+            : message.includes("network") || message.includes("fetch")
+              ? "We couldn’t reach the sign-in service. Check your connection and try again."
+              : "We couldn’t sign you in. Please try again.");
+        return;
+      }
+      // middleware sends each role to its own home
+      router.push(next || "/dashboard");
+      router.refresh();
+    } catch {
+      setError("We couldn’t reach the sign-in service. Check your connection and try again.");
+    } finally {
       setPending(false);
-      return;
+      submitting.current = false;
     }
-    // middleware sends each role to its own home
-    router.push(next || "/dashboard");
-    router.refresh();
   }
 
   return (
@@ -48,7 +64,7 @@ export function LoginForm({ next, notice }: { next?: string; notice?: string }) 
 
       <GoogleButton next={next} label="Continue with Google" />
 
-      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+      <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
         <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
       </div>
 
@@ -60,7 +76,7 @@ export function LoginForm({ next, notice }: { next?: string; notice?: string }) 
           <Input id="password" name="password" type="password" autoComplete="current-password" required />
         </Field>
         {error && (
-          <p role="alert" className="text-sm font-medium text-destructive">
+          <p role="alert" className="rounded-xl border border-destructive/20 bg-destructive/5 px-3.5 py-3 text-sm font-medium leading-relaxed text-destructive">
             {error}
           </p>
         )}

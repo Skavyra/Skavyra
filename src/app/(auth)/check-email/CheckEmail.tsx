@@ -2,16 +2,17 @@
 
 import { MailCheck } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 
 /** The resend button waits 60 seconds, which is also Supabase's own rate limit. */
-export function CheckEmail({ email, mode }: { email: string; mode: "signup" | "reset" }) {
+export function CheckEmail({ email, mode, next }: { email: string; mode: "signup" | "reset"; next?: string }) {
   const [seconds, setSeconds] = useState(60);
   const [message, setMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const submitting = useRef(false);
 
   useEffect(() => {
     if (seconds <= 0) return;
@@ -20,18 +21,28 @@ export function CheckEmail({ email, mode }: { email: string; mode: "signup" | "r
   }, [seconds]);
 
   async function resend() {
-    if (!email) return;
+    if (!email || submitting.current) return;
+    submitting.current = true;
     setPending(true);
     setMessage(null);
-    const supabase = createClient();
-    const redirectTo = `${window.location.origin}/auth/callback${mode === "reset" ? "?next=/reset-password" : ""}`;
-    const { error } =
-      mode === "reset"
-        ? await supabase.auth.resetPasswordForEmail(email, { redirectTo })
-        : await supabase.auth.resend({ type: "signup", email, options: { emailRedirectTo: redirectTo } });
-    setMessage(error ? error.message : "Sent. Check your inbox again in a moment.");
-    setSeconds(60);
-    setPending(false);
+    try {
+      const supabase = createClient();
+      const callback = new URL("/auth/callback", window.location.origin);
+      if (mode === "reset") callback.searchParams.set("next", "/reset-password");
+      else if (next) callback.searchParams.set("next", next);
+      const redirectTo = callback.toString();
+      const { error } =
+        mode === "reset"
+          ? await supabase.auth.resetPasswordForEmail(email, { redirectTo })
+          : await supabase.auth.resend({ type: "signup", email, options: { emailRedirectTo: redirectTo } });
+      setMessage(error ? "We couldn’t send the link. Check the address and try again." : "Sent. Check your inbox again in a moment.");
+      setSeconds(60);
+    } catch {
+      setMessage("We couldn’t reach the email service. Check your connection and try again.");
+    } finally {
+      setPending(false);
+      submitting.current = false;
+    }
   }
 
   return (

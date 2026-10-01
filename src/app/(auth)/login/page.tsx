@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { LoginForm } from "./LoginForm";
+import { safeNextPath } from "@/lib/auth/redirect";
 
 export const metadata: Metadata = { title: "Log in" };
 
@@ -10,5 +11,5 @@ export default async function LoginPage({
   searchParams: Promise<{ next?: string; error?: string }>;
 }) {
   const { next, error } = await searchParams;
-  return <LoginForm next={next} notice={error} />;
+  return <LoginForm next={safeNextPath(next)} notice={error} />;
 }

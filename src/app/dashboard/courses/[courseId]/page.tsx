@@ -10,8 +10,14 @@ import type { Resource } from "@/components/player/ResourceList";
 import { requireRole } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function PlayerPage({ params }: { params: Promise<{ courseId: string }> }) {
-  const { courseId } = await params;
+export default async function PlayerPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ courseId: string }>;
+  searchParams: Promise<{ lesson?: string }>;
+}) {
+  const [{ courseId }, { lesson: requestedLessonId }] = await Promise.all([params, searchParams]);
   const user = await requireRole("student");
   const supabase = await createClient();
 
@@ -54,6 +60,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ courseI
   }));
 
   const lessonIds = modules.flatMap((m) => m.lessons.map((l) => l.id));
+  const initialLessonId = requestedLessonId && lessonIds.includes(requestedLessonId) ? requestedLessonId : undefined;
   const { data: resourceRows } = lessonIds.length
     ? await supabase.from("lesson_resources").select("id, lesson_id, title, file_size").in("lesson_id", lessonIds)
     : { data: [] };
@@ -79,6 +86,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ courseI
         enrollmentId={enrollment.id}
         accessActive={active}
         balance={Number(enrollment.balance_amount ?? 0)}
+        initialLessonId={initialLessonId}
       />
     </>
   );

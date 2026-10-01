@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
@@ -12,6 +12,29 @@ import { createClient } from "@/lib/supabase/client";
 export function GoogleButton({ next, label }: { next?: string; label: string }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const submitting = useRef(false);
+
+  async function signInWithGoogle() {
+    if (submitting.current) return;
+    submitting.current = true;
+    setPending(true);
+    setError(null);
+    try {
+      const supabase = createClient();
+      const redirect = new URL("/auth/callback", window.location.origin);
+      if (next) redirect.searchParams.set("next", next);
+      const { error: authError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: redirect.toString() },
+      });
+      if (authError) setError("Google sign in is not available. Use your email and password instead.");
+    } catch {
+      setError("We couldn’t start Google sign in. Check your connection and try again.");
+    } finally {
+      setPending(false);
+      submitting.current = false;
+    }
+  }
 
   return (
     <div className="flex flex-col gap-2">
@@ -20,21 +43,7 @@ export function GoogleButton({ next, label }: { next?: string; label: string }) 
         variant="outline"
         size="lg"
         loading={pending}
-        onClick={async () => {
-          setPending(true);
-          setError(null);
-          const supabase = createClient();
-          const redirect = new URL("/auth/callback", window.location.origin);
-          if (next) redirect.searchParams.set("next", next);
-          const { error: authError } = await supabase.auth.signInWithOAuth({
-            provider: "google",
-            options: { redirectTo: redirect.toString() },
-          });
-          if (authError) {
-            setError("Google sign in is not available yet. Use your email and password.");
-            setPending(false);
-          }
-        }}
+        onClick={signInWithGoogle}
       >
         <GoogleMark />
         {label}

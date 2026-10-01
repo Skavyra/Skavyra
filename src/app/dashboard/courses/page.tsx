@@ -5,9 +5,11 @@ import Link from "next/link";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { AccessBadge } from "@/components/dashboard/StatusBadge";
+import { DashboardDataError } from "@/components/dashboard/DashboardDataError";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { requireRole } from "@/lib/auth/require-role";
+import { calculateCourseProgress } from "@/lib/dashboard/progress";
 import { createClient } from "@/lib/supabase/server";
 import { formatInr, percent } from "@/lib/utils";
 
@@ -17,31 +19,26 @@ export default async function MyCoursesPage() {
   const user = await requireRole("student");
   const supabase = await createClient();
 
-  const { data: enrollments } = await supabase
+  const { data: enrollments, error: enrollmentsError } = await supabase
     .from("enrollments")
     .select("id, course_id, access_status, balance_amount, course:courses(title, subtitle, duration_weeks)")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
   const list = enrollments ?? [];
 
-  const [{ data: outline }, { data: progress }, { data: certificates }] = await Promise.all([
+  const [{ data: outline, error: outlineError }, { data: progress, error: progressError }, { data: certificates, error: certificatesError }] = await Promise.all([
     list.length
       ? supabase.from("course_outline").select("course_id, lesson_id").in("course_id", list.map((e) => e.course_id))
-      : Promise.resolve({ data: [] as { course_id: string | null; lesson_id: string | null }[] }),
+      : Promise.resolve({ data: [] as { course_id: string | null; lesson_id: string | null }[], error: null }),
     supabase.from("progress").select("lesson_id, completed").eq("user_id", user.id),
     list.length
       ? supabase.from("certificates").select("enrollment_id").in("enrollment_id", list.map((e) => e.id))
-      : Promise.resolve({ data: [] as { enrollment_id: string }[] }),
+      : Promise.resolve({ data: [] as { enrollment_id: string }[], error: null }),
   ]);
 
-  const done = new Set((progress ?? []).filter((p) => p.completed).map((p) => p.lesson_id));
-  const totals = new Map<string, { total: number; done: number }>();
-  for (const row of outline ?? []) {
-    const t = totals.get(row.course_id!) ?? { total: 0, done: 0 };
-    t.total += 1;
-    if (done.has(row.lesson_id!)) t.done += 1;
-    totals.set(row.course_id!, t);
-  }
+  if (enrollmentsError || outlineError || progressError || certificatesError) return <DashboardDataError />;
+
+  const courseProgress = calculateCourseProgress(outline ?? [], progress ?? []);
   const certified = new Set((certificates ?? []).map((c) => c.enrollment_id));
 
   return (
@@ -61,12 +58,12 @@ export default async function MyCoursesPage() {
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {list.map((e) => {
-            const t = totals.get(e.course_id) ?? { total: 0, done: 0 };
+            const t = courseProgress.byCourse.get(e.course_id) ?? { total: 0, done: 0 };
             const balance = Number(e.balance_amount ?? 0);
             return (
-              <li key={e.id} className="flex flex-col gap-3 rounded-xl border bg-card p-5">
+              <li key={e.id} className="group flex flex-col gap-3 rounded-2xl border border-ink/10 bg-card p-5 shadow-[0_12px_32px_-28px_rgba(13,13,13,0.45)] transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-gold-500/40 hover:shadow-[0_22px_44px_-30px_rgba(142,103,24,0.38)] motion-reduce:transform-none sm:p-6">
                 <div className="flex items-start justify-between gap-3">
-                  <p className="font-display text-lg font-bold leading-tight">{e.course?.title}</p>
+                  <p className="font-display text-lg font-bold leading-tight transition-colors group-hover:text-gold-700">{e.course?.title}</p>
                   <AccessBadge status={e.access_status} />
                 </div>
                 {e.course?.subtitle && <p className="line-clamp-2 text-sm text-muted-foreground">{e.course.subtitle}</p>}

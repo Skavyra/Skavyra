@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
@@ -13,21 +13,32 @@ export function ForgotPasswordForm() {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const submitting = useRef(false);
 
   async function onSubmit(formData: FormData) {
+    if (submitting.current) return;
+    submitting.current = true;
     setPending(true);
     setError(null);
-    const email = String(formData.get("email") ?? "").trim();
-    const supabase = createClient();
-    const { error: authError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
-    });
-    if (authError) {
-      setError(authError.message);
+    try {
+      const email = String(formData.get("email") ?? "").trim();
+      const supabase = createClient();
+      const callback = new URL("/auth/callback", window.location.origin);
+      callback.searchParams.set("next", "/reset-password");
+      const { error: authError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: callback.toString(),
+      });
+      if (authError) {
+        setError("We couldn’t send a password reset link. Check the address and try again.");
+        return;
+      }
+      router.push(`/check-email?email=${encodeURIComponent(email)}&mode=reset`);
+    } catch {
+      setError("We couldn’t reach the password reset service. Check your connection and try again.");
+    } finally {
       setPending(false);
-      return;
+      submitting.current = false;
     }
-    router.push(`/check-email?email=${encodeURIComponent(email)}&mode=reset`);
   }
 
   return (

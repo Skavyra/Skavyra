@@ -15,7 +15,7 @@ export function PreviewLesson({ lessonId, title }: { lessonId: string; title: st
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 rounded-full border border-gold-300 px-2.5 py-0.5 text-xs font-semibold text-gold-700 hover:bg-gold-100/40"
+        className="inline-flex items-center gap-1.5 rounded-full border border-gold-300 bg-gold-100/20 px-2.5 py-0.5 text-xs font-semibold text-gold-700 transition-[transform,border-color,background-color,box-shadow] duration-200 hover:border-gold-500 hover:bg-gold-100/60 hover:shadow-sm motion-safe:hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
         <PlayCircle className="size-3.5" /> Preview
       </button>
