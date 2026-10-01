@@ -19,26 +19,83 @@ const SPEED = 3; // degrees per second
  * focus pauses it, and reduced-motion users get a still arc. Phones get a
  * plain swipeable row instead.
  */
-export function ArcTracks({ tracks }: { tracks: ArcTrack[] }) {
+export function ArcTracks({ tracks, motionProgressRef }: { tracks: ArcTrack[]; motionProgressRef?: { current: number } }) {
   // repeat short lists so the arc is always full
   const items = tracks.length === 0 ? [] : Array.from({ length: Math.max(7, tracks.length) }, (_, i) => tracks[i % tracks.length]);
   const span = items.length * STEP;
-  const [offset, setOffset] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const listRef = useRef<HTMLUListElement>(null);
+  const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
   const paused = useRef(false);
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const list = listRef.current;
+    if (!list) return;
+
+    const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
     let frame = 0;
+    let offset = 0;
     let last = performance.now();
+    let displayedIndex = -1;
+    let inView = false;
+    const speed = window.matchMedia("(min-width: 1024px)").matches ? SPEED : SPEED * 0.5;
+
+    const stop = () => cancelAnimationFrame(frame);
     const tick = (now: number) => {
       const dt = (now - last) / 1000;
       last = now;
-      if (!paused.current) setOffset((o) => (o + dt * SPEED) % span);
+      if (!paused.current) {
+        const scrollFactor = 1 - Math.min(1, Math.max(0, motionProgressRef?.current ?? 0)) * 0.55;
+        offset = (offset + dt * speed * scrollFactor) % span;
+      }
+
+      let centerIndex = 0;
+      for (let i = 0; i < items.length; i++) {
+        let angle = ((i * STEP - offset) % span + span) % span;
+        if (angle > span / 2) angle -= span;
+        if (Math.abs(angle) < STEP / 2) centerIndex = i;
+
+        const item = itemRefs.current[i];
+        if (!item) continue;
+        const hidden = Math.abs(angle) > 44;
+        item.style.transform = `translateX(-50%) rotate(${angle}deg)`;
+        item.style.opacity = hidden ? "0" : "1";
+        item.style.zIndex = Math.abs(angle) < STEP / 2 ? "2" : "1";
+        item.setAttribute("aria-hidden", hidden ? "true" : "false");
+        const link = item.querySelector("a");
+        if (link) link.tabIndex = hidden ? -1 : 0;
+      }
+
+      if (displayedIndex !== centerIndex) {
+        displayedIndex = centerIndex;
+        setActiveIndex(centerIndex);
+      }
       frame = requestAnimationFrame(tick);
     };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [span]);
+
+    const start = () => {
+      stop();
+      last = performance.now();
+      frame = requestAnimationFrame(tick);
+    };
+    const onMotionPreferenceChange = () => {
+      if (motionPreference.matches || !inView) stop();
+      else start();
+    };
+    const observer = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting;
+      if (motionPreference.matches || !inView) stop();
+      else start();
+    });
+
+    observer.observe(list);
+    motionPreference.addEventListener("change", onMotionPreferenceChange);
+    return () => {
+      stop();
+      observer.disconnect();
+      motionPreference.removeEventListener("change", onMotionPreferenceChange);
+    };
+  }, [span, items.length, motionProgressRef]);
 
   if (items.length === 0) return null;
 
@@ -52,16 +109,17 @@ export function ArcTracks({ tracks }: { tracks: ArcTrack[] }) {
         onFocusCapture={() => (paused.current = true)}
         onBlurCapture={() => (paused.current = false)}
       >
-        <ul aria-label="Course tracks">
+        <ul ref={listRef} aria-label="Course tracks">
           {items.map((track, i) => {
             // angle in (-span/2, span/2], centred on 0 at the middle
-            let angle = ((i * STEP - offset) % span + span) % span;
+            let angle = (i * STEP) % span;
             if (angle > span / 2) angle -= span;
             const center = Math.abs(angle) < STEP / 2;
             const hidden = Math.abs(angle) > 44;
             return (
               <li
                 key={i}
+                ref={(item) => { itemRefs.current[i] = item; }}
                 aria-hidden={hidden || undefined}
                 className="absolute left-1/2 top-8 w-[236px]"
                 style={{
@@ -71,7 +129,7 @@ export function ArcTracks({ tracks }: { tracks: ArcTrack[] }) {
                   zIndex: center ? 2 : 1,
                 }}
               >
-                <TrackCard track={track} active={center} tabbable={!hidden} />
+                <TrackCard track={track} active={activeIndex === i || center} tabbable={!hidden} />
               </li>
             );
           })}

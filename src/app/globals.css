@@ -110,3 +110,12 @@
   from { background-position: 200% 0; }
   to { background-position: -200% 0; }
 }
+
+@keyframes faq-answer-enter {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.faq-answer-motion[data-state="open"] > div {
+  animation: faq-answer-enter 0.2s ease-out both;
+}
