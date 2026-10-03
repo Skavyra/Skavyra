@@ -15,6 +15,8 @@ import { getUser, primaryRole } from "./get-user";
 export async function requireRole(role: AppRole | AppRole[], next?: string): Promise<SessionUser> {
   const user = await getUser();
   if (!user) redirect(next ? `/login?next=${encodeURIComponent(next)}` : "/login");
+  // A former employee may have no remaining panel role.
+  if (user.roles.length === 0) redirect("/");
 
   const allowed = Array.isArray(role) ? role : [role];
   if (!allowed.some((r) => user.roles.includes(r))) redirect(ROLE_HOME[primaryRole(user.roles)]);

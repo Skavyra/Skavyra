@@ -5,6 +5,7 @@ import { DataTable, type Column } from "@/components/dashboard/DataTable";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { DeactivateDialog } from "@/components/staff/DeactivateDialog";
+import { RemoveEmployeeDialog } from "@/components/staff/RemoveEmployeeDialog";
 import { EmployeeDialog, type EmployeeRecord } from "@/components/staff/EmployeeDialog";
 import { Badge } from "@/components/ui/badge";
 import { requireRole } from "@/lib/auth/require-role";
@@ -17,7 +18,7 @@ export const metadata: Metadata = { title: "Employees" };
 type Row = EmployeeRecord & { is_active: boolean; is_admin: boolean; openLeads: number };
 
 export default async function EmployeesPage() {
-  await requireRole("admin");
+  const user = await requireRole("admin");
   const supabase = await createClient();
 
   const [{ data: employees }, { data: roles }, { data: openLeads }] = await Promise.all([
@@ -83,6 +84,7 @@ export default async function EmployeesPage() {
             openLeads={r.openLeads}
             others={managers.filter((m) => m.id !== r.id)}
           />
+          {!r.is_admin && r.id !== user.id && <RemoveEmployeeDialog employee={{ id: r.id, name: fullName(r) || r.email }} others={managers.filter((m) => m.id !== r.id)} />}
         </span>
       ),
     },

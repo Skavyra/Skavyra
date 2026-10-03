@@ -89,7 +89,7 @@ export function ModuleList({ courseId, modules }: { courseId: string; modules: M
     <div className="flex flex-col gap-3">
       {modules.length === 0 && (
         <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
-          No modules yet. Add the first one to start building the syllabus.
+          Modules and classes are optional. You can publish the information in Details now and add learning content here later.
         </p>
       )}
 

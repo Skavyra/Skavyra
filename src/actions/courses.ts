@@ -7,7 +7,7 @@ import { currentUserWithRole } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils";
 import { firstError, formToObject } from "@/lib/validations/common";
-import { courseSchema, lessonSchema, moduleSchema } from "@/lib/validations/course";
+import { courseSchema, courseValidationError, lessonSchema, moduleSchema } from "@/lib/validations/course";
 import type { ActionResult, CourseStatus } from "@/types";
 
 async function adminOnly() {
@@ -19,6 +19,7 @@ function revalidateCourse(courseId?: string) {
   revalidatePath("/admin/courses");
   if (courseId) revalidatePath(`/admin/courses/${courseId}`);
   revalidatePath("/courses");
+  revalidatePath("/courses/[slug]", "page");
   revalidatePath("/");
 }
 
@@ -49,8 +50,13 @@ export async function createCourse(title: string): Promise<ActionResult<{ id: st
 export async function updateCourse(courseId: string, formData: FormData): Promise<ActionResult> {
   if (!(await adminOnly())) return { ok: false, error: "Only admins can edit courses." };
   const raw = formToObject(formData);
-  const parsed = courseSchema.safeParse({ ...raw, allows_partial: raw.allows_partial === "on" });
-  if (!parsed.success) return { ok: false, error: firstError(parsed.error) };
+  const allowsPartial = raw.allows_partial === "on";
+  const parsed = courseSchema.safeParse({
+    ...raw,
+    allows_partial: allowsPartial,
+    min_first_payment: allowsPartial ? raw.min_first_payment : null,
+  });
+  if (!parsed.success) return { ok: false, error: courseValidationError(parsed.error) };
 
   const supabase = await createClient();
   const { error } = await supabase.from("courses").update(parsed.data).eq("id", courseId);
@@ -76,19 +82,15 @@ export async function setCourseImage(
   return { ok: true, data: undefined };
 }
 
-/** Publishing sets published_at and makes the course visible to visitors. */
+/** Publish course details independently of modules; classes can be added later. */
 export async function setCourseStatus(courseId: string, status: CourseStatus): Promise<ActionResult> {
   if (!(await adminOnly())) return { ok: false, error: "Only admins can publish courses." };
   const supabase = await createClient();
 
   if (status === "published") {
-    const { data: course } = await supabase.from("courses").select("price, published_at").eq("id", courseId).single();
+    const { data: course, error: loadError } = await supabase.from("courses").select("published_at").eq("id", courseId).single();
+    if (loadError) return { ok: false, error: loadError.message };
     if (!course) return { ok: false, error: "Course not found." };
-    const { count } = await supabase
-      .from("course_modules")
-      .select("id", { count: "exact", head: true })
-      .eq("course_id", courseId);
-    if (!count) return { ok: false, error: "Add at least one module with a lesson before publishing." };
     const { error } = await supabase
       .from("courses")
       .update({ status, published_at: course.published_at ?? new Date().toISOString() })
@@ -103,6 +105,23 @@ export async function setCourseStatus(courseId: string, status: CourseStatus): P
 }
 
 // ---------- modules ----------
+
+export async function deleteCourse(courseId: string): Promise<ActionResult> {
+  const user = await adminOnly();
+  if (!user?.profile?.is_active) return { ok: false, error: "Only active admins can delete courses." };
+  if (!z.string().uuid().safeParse(courseId).success) return { ok: false, error: "Invalid course." };
+  const supabase = await createClient();
+  const { count, error: enrollmentError } = await supabase.from("enrollments").select("id", { count: "exact", head: true }).eq("course_id", courseId);
+  if (enrollmentError) return { ok: false, error: enrollmentError.message };
+  if (count) return { ok: false, error: "This course has enrollments. Unpublish it instead to preserve student history." };
+  const { data, error } = await supabase.from("courses").delete().eq("id", courseId).select("id").maybeSingle();
+  if (error) return { ok: false, error: error.code === "23503"
+    ? "This course has linked records, such as enrollments. Unpublish it instead to preserve student history."
+    : error.message };
+  if (!data) return { ok: false, error: "Course not found or deletion is not permitted." };
+  revalidateCourse(courseId);
+  return { ok: true, data: undefined };
+}
 
 export async function saveModule(courseId: string, moduleId: string | null, formData: FormData): Promise<ActionResult> {
   if (!(await adminOnly())) return { ok: false, error: "Only admins can edit courses." };

@@ -67,7 +67,7 @@ export default async function AdminCoursesPage({ searchParams }: { searchParams:
 
   return (
     <>
-      <PageHeader title="Courses" description="Build the syllabus, set the fee, then publish." actions={<NewCourseButton />} />
+      <PageHeader title="Courses" description="Publish your course details and fee. Add modules and classes when ready." actions={<NewCourseButton />} />
 
       <div className="mb-4 flex gap-2">
         {TABS.map((t) => (
@@ -93,7 +93,7 @@ export default async function AdminCoursesPage({ searchParams }: { searchParams:
           <EmptyState
             icon={BookOpen}
             title="No courses here yet"
-            description="Create a course, add its modules and lessons, then publish it to the website."
+            description="Create a course, fill in its details, and publish it to the website. Modules and lessons are optional."
             action={<NewCourseButton />}
           />
         }

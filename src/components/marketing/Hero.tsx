@@ -108,14 +108,14 @@ export function Hero({ courses }: { courses: Pick<Course, "title" | "slug" | "ca
         className="pointer-events-none absolute left-1/2 top-[18%] aspect-square w-[min(1180px,150vw)] -translate-x-1/2 rounded-full"
         style={{ background: "radial-gradient(circle at 50% 40%, rgba(142,103,24,0.38), rgba(142,103,24,0.16) 45%, rgba(13,13,13,0) 70%)" }}
       />
-      <div data-hero-foreground className="container relative flex flex-col items-center pt-fluid-md text-center">
+      <div data-hero-foreground className="container relative flex flex-col items-center pt-[clamp(1.25rem,4vh,3.5rem)] text-center">
         <p data-hero-badge className="inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-charcoal/80 px-4 py-2 text-sm font-semibold text-gold-100">
           <span className="size-1.5 rounded-full bg-gold-300" aria-hidden="true" />
           {HERO.badge}
         </p>
         <HeroHeadline titleStart={HERO.titleStart} titleAccent={HERO.titleAccent} />
-        <p data-hero-copy className="mt-6 max-w-[40rem] text-fluid-lg text-ivory/75">{HERO.body}</p>
-        <div className="mt-9 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+        <p data-hero-copy className="mt-4 max-w-[40rem] text-fluid-lg text-ivory/75">{HERO.body}</p>
+        <div className="mt-6 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
           <Button asChild variant="gold" size="lg" className="h-14 px-7">
             <Link href="/courses" data-hero-action>
               Explore courses <ArrowRight />
@@ -126,7 +126,7 @@ export function Hero({ courses }: { courses: Pick<Course, "title" | "slug" | "ca
           </Button>
         </div>
       </div>
-      <div data-hero-arc className="relative mt-fluid-sm">
+      <div data-hero-arc className="relative mt-6">
         <ArcTracks tracks={tracks} motionProgressRef={arcScrollProgress} />
       </div>
     </section>

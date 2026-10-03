@@ -27,7 +27,7 @@ export function EnrollCard({
   const requestStarted = useRef(false);
 
   return (
-    <div data-course-enrollment className="flex flex-col gap-4 rounded-2xl border border-gold-500/30 bg-card p-5 shadow-[0_24px_55px_-38px_rgba(13,13,13,0.42)] ring-1 ring-ink/[0.03] transition-shadow duration-300 hover:shadow-[0_30px_65px_-38px_rgba(142,103,24,0.34)] lg:sticky lg:top-28">
+    <div data-course-enrollment className="flex flex-col gap-4 rounded-2xl border border-gold-500/30 bg-card p-5 shadow-[0_24px_55px_-38px_rgba(13,13,13,0.42)] ring-1 ring-ink/[0.03] transition-shadow duration-300 hover:shadow-[0_30px_65px_-38px_rgba(142,103,24,0.34)]">
       <div className="relative aspect-[16/9] overflow-hidden rounded-xl bg-ink">
         {course.cover_image_url ? (
           <Image src={course.cover_image_url} alt="" fill sizes="360px" className="object-cover" />

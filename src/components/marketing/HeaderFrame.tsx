@@ -20,7 +20,7 @@ export function HeaderFrame({ children }: { children: ReactNode }) {
     <header
       data-site-header
       data-scrolled="false"
-      className="theme-ink group sticky top-0 z-40 border-b border-transparent bg-background text-foreground transition-[height,background-color,border-color,box-shadow,backdrop-filter] duration-300 data-[scrolled=true]:border-white/[0.07] data-[scrolled=true]:bg-background/80 data-[scrolled=true]:shadow-[0_8px_30px_rgba(0,0,0,0.12)] data-[scrolled=true]:backdrop-blur-xl"
+      className="theme-ink group sticky top-0 z-40 bg-ink text-foreground transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 data-[scrolled=true]:border-b data-[scrolled=true]:border-white/[0.07] data-[scrolled=true]:bg-ink data-[scrolled=true]:shadow-[0_8px_30px_rgba(0,0,0,0.2)] data-[scrolled=true]:backdrop-blur-xl"
     >
       {children}
     </header>

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { CourseForm } from "@/components/courses/CourseForm";
+import { DeleteCourseDialog } from "@/components/courses/DeleteCourseDialog";
 import { CoverUpload } from "@/components/courses/CoverUpload";
 import { ModuleList, type ModuleRecord } from "@/components/courses/ModuleList";
 import { PublishToggle } from "@/components/courses/PublishToggle";
@@ -63,11 +64,11 @@ export default async function CourseBuilderPage({ params }: { params: Promise<{ 
       </Link>
       <PageHeader
         title={course.title}
-        description={`${modules.length} modules, ${lessonCount} lessons.`}
-        actions={<PublishToggle courseId={course.id} slug={course.slug} status={course.status} />}
+        description={modules.length > 0 ? `${modules.length} modules, ${lessonCount} lessons.` : "Publish your course details now. Modules and classes can be added later."}
+        actions={<div className="flex flex-wrap items-center gap-2"><PublishToggle courseId={course.id} slug={course.slug} status={course.status} /><DeleteCourseDialog courseId={course.id} title={course.title} /></div>}
       />
 
-      <Tabs defaultValue="content">
+      <Tabs defaultValue={modules.length > 0 ? "content" : "details"}>
         <TabsList>
           <TabsTrigger value="content">Content</TabsTrigger>
           <TabsTrigger value="details">Details</TabsTrigger>

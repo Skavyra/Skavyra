@@ -79,6 +79,22 @@ export async function deactivateStaff(
   return { ok: true, data: { leads_moved: Number(result.data.leads_moved ?? 0) } };
 }
 
+/** Removes staff membership through one audited database transaction. */
+export async function removeEmployee(userId: string, reassignTo: string | null): Promise<ActionResult> {
+  const user = await currentUserWithRole("admin");
+  if (!user || !user.profile?.is_active) return { ok: false, error: "Only active admins can remove employees." };
+  if (!z.string().uuid().safeParse(userId).success || (reassignTo !== null && !z.string().uuid().safeParse(reassignTo).success)) {
+    return { ok: false, error: "Invalid employee selection." };
+  }
+  if (userId === user.id) return { ok: false, error: "You cannot remove your own account." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("remove_employee", { p_user_id: userId, ...(reassignTo ? { p_reassign_to: reassignTo } : {}) });
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/admin", "layout");
+  revalidatePath("/employee", "layout");
+  return { ok: true, data: undefined };
+}
+
 /** Switch a deactivated employee back on (admin table rights, no edge function needed). */
 export async function reactivateStaff(userId: string): Promise<ActionResult> {
   const user = await currentUserWithRole("admin");

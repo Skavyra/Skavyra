@@ -14,7 +14,8 @@ const AUTH_PAGES = ["/login", "/signup", "/forgot-password"];
 function homeFor(roles: string[]) {
   if (roles.includes("admin")) return "/admin";
   if (roles.includes("employee")) return "/employee";
-  return "/dashboard";
+  if (roles.includes("student")) return "/dashboard";
+  return "/";
 }
 
 export async function middleware(request: NextRequest) {

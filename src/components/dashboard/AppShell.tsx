@@ -28,7 +28,6 @@ export function AppShell({
           title={title}
           name={fullName(user.profile)}
           email={user.email}
-          avatarUrl={user.profile?.avatar_url ?? null}
           profileHref={profileHref}
         />
         <main className="flex-1 px-4 py-6 lg:px-8 lg:py-8">{children}</main>

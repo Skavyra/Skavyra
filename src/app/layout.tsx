@@ -31,7 +31,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en-IN" className={`${syne.variable} ${manrope.variable}`}>
-      <body>
+      <body suppressHydrationWarning>
         {children}
         <Toaster />
       </body>

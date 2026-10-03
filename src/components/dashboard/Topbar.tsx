@@ -6,7 +6,7 @@ import { useState, useTransition } from "react";
 
 import { signOut } from "@/actions/profile";
 import { Logo } from "@/components/brand/logo";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -27,14 +27,12 @@ export function Topbar({
   title,
   name,
   email,
-  avatarUrl,
   profileHref,
 }: {
   items: NavItem[];
   title: string;
   name: string;
   email: string;
-  avatarUrl: string | null;
   profileHref?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -65,7 +63,6 @@ export function Topbar({
         <DropdownMenuTrigger asChild>
           <button className="flex items-center gap-2 rounded-full p-0.5 pr-2 hover:bg-muted" aria-label="Account menu">
             <Avatar className="size-8">
-              {avatarUrl && <AvatarImage src={avatarUrl} alt="" />}
               <AvatarFallback>{initials(name || email)}</AvatarFallback>
             </Avatar>
             <span className="hidden max-w-[10rem] truncate text-sm font-semibold sm:block">{name || email}</span>

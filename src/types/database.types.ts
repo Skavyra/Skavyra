@@ -284,6 +284,11 @@ export type Database = {
           language: string | null
           mentor_name: string | null
           mentor_company: string | null
+          learning_outcomes: string | null
+          target_audience: string | null
+          prerequisites: string | null
+          projects: string | null
+          mentor_bio: string | null
           mentor_avatar_url: string | null
           allows_partial: boolean
           min_first_payment: number | null
@@ -310,6 +315,11 @@ export type Database = {
           language?: string | null
           mentor_name?: string | null
           mentor_company?: string | null
+          learning_outcomes?: string | null
+          target_audience?: string | null
+          prerequisites?: string | null
+          projects?: string | null
+          mentor_bio?: string | null
           mentor_avatar_url?: string | null
           allows_partial?: boolean
           min_first_payment?: number | null
@@ -336,6 +346,11 @@ export type Database = {
           language?: string | null
           mentor_name?: string | null
           mentor_company?: string | null
+          learning_outcomes?: string | null
+          target_audience?: string | null
+          prerequisites?: string | null
+          projects?: string | null
+          mentor_bio?: string | null
           mentor_avatar_url?: string | null
           allows_partial?: boolean
           min_first_payment?: number | null
@@ -1367,6 +1382,7 @@ export type Database = {
       }
     }
     Functions: {
+      remove_employee: { Args: { p_user_id: string; p_reassign_to?: string }; Returns: Json }
       has_role: { Args: { p_user_id: string; p_role: Database["public"]["Enums"]["app_role"] }; Returns: boolean }
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
       is_employee: { Args: Record<PropertyKey, never>; Returns: boolean }

@@ -11,7 +11,7 @@ export function HeroHeadline({ titleStart, titleAccent }: { titleStart: string; 
     <h1
       data-hero-headline
       aria-label={`${titleStart} ${titleAccent}`}
-      className="mt-7 max-w-[15ch] text-fluid-hero font-bold tracking-[-0.035em] sm:max-w-none"
+      className="mt-5 max-w-[15ch] text-fluid-hero font-bold tracking-[-0.035em] sm:max-w-none"
     >
       <span aria-hidden="true">{reveal(firstLine, 0)}</span>
       <br className="hidden sm:block" />
