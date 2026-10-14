@@ -1,5 +1,6 @@
 import { SiteFooter } from "@/components/marketing/SiteFooter";
 import { SiteHeader } from "@/components/marketing/SiteHeader";
+import { MarketingPageMotion } from "@/components/marketing/MarketingPageMotion";
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -8,7 +9,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
         Skip to content
       </a>
       <SiteHeader />
-      <main id="main">{children}</main>
+      <main id="main"><MarketingPageMotion>{children}</MarketingPageMotion></main>
       <SiteFooter />
     </>
   );

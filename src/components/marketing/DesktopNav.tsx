@@ -3,19 +3,80 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { isMarketingNavLinkActive, type MarketingNavLink } from "@/lib/marketing-nav";
 
-type NavLink = { href: string; label: string };
-
-export function DesktopNav({ links }: { links: NavLink[] }) {
+export function DesktopNav({ links }: { links: MarketingNavLink[] }) {
   const pathname = usePathname();
   const [hash, setHash] = useState("");
+  const [pendingLocation, setPendingLocation] = useState<{ pathname: string; hash: string } | null>(null);
 
   useEffect(() => {
-    const updateHash = () => setHash(window.location.hash);
-    updateHash();
-    window.addEventListener("hashchange", updateHash);
-    return () => window.removeEventListener("hashchange", updateHash);
+    const syncLocation = () => {
+      const nextHash = window.location.hash;
+      setHash(nextHash);
+      setPendingLocation(null);
+    };
+    syncLocation();
+    window.addEventListener("hashchange", syncLocation);
+    window.addEventListener("popstate", syncLocation);
+    return () => {
+      window.removeEventListener("hashchange", syncLocation);
+      window.removeEventListener("popstate", syncLocation);
+    };
   }, [pathname]);
+
+  useEffect(() => {
+    const targetPath = pendingLocation?.pathname ?? pathname;
+    const targetHash = pendingLocation ? pendingLocation.hash : window.location.hash;
+    if (!targetHash || targetPath !== pathname) return;
+
+    let cancelled = false;
+    let scheduled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    let firstFrame = 0;
+    let secondFrame = 0;
+    let attempts = 0;
+
+    const alignToAnchor = () => {
+      if (cancelled) return;
+      let id = targetHash.slice(1);
+      try {
+        id = decodeURIComponent(id);
+      } catch {
+        // Keep the literal fragment if it contains malformed percent encoding.
+      }
+      const target = document.getElementById(id);
+      if (!target && attempts < 20) {
+        attempts += 1;
+        timer = setTimeout(alignToAnchor, 100);
+        return;
+      }
+      target?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+
+    const scheduleAlignment = () => {
+      if (cancelled || scheduled) return;
+      scheduled = true;
+      firstFrame = requestAnimationFrame(() => {
+        secondFrame = requestAnimationFrame(() => {
+          timer = setTimeout(alignToAnchor, 120);
+        });
+      });
+    };
+
+    if ("fonts" in document) {
+      void document.fonts.ready.then(scheduleAlignment);
+    } else {
+      scheduleAlignment();
+    }
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(firstFrame);
+      cancelAnimationFrame(secondFrame);
+      clearTimeout(timer);
+    };
+  }, [pathname, hash, pendingLocation]);
 
   return (
     <nav
@@ -23,21 +84,24 @@ export function DesktopNav({ links }: { links: NavLink[] }) {
       className="hidden items-center gap-0.5 rounded-full border border-yellow-200/25 bg-black/40 p-1 shadow-[0_8px_24px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,245,190,0.16)] backdrop-blur-xl md:flex"
     >
       {links.map((link) => {
-        const path = link.href.split(/[?#]/)[0];
-        const linkHash = link.href.includes("#") ? `#${link.href.split("#")[1]}` : "";
-        const hashAliasIsActive = links.some((candidate) => {
-          const aliasPath = candidate.href.split(/[?#]/)[0];
-          const aliasHash = candidate.href.includes("#") ? `#${candidate.href.split("#")[1]}` : "";
-          return aliasPath === path && aliasHash !== "" && hash === aliasHash;
-        });
-        const active = linkHash
-          ? pathname === path && hash === linkHash
-          : (pathname === path && !hashAliasIsActive) || (path !== "/" && pathname.startsWith(`${path}/`));
+        const activePathname = pendingLocation?.pathname ?? pathname;
+        const activeHash = pendingLocation?.hash ?? hash;
+        const active = isMarketingNavLinkActive(link, links, activePathname, activeHash);
 
         return (
           <Link
             key={link.label}
             href={link.href}
+            onClick={(event) => {
+              if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+              const destination = new URL(link.href, window.location.href);
+              const nextLocation = { pathname: destination.pathname, hash: destination.hash };
+              setPendingLocation(
+                nextLocation.pathname === window.location.pathname && nextLocation.hash === window.location.hash
+                  ? null
+                  : nextLocation,
+              );
+            }}
             aria-current={active ? "page" : undefined}
             className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors focus-visible:ring-white ${
               active

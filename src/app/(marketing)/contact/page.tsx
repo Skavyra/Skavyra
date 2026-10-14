@@ -50,7 +50,7 @@ export default async function ContactPage({
         </ul>
       </div>
 
-      <div className="rounded-3xl border bg-card p-6 sm:p-8">
+      <div className="rounded-3xl border bg-card p-6 shadow-[0_18px_55px_-44px_rgba(13,13,13,0.42)] transition-[border-color,box-shadow] duration-300 hover:border-gold-300/60 hover:shadow-[0_24px_65px_-44px_rgba(142,103,24,0.32)] sm:p-8">
         <ContactForm defaultCourse={course} topic={isCollege ? "college" : undefined} />
       </div>
     </div>

@@ -13,7 +13,7 @@ export function Testimonials() {
         <SectionHeading title="Student stories" />
         <ul className="mt-fluid-sm grid gap-4 md:grid-cols-3">
           {TESTIMONIALS.map((t) => (
-            <li key={t.name} className="flex flex-col gap-5 rounded-2xl border bg-card p-6">
+            <li key={t.name} className="group flex flex-col gap-5 rounded-2xl border bg-card p-6 transition-[transform,border-color,box-shadow] duration-300 motion-safe:hover:-translate-y-1 hover:border-gold-300/70 hover:shadow-[0_20px_42px_-30px_rgba(142,103,24,0.45)]">
               <blockquote className="text-fluid-base leading-relaxed">“{t.quote}”</blockquote>
               <div className="mt-auto flex items-center gap-3">
                 <Avatar>

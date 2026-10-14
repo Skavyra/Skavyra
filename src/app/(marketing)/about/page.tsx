@@ -81,7 +81,7 @@ export default async function AboutPage() {
         ) : (
           <ul className="mt-fluid-sm grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[...mentors.values()].map((m) => (
-              <li key={m.name} className="flex flex-col gap-4 rounded-2xl border bg-card p-6">
+              <li key={m.name} className="group flex flex-col gap-4 rounded-2xl border bg-card p-6 transition-[transform,border-color,box-shadow] duration-300 motion-safe:hover:-translate-y-1 hover:border-gold-300/70 hover:shadow-[0_20px_42px_-30px_rgba(142,103,24,0.4)]">
                 <div className="flex items-center gap-4">
                   <Avatar className="size-14">
                     {m.avatar && <AvatarImage src={m.avatar} alt="" />}
