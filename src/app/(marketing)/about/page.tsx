@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 import { TaglineRule } from "@/components/brand/logo";
 import { HowItWorks } from "@/components/marketing/HowItWorks";
-import { Quarter } from "@/components/marketing/Quarter";
 import { SectionHeading } from "@/components/marketing/SectionHeading";
 import { WhySkavyra } from "@/components/marketing/WhySkavyra";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -55,9 +55,13 @@ export default async function AboutPage() {
             </div>
           </div>
           <div className="relative hidden aspect-square place-items-center lg:grid">
-            <Quarter className="w-2/3 opacity-90" fill="#8E6718" />
-            <Quarter className="absolute right-[18%] top-[22%] w-1/3 rotate-90" fill="#DDAA2F" />
-            <Quarter className="absolute bottom-[26%] right-[26%] w-1/6 rotate-180" fill="#F2C75C" />
+            <Image
+              src="/logo-mark.svg"
+              alt="Skavyra logo"
+              fill
+              sizes="(min-width: 1024px) 40vw, 0px"
+              className="object-contain"
+            />
           </div>
         </div>
       </section>

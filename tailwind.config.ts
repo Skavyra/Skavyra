@@ -52,7 +52,7 @@ const config: Config = {
         "fluid-xl": ["clamp(1.25rem, 1.13rem + 0.55vw, 1.625rem)", { lineHeight: "1.3" }],
         "fluid-2xl": ["clamp(1.5rem, 1.3rem + 0.9vw, 2.125rem)", { lineHeight: "1.2" }],
         "fluid-3xl": ["clamp(1.875rem, 1.5rem + 1.6vw, 3rem)", { lineHeight: "1.1" }],
-        "fluid-hero": ["clamp(2.25rem, 1.4rem + 4.2vw, 5rem)", { lineHeight: "1.02" }],
+        "fluid-hero": ["clamp(2.15rem, 1.3rem + 3.95vw, 4.6rem)", { lineHeight: "1.02" }],
       },
       spacing: {
         "fluid-sm": "clamp(1.5rem, 1.1rem + 1.8vw, 2.5rem)",
