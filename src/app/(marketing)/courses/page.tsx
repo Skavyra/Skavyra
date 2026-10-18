@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { CourseCard } from "@/components/marketing/CourseCard";
+import { CourseCard, type CourseCardData } from "@/components/marketing/CourseCard";
 import { CoursesPageMotion } from "@/components/marketing/CoursesPageMotion";
 import { Pagination } from "@/components/ui/pagination";
 import { CATEGORY_LABEL, LEVEL_LABEL } from "@/lib/constants";
+import { FLAGSHIP_COURSES } from "@/lib/flagship-mock";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 import type { CourseCategory, CourseLevel } from "@/types";
@@ -19,6 +20,23 @@ const DURATIONS = [
   { value: "medium", label: "9 to 12 weeks", min: 9, max: 12 },
   { value: "long", label: "More than 12 weeks", min: 13, max: 520 },
 ];
+const FLAGSHIP_CARD_COURSES: CourseCardData[] = [...FLAGSHIP_COURSES]
+  .sort((a, b) => a.sort_order - b.sort_order)
+  .map((course) => ({
+    id: course.id,
+    slug: course.slug,
+    title: course.title,
+    subtitle: course.subtitle,
+    category: course.category,
+    level: course.level,
+    cover_image_url: course.cover_image_url,
+    price: course.price,
+    mrp: course.mrp,
+    duration_weeks: course.duration_weeks,
+    is_flagship: course.is_flagship,
+    offer_label: course.offer_label,
+    offer_ends_at: course.offer_ends_at,
+  }));
 
 type Params = { category?: string; level?: string; duration?: string; page?: string };
 
@@ -33,24 +51,38 @@ function hrefWith(current: Params, patch: Partial<Params>) {
 export default async function CoursesPage({ searchParams }: { searchParams: Promise<Params> }) {
   const params = await searchParams;
   const page = Math.max(1, Number(params.page) || 1);
-  const supabase = await createClient();
-
-  let query = supabase
-    .from("courses")
-    .select("id, slug, title, subtitle, category, level, cover_image_url, price, mrp, duration_weeks", { count: "exact" })
-    .eq("status", "published");
-  // a "both" course belongs in either stream
-  if (params.category === "it" || params.category === "non_it") query = query.in("category", [params.category, "both"]);
-  if (LEVELS.includes(params.level as CourseLevel)) query = query.eq("level", params.level as CourseLevel);
   const dur = DURATIONS.find((d) => d.value === params.duration);
-  if (dur) query = query.gte("duration_weeks", dur.min).lte("duration_weeks", dur.max);
+  const isFlagshipCategory = params.category === "flagship";
+  let courses: CourseCardData[];
+  let total: number;
 
-  const { data, count } = await query
-    .order("sort_order", { ascending: true })
-    .range((page - 1) * PER_PAGE, page * PER_PAGE - 1);
-  const courses = data ?? [];
-  const total = count ?? 0;
+  if (isFlagshipCategory) {
+    courses = FLAGSHIP_CARD_COURSES.filter(
+      (course) =>
+        (!LEVELS.includes(params.level as CourseLevel) || course.level === params.level) &&
+        (!dur || (course.duration_weeks !== null && course.duration_weeks >= dur.min && course.duration_weeks <= dur.max)),
+    );
+    total = courses.length;
+  } else {
+    const supabase = await createClient();
+    let query = supabase
+      .from("courses")
+      .select("id, slug, title, subtitle, category, level, cover_image_url, price, mrp, duration_weeks", { count: "exact" })
+      .eq("status", "published");
+    // a "both" course belongs in either stream
+    if (params.category === "it" || params.category === "non_it") query = query.in("category", [params.category, "both"]);
+    if (LEVELS.includes(params.level as CourseLevel)) query = query.eq("level", params.level as CourseLevel);
+    if (dur) query = query.gte("duration_weeks", dur.min).lte("duration_weeks", dur.max);
+
+    const { data, count } = await query
+      .order("sort_order", { ascending: true })
+      .range((page - 1) * PER_PAGE, page * PER_PAGE - 1);
+    courses = data ?? [];
+    total = count ?? 0;
+  }
+  const showPinnedFlagships = !params.category && !params.level && !params.duration && page === 1;
   const animationKey = [
+    isFlagshipCategory ? "flagship" : "",
     params.category ?? "",
     params.level ?? "",
     params.duration ?? "",
@@ -60,7 +92,11 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
   ].join("|");
 
   const groups: { title: string; key: keyof Params; options: { value: string; label: string }[] }[] = [
-    { title: "Stream", key: "category", options: CATEGORIES.map((c) => ({ value: c, label: CATEGORY_LABEL[c] })) },
+    {
+      title: "Stream",
+      key: "category",
+      options: [...CATEGORIES.map((c) => ({ value: c, label: CATEGORY_LABEL[c] })), { value: "flagship", label: "★ Flagship" }],
+    },
     { title: "Level", key: "level", options: LEVELS.map((l) => ({ value: l, label: LEVEL_LABEL[l] })) },
     { title: "Duration", key: "duration", options: DURATIONS.map((d) => ({ value: d.value, label: d.label })) },
   ];
@@ -111,6 +147,23 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
           </aside>
 
           <div className="flex flex-col gap-8">
+            {showPinnedFlagships && (
+              <section className="rounded-2xl border border-gold-300/60 bg-gold-100/10 p-4 sm:p-5" aria-label="Flagship programs">
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                  <h2 className="font-display text-lg font-bold">★ Flagship programs</h2>
+                  <Link href="/flagship" className="text-sm font-semibold text-gold-700 hover:underline">
+                    View all →
+                  </Link>
+                </div>
+                <ul className="grid gap-5 [perspective:1000px] sm:grid-cols-2 xl:grid-cols-3">
+                  {FLAGSHIP_CARD_COURSES.map((course) => (
+                    <li key={course.id} data-listing-card className="[transform-style:preserve-3d]">
+                      <CourseCard course={course} href={`/flagship#${course.slug}`} />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
             {courses.length > 0 ? (
               <ul
                 data-courses-results
@@ -119,7 +172,7 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
               >
                 {courses.map((c) => (
                   <li key={c.id} data-listing-card className="[transform-style:preserve-3d]">
-                    <CourseCard course={c} />
+                    <CourseCard course={c} href={isFlagshipCategory ? `/flagship#${c.slug}` : undefined} />
                   </li>
                 ))}
               </ul>
@@ -131,14 +184,16 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
                 </Link>
               </div>
             )}
-            <div data-courses-pagination>
-              <Pagination
-                page={page}
-                pageCount={Math.max(1, Math.ceil(total / PER_PAGE))}
-                total={total}
-                hrefFor={(p) => hrefWith(params, { page: String(p) })}
-              />
-            </div>
+            {!isFlagshipCategory && (
+              <div data-courses-pagination>
+                <Pagination
+                  page={page}
+                  pageCount={Math.max(1, Math.ceil(total / PER_PAGE))}
+                  total={total}
+                  hrefFor={(p) => hrefWith(params, { page: String(p) })}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
