@@ -83,3 +83,16 @@ export function percent(part: number, whole: number) {
   if (!whole) return 0;
   return Math.round((part / whole) * 100);
 }
+
+export function isOfferActive(c: { offer_label?: string | null; offer_ends_at?: string | null }) {
+  if (!c.offer_label?.trim()) return false;
+  if (c.offer_ends_at == null) return true;
+
+  const endTime = new Date(c.offer_ends_at).getTime();
+  return Number.isFinite(endTime) && endTime > Date.now();
+}
+
+export function savingsPercent(price: number, mrp: number | null) {
+  if (mrp == null || mrp <= price) return 0;
+  return Math.round(((mrp - price) / mrp) * 100);
+}
