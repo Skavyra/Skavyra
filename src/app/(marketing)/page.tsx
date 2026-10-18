@@ -2,6 +2,7 @@ import { CategoryGrid } from "@/components/marketing/CategoryGrid";
 import { ContactCta } from "@/components/marketing/ContactCta";
 import { CourseGrid } from "@/components/marketing/CourseGrid";
 import { FaqAccordion } from "@/components/marketing/FaqAccordion";
+import { FlagshipStrip } from "@/components/marketing/FlagshipStrip";
 import { Hero } from "@/components/marketing/Hero";
 import { HowItWorks } from "@/components/marketing/HowItWorks";
 import { Testimonials } from "@/components/marketing/Testimonials";
@@ -23,6 +24,7 @@ export default async function HomePage() {
   return (
     <>
       <Hero courses={courses} />
+      <FlagshipStrip />
       <CategoryGrid />
       <CourseGrid courses={courses} />
       <WhySkavyra />

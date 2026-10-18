@@ -13,6 +13,7 @@ const COLUMNS = [
     title: "Courses",
     links: [
       { href: "/courses", label: "All courses" },
+      { href: "/flagship", label: "Flagship programs" },
       { href: "/courses?category=it", label: "IT courses" },
       { href: "/courses?category=non_it", label: "Non-IT courses" },
     ],
