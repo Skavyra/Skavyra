@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Check, X } from "lucide-react";
 
 import { CourseCard, type CourseCardData } from "@/components/marketing/CourseCard";
 import { CoursesPageMotion } from "@/components/marketing/CoursesPageMotion";
@@ -116,23 +117,41 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
     { title: "Level", key: "level", options: LEVELS.map((l) => ({ value: l, label: LEVEL_LABEL[l] })) },
     { title: "Duration", key: "duration", options: DURATIONS.map((d) => ({ value: d.value, label: d.label })) },
   ];
+  const hasActiveFilter = Boolean(params.category || params.level || params.duration);
+  const activeFilters = groups.flatMap((group) => {
+    const value = params[group.key];
+    const option = group.options.find((item) => item.value === value);
+    return value && option ? [{ key: group.key, label: option.label }] : [];
+  });
 
   return (
     <CoursesPageMotion animationKey={animationKey}>
       <div className="container section">
-        <div className="relative overflow-hidden rounded-3xl border border-gold-500/20 bg-[radial-gradient(ellipse_at_top_right,rgba(242,199,92,0.15),transparent_45%),linear-gradient(135deg,rgba(255,255,255,0.72),rgba(247,244,237,0.55))] px-6 py-8 shadow-[0_24px_70px_-54px_rgba(13,13,13,0.45)] sm:px-9 sm:py-10">
-        <h1 data-courses-heading className="text-fluid-3xl">Courses</h1>
-        <p data-courses-description className="mt-3 max-w-2xl text-muted-foreground">
-          Filter by stream, level and length. The link updates as you go, so you can share it.
-        </p>
+        <div className="theme-ink relative overflow-hidden rounded-3xl bg-ink px-6 py-10 text-ivory shadow-[0_30px_70px_-46px_rgba(13,13,13,0.6)] sm:px-10 sm:py-14">
+          <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-32 size-[28rem] rounded-full bg-gold-300/15 blur-3xl" />
+          <div className="relative z-10">
+            <p className="text-xs uppercase tracking-widest text-gold-300">All courses</p>
+            <h1 data-courses-heading className="mt-3 text-fluid-3xl text-ivory">Explore courses</h1>
+            <p data-courses-description className="mt-3 max-w-2xl text-ivory/70">
+              IT and non-IT courses led by mentors from the industry. Filter by stream, level and duration to find your fit.
+            </p>
+            <ul className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-ivory/75">
+              {["Mentor-led", "Real projects", "Certificate on completion"].map((point) => (
+                <li key={point} className="inline-flex items-center gap-2">
+                  <Check aria-hidden="true" className="size-4 text-gold-300" />
+                  {point}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
         <div className="mt-fluid-sm grid gap-6 lg:grid-cols-[240px_1fr] lg:gap-8">
-          <aside data-courses-filters aria-label="Filters" className="flex flex-col gap-6 lg:sticky lg:top-24 lg:self-start lg:rounded-2xl lg:border lg:border-ink/10 lg:bg-card lg:p-5 lg:shadow-[0_16px_40px_-34px_rgba(13,13,13,0.4)]">
+          <aside data-courses-filters aria-label="Filters" className="flex flex-col gap-3 lg:sticky lg:top-24 lg:self-start lg:gap-6 lg:rounded-2xl lg:border lg:border-ink/10 lg:bg-card lg:p-5 lg:shadow-[0_16px_40px_-34px_rgba(13,13,13,0.4)]">
             {groups.map((g) => (
-              <div key={g.key}>
-                <h2 className="font-sans text-sm font-bold">{g.title}</h2>
-                <ul className="hide-scrollbar mt-3 flex gap-2 overflow-x-auto lg:flex-col lg:gap-1">
+              <div key={g.key} className="flex items-center gap-3 lg:block">
+                <h2 className="w-16 shrink-0 text-xs font-bold uppercase tracking-widest text-ink/60 lg:w-auto">{g.title}</h2>
+                <ul className="hide-scrollbar mt-0 flex min-w-0 gap-2 overflow-x-auto lg:mt-3 lg:flex-col lg:gap-1">
                   {g.options.map((o) => {
                     const active = params[g.key] === o.value;
                     return (
@@ -143,7 +162,7 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
                           className={cn(
                             "block rounded-lg border px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 lg:border-transparent",
                             active
-                              ? "border-ink bg-ink font-semibold text-ivory shadow-sm lg:border-ink"
+                              ? "border-ink bg-ink font-semibold text-gold-300 shadow-sm lg:border-ink"
                               : "bg-card text-foreground/80 hover:border-gold-300 hover:bg-gold-100/30 lg:bg-transparent lg:hover:bg-muted",
                           )}
                         >
@@ -155,29 +174,42 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
                 </ul>
               </div>
             ))}
-            {(params.category || params.level || params.duration) && (
-              <Link href="/courses" className="text-sm font-semibold text-gold-700 hover:underline">
-                Clear filters
-              </Link>
-            )}
           </aside>
 
           <div className="flex flex-col gap-8">
-            {showPinnedFlagships && flagshipCardCourses.length > 0 && (
-              <section className="rounded-2xl border border-gold-300/60 bg-gold-100/10 p-4 sm:p-5" aria-label="Flagship programs">
-                <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                  <h2 className="font-display text-lg font-bold">★ Flagship programs</h2>
-                  <Link href="/flagship" className="text-sm font-semibold text-gold-700 hover:underline">
-                    View all →
+            {hasActiveFilter && (
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                {activeFilters.map(({ key, label }) => (
+                  <Link
+                    key={key}
+                    href={hrefWith(params, { [key]: "" })}
+                    aria-label={`Remove filter ${label}`}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-gold-300 bg-gold-100/30 px-3 py-1 font-semibold text-ink hover:bg-gold-100/50"
+                  >
+                    {label}<X aria-hidden="true" className="size-3.5" />
                   </Link>
+                ))}
+                <Link href="/courses" className="font-semibold text-gold-700 hover:underline">Clear all</Link>
+              </div>
+            )}
+            {showPinnedFlagships && flagshipCardCourses.length > 0 && (
+              <section className="theme-ink relative overflow-hidden rounded-3xl bg-ink p-5 text-ivory sm:p-6" aria-label="Flagship programs">
+                <div aria-hidden="true" className="pointer-events-none absolute -left-20 -top-24 size-[22rem] rounded-full bg-gold-300/10 blur-3xl" />
+                <div className="relative z-10">
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                    <h2 className="font-display text-lg font-bold text-ivory">★ Flagship programs</h2>
+                    <Link href="/flagship" className="text-sm font-semibold text-gold-300 hover:underline">
+                      View all →
+                    </Link>
+                  </div>
+                  <ul className="hide-scrollbar -mx-1 flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 pb-1 [perspective:1000px] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 xl:grid-cols-3">
+                    {flagshipCardCourses.map((course) => (
+                      <li key={course.id} data-listing-card className="w-[85%] shrink-0 snap-start [transform-style:preserve-3d] sm:w-auto">
+                        <CourseCard course={course} />
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <ul className="grid gap-5 [perspective:1000px] sm:grid-cols-2 xl:grid-cols-3">
-                  {flagshipCardCourses.map((course) => (
-                    <li key={course.id} data-listing-card className="[transform-style:preserve-3d]">
-                      <CourseCard course={course} />
-                    </li>
-                  ))}
-                </ul>
               </section>
             )}
             {courses.length > 0 ? (
