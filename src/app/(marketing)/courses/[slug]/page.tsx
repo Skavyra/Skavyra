@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CourseContentSection, CourseContentList, courseContentLines } from "@/components/marketing/CourseContentSection";
+import { MobileEnrollBar } from "@/components/marketing/MobileEnrollBar";
 import { getUser } from "@/lib/auth/get-user";
 import { CATEGORY_LABEL, LEVEL_LABEL } from "@/lib/constants";
 import { FAQS } from "@/lib/content";
@@ -85,10 +86,20 @@ export default async function CourseDetailPage({ params }: Props) {
     ...(course.mentor_name?.trim() || course.mentor_bio?.trim() ? [{ id: "mentor", label: "Mentor" }] : []),
     ...(FAQS.length ? [{ id: "faq", label: "FAQ" }] : []),
   ];
+  const primaryHref = state === "enrolled" && enrolledHref
+    ? enrolledHref
+    : state === "guest"
+      ? `/signup?next=${encodeURIComponent(`/courses/${course.slug}`)}`
+      : `/contact?course=${encodeURIComponent(course.title)}`;
+  const primaryLabel = state === "enrolled" && enrolledHref
+    ? "Continue learning"
+    : state === "guest"
+      ? "Enroll now"
+      : "Talk to a counsellor";
 
   return (
     <CourseDetailMotion>
-      <div className="container section">
+      <div className="container section pb-28 lg:pb-0">
         <nav data-course-breadcrumb aria-label="Breadcrumb" className="flex items-center gap-1 text-sm text-muted-foreground">
           <Link href="/courses" className="transition-colors hover:text-gold-700">
             Courses
@@ -137,15 +148,7 @@ export default async function CourseDetailPage({ params }: Props) {
             {course.mentor_name?.trim() && <p className="mt-6 text-sm text-ivory/80">Taught by <span className="font-semibold text-gold-300">{course.mentor_name}</span>{course.mentor_company ? ` · ${course.mentor_company}` : ""}</p>}
             <div className="mt-8 flex flex-wrap gap-3">
               <Button asChild variant="gold" size="lg">
-                <Link href={
-                  state === "enrolled" && enrolledHref
-                    ? enrolledHref
-                    : state === "guest"
-                      ? `/signup?next=${encodeURIComponent(`/courses/${course.slug}`)}`
-                      : `/contact?course=${encodeURIComponent(course.title)}`
-                }>
-                  {state === "enrolled" && enrolledHref ? "Continue learning" : state === "guest" ? "Enroll now" : "Talk to a counsellor"}
-                </Link>
+                <Link href={primaryHref}>{primaryLabel}</Link>
               </Button>
               {modules.length > 0 && <Button asChild variant="outline" size="lg"><a href="#curriculum">View curriculum</a></Button>}
             </div>
@@ -174,8 +177,8 @@ export default async function CourseDetailPage({ params }: Props) {
           </div>
 
           <div data-course-content className="min-w-0 lg:col-start-1 lg:row-start-2">
-            <nav aria-label="Course sections" className="mb-6 flex flex-wrap gap-2">
-              {sections.map((section) => <a key={section.id} href={`#${section.id}`} className="rounded-full border border-ink/10 bg-card px-4 py-2 text-sm font-semibold transition-colors hover:border-gold-500 hover:bg-gold-100/30">{section.label}</a>)}
+            <nav aria-label="Course sections" className="hide-scrollbar mb-6 -mx-4 flex gap-2 overflow-x-auto px-4 lg:sticky lg:top-16 lg:z-20 lg:-mx-2 lg:flex-wrap lg:rounded-2xl lg:bg-background/90 lg:px-2 lg:py-3 lg:backdrop-blur lg:overflow-visible">
+              {sections.map((section) => <a key={section.id} href={`#${section.id}`} className="shrink-0 whitespace-nowrap rounded-full border border-ink/10 bg-card px-4 py-2 text-sm font-semibold transition-colors hover:border-gold-500 hover:bg-gold-100/30">{section.label}</a>)}
             </nav>
             <div className="space-y-6">
               {course.description?.trim() && <CourseContentSection id="overview" eyebrow="The course" title="What this course covers"><p className="whitespace-pre-line break-words leading-relaxed text-muted-foreground">{course.description}</p></CourseContentSection>}
@@ -225,15 +228,33 @@ export default async function CourseDetailPage({ params }: Props) {
                     ))}
                   </Accordion>
               </CourseContentSection>}
-              {projects.length > 0 && <CourseContentSection id="projects" eyebrow="Put it into practice" title="What you'll build">
-                <ol className="grid gap-4 sm:grid-cols-2">{projects.map((project, index) => <li key={index} className="rounded-2xl border border-gold-500/25 bg-gold-100/10 p-5"><span className="font-display text-3xl text-gold-700">{String(index + 1).padStart(2, "0")}</span><p className="mt-3 break-words text-sm leading-relaxed">{project}</p></li>)}</ol>
+              {projects.length > 0 && <CourseContentSection id="projects" eyebrow="Put it into practice" title="What you'll build" tone="dark">
+                <ol className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  {projects.map((project, index) => {
+                    const separators = [" — ", " - "]
+                      .map((separator) => ({ separator, index: project.indexOf(separator) }))
+                      .filter((match) => match.index >= 0)
+                      .sort((a, b) => a.index - b.index);
+                    const split = separators[0];
+                    const projectTitle = split ? project.slice(0, split.index).trim() : null;
+                    const projectDescription = split ? project.slice(split.index + split.separator.length).trim() : project;
+
+                    return (
+                      <li key={index} className="rounded-2xl border border-ivory/10 bg-ivory/5 p-4">
+                        <span className="font-display text-xl text-gold-300">{String(index + 1).padStart(2, "0")}</span>
+                        {projectTitle && <h3 className="mt-2 break-words font-semibold text-ivory">{projectTitle}</h3>}
+                        <p className="mt-1 break-words text-sm leading-relaxed text-ivory/70">{projectDescription}</p>
+                      </li>
+                    );
+                  })}
+                </ol>
               </CourseContentSection>}
               {!!course.tools?.length && <CourseContentSection id="tools" eyebrow="Tools" title="Tools you'll use">
                 <ul className="flex flex-wrap gap-2">{course.tools.map((tool) => <li key={tool} className="rounded-full border border-ink/10 bg-card px-3 py-1 text-sm">{tool}</li>)}</ul>
               </CourseContentSection>}
               {(course.mentor_name?.trim() || course.mentor_bio?.trim()) && <CourseContentSection id="mentor" eyebrow="Meet your guide" title="Your course mentor">
                 {course.mentor_name?.trim() && <div className="flex items-center gap-4">
-                  <Avatar className="size-16 shrink-0">{course.mentor_avatar_url && <AvatarImage src={course.mentor_avatar_url} alt="" />}<AvatarFallback>{initials(course.mentor_name)}</AvatarFallback></Avatar>
+                  <Avatar className="size-16 shrink-0">{course.mentor_avatar_url && <AvatarImage src={course.mentor_avatar_url} alt="" />}<AvatarFallback className="bg-ink font-bold text-gold-300">{initials(course.mentor_name)}</AvatarFallback></Avatar>
                   <div className="min-w-0 break-words"><h3 className="text-lg">{course.mentor_name}</h3>{course.mentor_company && <p className="mt-1 text-sm text-muted-foreground">{course.mentor_company}</p>}</div>
                 </div>}
                 {course.mentor_bio?.trim() && <p className="mt-5 whitespace-pre-line break-words leading-relaxed text-muted-foreground">{course.mentor_bio}</p>}
@@ -245,6 +266,14 @@ export default async function CourseDetailPage({ params }: Props) {
           </div>
         </div>
       </div>
+      <MobileEnrollBar
+        price={Number(course.price)}
+        offerPrice={course.offer_price === null ? null : Number(course.offer_price)}
+        offerEndsAt={course.offer_ends_at}
+        mrp={course.mrp === null ? null : Number(course.mrp)}
+        href={primaryHref}
+        label={primaryLabel}
+      />
     </CourseDetailMotion>
   );
 }
