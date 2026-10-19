@@ -16,7 +16,7 @@ export const HEADER_LINKS = [
   { href: "/courses", label: "Courses" },
   { href: "/flagship", label: "Flagship" },
   { href: "/contact?topic=college", label: "For colleges" },
-  { href: "/about#mentors", label: "Mentors" },
+  { href: "/mentors", label: "Mentors" },
   { href: "/about", label: "About" },
 ];
 

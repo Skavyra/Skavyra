@@ -6,13 +6,12 @@ import { Check } from "lucide-react";
 import { TaglineRule } from "@/components/brand/logo";
 import { ContactCta } from "@/components/marketing/ContactCta";
 import { HowItWorks } from "@/components/marketing/HowItWorks";
+import { MentorCard } from "@/components/marketing/MentorCard";
 import { SectionHeading } from "@/components/marketing/SectionHeading";
 import { WhySkavyra } from "@/components/marketing/WhySkavyra";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ABOUT } from "@/lib/content";
 import { createClient } from "@/lib/supabase/server";
-import { initials } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "About", description: ABOUT.title };
 export const revalidate = 600;
@@ -34,6 +33,7 @@ export default async function AboutPage() {
     entry.courses.push({ slug: c.slug, title: c.title });
     mentors.set(key, entry);
   }
+  const featuredMentors = [...mentors.values()].slice(0, 6);
   const [missionFirst, missionSecond] = ABOUT.mission.split(". ");
 
   return (
@@ -105,34 +105,18 @@ export default async function AboutPage() {
           </p>
         ) : (
           <ul className="mt-fluid-sm grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {[...mentors.values()].map((m) => (
-              <li key={m.name} className="group flex flex-col gap-4 rounded-2xl border border-ink/10 bg-white p-6 transition-[transform,border-color,box-shadow] duration-300 motion-safe:hover:-translate-y-1 hover:border-gold-300/70 hover:shadow-[0_20px_42px_-30px_rgba(142,103,24,0.4)]">
-                <div className="flex items-center gap-4">
-                  <Avatar className="size-14">
-                    {m.avatar && <AvatarImage src={m.avatar} alt="" />}
-                    <AvatarFallback className="bg-ink font-bold text-gold-300">{initials(m.name)}</AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0">
-                    <p className="font-display text-lg font-bold leading-tight">{m.name}</p>
-                    {m.company && <p className="truncate text-sm text-muted-foreground">{m.company}</p>}
-                  </div>
-                </div>
-                <ul className="flex flex-wrap gap-2">
-                  {m.courses.map((c) => (
-                    <li key={c.slug}>
-                      <Link
-                        href={`/courses/${c.slug}`}
-                        className="rounded-full border px-3 py-1 text-xs font-semibold hover:border-gold-300"
-                      >
-                        {c.title}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
+            {featuredMentors.map((mentor) => (
+              <li key={mentor.name}>
+                <MentorCard mentor={{ ...mentor, bio: null, categories: [] }} />
               </li>
             ))}
           </ul>
         )}
+        <div className="mt-8 flex justify-center">
+          <Button asChild variant="outline">
+            <Link href="/mentors">See all mentors</Link>
+          </Button>
+        </div>
       </section>
       <ContactCta />
     </>
