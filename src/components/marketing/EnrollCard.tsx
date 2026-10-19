@@ -8,9 +8,11 @@ import { requestEnrollment } from "@/actions/contact";
 import { Button } from "@/components/ui/button";
 import { FLAGSHIP_STYLES } from "@/lib/flagship-styles";
 import { formatInr, getOfferPricing } from "@/lib/utils";
+import { whatsappLink } from "@/lib/whatsapp";
 
 import { Quarter } from "./Quarter";
 import { OfferCountdown } from "./OfferCountdown";
+import { WhatsAppIcon } from "./WhatsAppIcon";
 
 type State = "guest" | "student" | "enrolled" | "staff";
 
@@ -42,6 +44,7 @@ export function EnrollCard({
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const requestStarted = useRef(false);
   const pricing = getOfferPricing(course);
+  const whatsappHref = whatsappLink(`Hi Skavyra, I'd like details about the ${course.title} course.`);
 
   return (
     <div data-course-enrollment className="flex flex-col gap-4 rounded-2xl border border-gold-500/30 bg-card p-5 shadow-[0_24px_55px_-38px_rgba(13,13,13,0.42)] ring-1 ring-ink/[0.03] transition-shadow duration-300 hover:shadow-[0_30px_65px_-38px_rgba(142,103,24,0.34)]">
@@ -118,6 +121,25 @@ export function EnrollCard({
           {pending ? "Sending request…" : "Request enrollment"}
         </Button>
       ) : null}
+
+      {(state === "guest" || state === "student") && whatsappHref && (
+        <Button
+          asChild
+          variant="outline"
+          size="lg"
+          className="w-full border-[#25D366]/50 text-ink hover:bg-[#25D366]/10 focus-visible:ring-2 focus-visible:ring-gold-300"
+        >
+          <a
+            href={whatsappHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Ask about ${course.title} on WhatsApp`}
+          >
+            <WhatsAppIcon className="size-4" />
+            Ask on WhatsApp
+          </a>
+        </Button>
+      )}
 
       <Button asChild variant="outline" size="lg">
         <Link href={`/contact?course=${encodeURIComponent(course.title)}`}>Talk to a counsellor</Link>

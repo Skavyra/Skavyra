@@ -4,13 +4,18 @@ import { useLayoutEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
+import { Button } from "@/components/ui/button";
+import { WHATSAPP_DEFAULT_MESSAGE, whatsappLink } from "@/lib/whatsapp";
+
 import { ContactForm } from "./ContactForm";
 import { Quarter } from "./Quarter";
+import { WhatsAppIcon } from "./WhatsAppIcon";
 
 /** Home page closer. The form writes a lead with source website_form. */
 export function ContactCta() {
   const sectionRef = useRef<HTMLElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  const whatsappHref = whatsappLink(WHATSAPP_DEFAULT_MESSAGE);
 
   useLayoutEffect(() => {
     const section = sectionRef.current;
@@ -47,6 +52,24 @@ export function ContactCta() {
             Leave your number and a counsellor will call you back to talk through your degree, your goals and the course
             that suits them.
           </p>
+          {whatsappHref && (
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="mt-5 border-ivory/30 text-ivory hover:border-[#25D366] hover:text-[#25D366] focus-visible:ring-2 focus-visible:ring-gold-300"
+            >
+              <a
+                href={whatsappHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Chat with a counsellor on WhatsApp"
+              >
+                <WhatsAppIcon className="size-4" />
+                Chat with a counsellor on WhatsApp
+              </a>
+            </Button>
+          )}
         </div>
         <div className="rounded-2xl border border-white/10 bg-paper p-5 text-ink shadow-[0_18px_50px_-32px_rgba(0,0,0,0.8)] sm:p-6 [&_button[type=submit]]:w-full">
           <ContactForm compact />

@@ -7,6 +7,8 @@ import Link from "next/link";
 
 import { Logo, TaglineRule } from "@/components/brand/logo";
 import { SUPPORT_EMAIL } from "@/lib/content";
+import { WhatsAppIcon } from "@/components/marketing/WhatsAppIcon";
+import { whatsappLink, WHATSAPP_DEFAULT_MESSAGE } from "@/lib/whatsapp";
 
 const COLUMNS = [
   {
@@ -37,6 +39,7 @@ const COLUMNS = [
 
 export function SiteFooter() {
   const footerRef = useRef<HTMLElement>(null);
+  const whatsappHref = whatsappLink(WHATSAPP_DEFAULT_MESSAGE);
 
   useLayoutEffect(() => {
     const footer = footerRef.current;
@@ -70,6 +73,12 @@ export function SiteFooter() {
           <a href={`mailto:${SUPPORT_EMAIL}`} className="group relative w-fit text-sm text-muted-foreground transition-colors hover:text-gold-100 after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-center after:scale-x-0 after:bg-gold-300 after:transition-transform hover:after:scale-x-100">
             {SUPPORT_EMAIL}
           </a>
+          {whatsappHref && (
+            <a href={whatsappHref} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp us" className="group relative flex w-fit items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-gold-100 after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-center after:scale-x-0 after:bg-gold-300 after:transition-transform hover:after:scale-x-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
+              <WhatsAppIcon className="size-4" />
+              WhatsApp us
+            </a>
+          )}
         </div>
         {COLUMNS.map((col) => (
           <div key={col.title}>
