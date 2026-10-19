@@ -12,10 +12,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import type { Course } from "@/types";
 
+function toLocalInput(iso: string | null) {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 export function CourseForm({ course }: { course: Course }) {
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [partial, setPartial] = useState(course.allows_partial);
+  const [isFlagship, setIsFlagship] = useState(course.is_flagship);
+  const [showCountdown, setShowCountdown] = useState(course.show_countdown);
 
   return (
     <form
@@ -23,6 +33,12 @@ export function CourseForm({ course }: { course: Course }) {
       action={(formData) => {
         setError(null);
         formData.set("allows_partial", partial ? "on" : "");
+        formData.set("is_flagship", isFlagship ? "on" : "");
+        formData.set("show_countdown", showCountdown ? "on" : "");
+        const offerEndsAt = formData.get("offer_ends_at");
+        if (typeof offerEndsAt === "string" && offerEndsAt !== "") {
+          formData.set("offer_ends_at", new Date(offerEndsAt).toISOString());
+        }
         start(async () => {
           const result = await updateCourse(course.id, formData);
           if (!result.ok) {
@@ -101,6 +117,41 @@ export function CourseForm({ course }: { course: Course }) {
           </Field>
           <Field label="Mentor biography" htmlFor="mentor_bio" className="sm:col-span-2" hint="Describe the mentor’s relevant experience. Add their name above and photo in Images.">
             <Textarea id="mentor_bio" name="mentor_bio" rows={4} defaultValue={course.mentor_bio ?? ""} />
+          </Field>
+        </div>
+      </section>
+
+      <section aria-labelledby="flagship-offer" className="rounded-xl border bg-card p-5 sm:p-6">
+        <h2 id="flagship-offer" className="text-lg">Flagship &amp; offer</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Optional. Leave the offer empty for no offer. The site goes back to the normal fee automatically after the end date.
+        </p>
+        <div className="mt-5 grid gap-5 sm:grid-cols-2">
+          <label className="flex items-center justify-between gap-4 sm:col-span-2">
+            <span>
+              <span className="block text-sm font-semibold">Flagship program</span>
+              <span className="block text-xs text-muted-foreground">Shows this course on the Flagship page with a premium badge.</span>
+            </span>
+            <Switch checked={isFlagship} onCheckedChange={setIsFlagship} />
+          </label>
+          <Field label="Offer price" htmlFor="offer_price" hint="Must be lower than the fee. Leave empty for no offer.">
+            <Input id="offer_price" name="offer_price" inputMode="decimal" defaultValue={course.offer_price ?? ""} />
+          </Field>
+          <Field label="Offer label" htmlFor="offer_label" hint="e.g. Diwali offer">
+            <Input id="offer_label" name="offer_label" defaultValue={course.offer_label ?? ""} />
+          </Field>
+          <Field label="Offer ends" htmlFor="offer_ends_at" hint="Optional. Your local time.">
+            <Input id="offer_ends_at" name="offer_ends_at" type="datetime-local" defaultValue={toLocalInput(course.offer_ends_at)} />
+          </Field>
+          <label className="flex items-center justify-between gap-4">
+            <span>
+              <span className="block text-sm font-semibold">Show countdown timer</span>
+              <span className="block text-xs text-muted-foreground">Only works when an end date is set.</span>
+            </span>
+            <Switch checked={showCountdown} onCheckedChange={setShowCountdown} />
+          </label>
+          <Field label="Tools covered" htmlFor="tools" hint="One tool per line, e.g. Python, LangChain." className="sm:col-span-2">
+            <Textarea id="tools" name="tools" rows={4} defaultValue={(course.tools ?? []).join("\n")} />
           </Field>
         </div>
       </section>

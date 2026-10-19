@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { optionalText } from "./common";
+import { optionalDate, optionalText } from "./common";
 
 const money = z.coerce.number().min(0, "Amount cannot be negative");
 
@@ -35,9 +35,23 @@ export const courseSchema = z
     mentor_company: optionalText,
     allows_partial: z.boolean(),
     min_first_payment: optionalNumber(z.coerce.number({ invalid_type_error: "Enter a valid amount" }).finite().min(0, "Amount cannot be negative")),
+    is_flagship: z.boolean(),
+    show_countdown: z.boolean(),
+    offer_label: optionalText,
+    offer_price: optionalNumber(z.coerce.number({ invalid_type_error: "Enter a valid amount" }).finite().min(0, "Amount cannot be negative")),
+    offer_ends_at: optionalDate.refine((value) => value == null || !Number.isNaN(Date.parse(value)), "Enter a valid date"),
+    tools: z.array(z.string().trim().min(1)).max(20, "Up to 20 tools"),
     sort_order: z.coerce.number().int(),
   })
-  .refine((v) => v.mrp === null || v.mrp >= v.price, { message: "MRP must be at least the price", path: ["mrp"] });
+  .refine((v) => v.mrp === null || v.mrp >= v.price, { message: "MRP must be at least the price", path: ["mrp"] })
+  .refine((v) => v.offer_price === null || v.offer_price < v.price, {
+    message: "Offer price must be lower than the fee",
+    path: ["offer_price"],
+  })
+  .refine((v) => !v.show_countdown || v.offer_ends_at != null, {
+    message: "Set an offer end date to show the countdown",
+    path: ["show_countdown"],
+  });
 
 export function courseValidationError(error: z.ZodError) {
   const issue = error.issues[0];
@@ -48,6 +62,8 @@ export function courseValidationError(error: z.ZodError) {
     duration_weeks: "Duration in weeks", language: "Language", mentor_name: "Mentor name",
     mentor_company: "Mentor company", allows_partial: "Allow installments",
     min_first_payment: "Smallest first payment", sort_order: "Sort order",
+    is_flagship: "Flagship", offer_label: "Offer label", offer_price: "Offer price",
+    offer_ends_at: "Offer ends", show_countdown: "Show countdown", tools: "Tools",
     learning_outcomes: "What students will learn", target_audience: "Who this course is for",
     prerequisites: "Prerequisites", projects: "Projects students will build", mentor_bio: "Mentor biography",
   };

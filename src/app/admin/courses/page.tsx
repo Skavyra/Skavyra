@@ -19,11 +19,13 @@ const TABS: { value: string; label: string }[] = [
   { value: "", label: "All" },
   { value: "published", label: "Published" },
   { value: "draft", label: "Draft" },
+  { value: "flagship", label: "Flagship" },
 ];
 
 type Row = {
   id: string;
   title: string;
+  is_flagship: boolean;
   category: "it" | "non_it" | "both";
   duration_weeks: number | null;
   price: number;
@@ -31,12 +33,14 @@ type Row = {
   enrolled: number;
 };
 
-export default async function AdminCoursesPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
-  const { status } = await searchParams;
+export default async function AdminCoursesPage({ searchParams }: { searchParams: Promise<{ status?: string; flagship?: string }> }) {
+  const { status, flagship } = await searchParams;
+  const activeTab = flagship === "1" ? "flagship" : status ?? "";
   await requireRole("admin");
   const supabase = await createClient();
 
-  let query = supabase.from("courses").select("id, title, category, duration_weeks, price, status").order("sort_order");
+  let query = supabase.from("courses").select("id, title, is_flagship, category, duration_weeks, price, status").order("sort_order");
+  if (flagship === "1") query = query.eq("is_flagship", true);
   if (status === "published" || status === "draft") query = query.eq("status", status);
   const [{ data: courses }, { data: enrollments }] = await Promise.all([
     query,
@@ -49,7 +53,16 @@ export default async function AdminCoursesPage({ searchParams }: { searchParams:
   const rows: Row[] = (courses ?? []).map((c) => ({ ...c, price: Number(c.price), enrolled: counts.get(c.id) ?? 0 }));
 
   const columns: Column<Row>[] = [
-    { key: "title", header: "Course", cell: (r) => r.title },
+    {
+      key: "title",
+      header: "Course",
+      cell: (r) => (
+        <span className="inline-flex flex-wrap items-center gap-2">
+          {r.title}
+          {r.is_flagship && <Badge tone="gold">Flagship</Badge>}
+        </span>
+      ),
+    },
     { key: "category", header: "Stream", cell: (r) => CATEGORY_LABEL[r.category] },
     { key: "duration", header: "Duration", cell: (r) => (r.duration_weeks ? `${r.duration_weeks} weeks` : "—") },
     { key: "price", header: "Fee", cell: (r) => formatInr(r.price) },
@@ -73,10 +86,10 @@ export default async function AdminCoursesPage({ searchParams }: { searchParams:
         {TABS.map((t) => (
           <Link
             key={t.label}
-            href={t.value ? `/admin/courses?status=${t.value}` : "/admin/courses"}
+            href={t.value === "flagship" ? "/admin/courses?flagship=1" : t.value ? `/admin/courses?status=${t.value}` : "/admin/courses"}
             className={cn(
               "rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors",
-              (status ?? "") === t.value ? "border-ink bg-ink text-ivory" : "hover:border-gold-300",
+              activeTab === t.value ? "border-ink bg-ink text-ivory" : "hover:border-gold-300",
             )}
           >
             {t.label}

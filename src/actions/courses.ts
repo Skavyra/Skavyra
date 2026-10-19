@@ -51,9 +51,15 @@ export async function updateCourse(courseId: string, formData: FormData): Promis
   if (!(await adminOnly())) return { ok: false, error: "Only admins can edit courses." };
   const raw = formToObject(formData);
   const allowsPartial = raw.allows_partial === "on";
+  const isFlagship = raw.is_flagship === "on";
+  const showCountdown = raw.show_countdown === "on";
+  const tools = [...new Set((raw.tools ?? "").split(/\r?\n/).map((tool) => tool.trim()).filter(Boolean))];
   const parsed = courseSchema.safeParse({
     ...raw,
     allows_partial: allowsPartial,
+    is_flagship: isFlagship,
+    show_countdown: showCountdown,
+    tools,
     min_first_payment: allowsPartial ? raw.min_first_payment : null,
   });
   if (!parsed.success) return { ok: false, error: courseValidationError(parsed.error) };

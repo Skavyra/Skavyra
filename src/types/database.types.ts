@@ -292,6 +292,12 @@ export type Database = {
           mentor_avatar_url: string | null
           allows_partial: boolean
           min_first_payment: number | null
+          is_flagship: boolean
+          offer_label: string | null
+          offer_price: number | null
+          offer_ends_at: string | null
+          show_countdown: boolean
+          tools: string[]
           status: Database["public"]["Enums"]["course_status"]
           sort_order: number
           published_at: string | null
@@ -323,6 +329,12 @@ export type Database = {
           mentor_avatar_url?: string | null
           allows_partial?: boolean
           min_first_payment?: number | null
+          is_flagship?: boolean
+          offer_label?: string | null
+          offer_price?: number | null
+          offer_ends_at?: string | null
+          show_countdown?: boolean
+          tools?: string[]
           status?: Database["public"]["Enums"]["course_status"]
           sort_order?: number
           published_at?: string | null
@@ -354,6 +366,12 @@ export type Database = {
           mentor_avatar_url?: string | null
           allows_partial?: boolean
           min_first_payment?: number | null
+          is_flagship?: boolean
+          offer_label?: string | null
+          offer_price?: number | null
+          offer_ends_at?: string | null
+          show_countdown?: boolean
+          tools?: string[]
           status?: Database["public"]["Enums"]["course_status"]
           sort_order?: number
           published_at?: string | null
