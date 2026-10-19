@@ -6,9 +6,11 @@ import { useRef, useState, useTransition } from "react";
 
 import { requestEnrollment } from "@/actions/contact";
 import { Button } from "@/components/ui/button";
-import { formatInr } from "@/lib/utils";
+import { FLAGSHIP_STYLES } from "@/lib/flagship-styles";
+import { formatInr, getOfferPricing } from "@/lib/utils";
 
 import { Quarter } from "./Quarter";
+import { OfferCountdown } from "./OfferCountdown";
 
 type State = "guest" | "student" | "enrolled" | "staff";
 
@@ -18,13 +20,28 @@ export function EnrollCard({
   state,
   enrolledHref,
 }: {
-  course: { title: string; slug: string; price: number; mrp: number | null; cover_image_url: string | null; allows_partial: boolean; duration_weeks: number | null; language: string | null };
+  course: {
+    title: string;
+    slug: string;
+    price: number;
+    mrp: number | null;
+    cover_image_url: string | null;
+    allows_partial: boolean;
+    duration_weeks: number | null;
+    language: string | null;
+    is_flagship?: boolean;
+    offer_price?: number | null;
+    offer_label?: string | null;
+    offer_ends_at?: string | null;
+    show_countdown?: boolean;
+  };
   state: State;
   enrolledHref?: string;
 }) {
   const [pending, start] = useTransition();
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const requestStarted = useRef(false);
+  const pricing = getOfferPricing(course);
 
   return (
     <div data-course-enrollment className="flex flex-col gap-4 rounded-2xl border border-gold-500/30 bg-card p-5 shadow-[0_24px_55px_-38px_rgba(13,13,13,0.42)] ring-1 ring-ink/[0.03] transition-shadow duration-300 hover:shadow-[0_30px_65px_-38px_rgba(142,103,24,0.34)]">
@@ -37,12 +54,32 @@ export function EnrollCard({
           </div>
         )}
       </div>
-      <div className="flex items-baseline gap-3">
-        <span className="font-display text-3xl font-bold">{formatInr(course.price)}</span>
-        {course.mrp && course.mrp > course.price && (
-          <span className="text-sm text-muted-foreground line-through">{formatInr(course.mrp)}</span>
-        )}
-      </div>
+      {course.is_flagship ? (
+        <div className="flex flex-col gap-2">
+          {pricing.active && (
+            <div className="flex flex-wrap items-center gap-2">
+              {course.offer_label && <span className={FLAGSHIP_STYLES.offerPillLight}>{course.offer_label}</span>}
+              {course.show_countdown && course.offer_ends_at && <OfferCountdown endsAt={course.offer_ends_at} />}
+            </div>
+          )}
+          <div className="flex flex-wrap items-baseline gap-3">
+            <span className="font-display text-3xl font-bold">{formatInr(pricing.current)}</span>
+            {pricing.active && pricing.original !== null && (
+              <>
+                <span className="text-sm text-muted-foreground line-through">{formatInr(pricing.original)}</span>
+                <span className={FLAGSHIP_STYLES.saveLight}>Save {pricing.savings}%</span>
+              </>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-baseline gap-3">
+          <span className="font-display text-3xl font-bold">{formatInr(course.price)}</span>
+          {course.mrp && course.mrp > course.price && (
+            <span className="text-sm text-muted-foreground line-through">{formatInr(course.mrp)}</span>
+          )}
+        </div>
+      )}
 
       {state === "enrolled" && enrolledHref ? (
         <Button asChild variant="gold" size="lg">

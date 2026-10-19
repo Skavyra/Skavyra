@@ -84,12 +84,36 @@ export function percent(part: number, whole: number) {
   return Math.round((part / whole) * 100);
 }
 
-export function isOfferActive(c: { offer_label?: string | null; offer_ends_at?: string | null }) {
-  if (!c.offer_label?.trim()) return false;
+export function isOfferActive(c: {
+  price: number | string;
+  offer_price?: number | string | null;
+  offer_ends_at?: string | null;
+}) {
+  const price = Number(c.price);
+  if (c.offer_price == null) return false;
+  const offerPrice = Number(c.offer_price);
+  if (!Number.isFinite(price) || !Number.isFinite(offerPrice) || offerPrice >= price) return false;
   if (c.offer_ends_at == null) return true;
 
   const endTime = new Date(c.offer_ends_at).getTime();
   return Number.isFinite(endTime) && endTime > Date.now();
+}
+
+export function getOfferPricing(c: {
+  price: number | string;
+  offer_price?: number | string | null;
+  offer_ends_at?: string | null;
+}): { active: boolean; current: number; original: number | null; savings: number } {
+  const price = Number(c.price);
+  const active = isOfferActive(c);
+  const offerPrice = active ? Number(c.offer_price) : null;
+
+  return {
+    active,
+    current: offerPrice ?? price,
+    original: active ? price : null,
+    savings: active && price > 0 ? Math.round(((price - offerPrice!) / price) * 100) : 0,
+  };
 }
 
 export function savingsPercent(price: number, mrp: number | null) {

@@ -4,7 +4,7 @@ import { Check, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FLAGSHIP_STYLES } from "@/lib/flagship-styles";
 import { LEVEL_LABEL } from "@/lib/constants";
-import { formatInr, isOfferActive, savingsPercent } from "@/lib/utils";
+import { formatInr, getOfferPricing } from "@/lib/utils";
 import type { FlagshipCourse } from "@/types/flagship";
 
 import { OfferCountdown } from "./OfferCountdown";
@@ -15,10 +15,7 @@ export function FlagshipCard({ course }: { course: FlagshipCourse }) {
     .map((outcome) => outcome.trim())
     .filter(Boolean)
     .slice(0, 4);
-  const price = Number(course.price);
-  const mrp = course.mrp == null ? null : Number(course.mrp);
-  const hasSavings = mrp !== null && mrp > price;
-  const savings = hasSavings ? savingsPercent(price, mrp) : 0;
+  const pricing = getOfferPricing(course);
 
   return (
     <article id={course.slug} className={`${FLAGSHIP_STYLES.darkCard} scroll-mt-24`}>
@@ -62,31 +59,31 @@ export function FlagshipCard({ course }: { course: FlagshipCourse }) {
       )}
 
       <div className="mt-auto flex flex-col gap-3">
-        {isOfferActive(course) && (
+        {pricing.active && (
           <div className="flex flex-wrap items-center gap-2">
-            <span className={FLAGSHIP_STYLES.offerPillDark}>{course.offer_label}</span>
-            <OfferCountdown endsAt={course.offer_ends_at} />
+            {course.offer_label && <span className={FLAGSHIP_STYLES.offerPillDark}>{course.offer_label}</span>}
+            {course.show_countdown && course.offer_ends_at && <OfferCountdown endsAt={course.offer_ends_at} />}
           </div>
         )}
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <span className={FLAGSHIP_STYLES.priceDark}>{formatInr(course.price)}</span>
-          {hasSavings && (
+          <span className={FLAGSHIP_STYLES.priceDark}>{formatInr(pricing.current)}</span>
+          {pricing.active && pricing.original !== null && (
             <>
-              <span className={FLAGSHIP_STYLES.mrpStruckDark}>{formatInr(mrp)}</span>
-              <span className={FLAGSHIP_STYLES.saveDark}>Save {savings}%</span>
+              <span className={FLAGSHIP_STYLES.mrpStruckDark}>{formatInr(pricing.original)}</span>
+              <span className={FLAGSHIP_STYLES.saveDark}>Save {pricing.savings}%</span>
             </>
           )}
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button asChild variant="gold" className="w-full sm:flex-1">
-            <Link href="/contact">Enroll now</Link>
+            <Link href={`/courses/${course.slug}`}>Enroll now</Link>
           </Button>
           <Button
             asChild
             variant="outline"
             className="w-full border-ivory/30 text-ivory hover:bg-ivory/10 sm:flex-1"
           >
-            <Link href="/contact">Talk to us</Link>
+            <Link href={`/contact?course=${encodeURIComponent(course.title)}`}>Talk to us</Link>
           </Button>
         </div>
       </div>

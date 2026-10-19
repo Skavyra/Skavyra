@@ -7,24 +7,29 @@ import { Hero } from "@/components/marketing/Hero";
 import { HowItWorks } from "@/components/marketing/HowItWorks";
 import { Testimonials } from "@/components/marketing/Testimonials";
 import { WhySkavyra } from "@/components/marketing/WhySkavyra";
+import { getFlagshipCourses } from "@/lib/flagship";
 import { createClient } from "@/lib/supabase/server";
 
 export const revalidate = 300;
 
 export default async function HomePage() {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("courses")
-    .select("id, slug, title, subtitle, category, level, cover_image_url, price, mrp, duration_weeks")
-    .eq("status", "published")
-    .order("sort_order", { ascending: true })
-    .limit(12);
+  const [{ data }, flagship] = await Promise.all([
+    supabase
+      .from("courses")
+      .select("id, slug, title, subtitle, category, level, cover_image_url, price, mrp, duration_weeks")
+      .eq("status", "published")
+      .eq("is_flagship", false)
+      .order("sort_order", { ascending: true })
+      .limit(12),
+    getFlagshipCourses(),
+  ]);
   const courses = data ?? [];
 
   return (
     <>
       <Hero courses={courses} />
-      <FlagshipStrip />
+      <FlagshipStrip courses={flagship} />
       <CategoryGrid />
       <CourseGrid courses={courses} />
       <WhySkavyra />

@@ -1,20 +1,23 @@
 import type { Metadata } from "next";
 import { Check } from "lucide-react";
+import Link from "next/link";
 
 import { ContactCta } from "@/components/marketing/ContactCta";
 import { FlagshipCard } from "@/components/marketing/FlagshipCard";
-import { FLAGSHIP_COURSES } from "@/lib/flagship-mock"; // TODO: replace with Supabase query in backend phase
+import { Button } from "@/components/ui/button";
+import { getFlagshipCourses } from "@/lib/flagship";
 import { FLAGSHIP_STYLES } from "@/lib/flagship-styles";
 
 export const metadata: Metadata = {
   title: "Flagship Programs",
   description: "Skavyra's premium programs in AI practice, AI product management and business growth.",
 };
+export const revalidate = 300;
 
 const TRUST_POINTS = ["Live mentor sessions", "Real projects", "Certificate on completion"];
 
-export default function FlagshipPage() {
-  const courses = [...FLAGSHIP_COURSES].sort((a, b) => a.sort_order - b.sort_order);
+export default async function FlagshipPage() {
+  const courses = await getFlagshipCourses();
 
   return (
     <>
@@ -37,11 +40,20 @@ export default function FlagshipPage() {
       </section>
 
       <section className={`${FLAGSHIP_STYLES.darkSection} pb-fluid-lg`} aria-label="Flagship programs">
-        <div className="container grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {courses.map((course) => (
-            <FlagshipCard key={course.id} course={course} />
-          ))}
-        </div>
+        {courses.length > 0 ? (
+          <div className="container grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {courses.map((course) => (
+              <FlagshipCard key={course.id} course={course} />
+            ))}
+          </div>
+        ) : (
+          <div className="container text-center">
+            <p className="text-ivory/70">Our flagship programs are launching soon.</p>
+            <Button asChild variant="gold" className="mt-5">
+              <Link href="/contact">Get notified</Link>
+            </Button>
+          </div>
+        )}
       </section>
 
       <ContactCta />

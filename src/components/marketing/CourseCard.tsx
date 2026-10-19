@@ -5,7 +5,7 @@ import { Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CATEGORY_LABEL, LEVEL_LABEL } from "@/lib/constants";
 import { FLAGSHIP_STYLES } from "@/lib/flagship-styles";
-import { cn, formatInr, isOfferActive, savingsPercent } from "@/lib/utils";
+import { cn, formatInr, getOfferPricing } from "@/lib/utils";
 import type { Course } from "@/types";
 
 import { Quarter } from "./Quarter";
@@ -19,11 +19,13 @@ export type CourseCardData = CourseCardDataBase & {
   is_flagship?: boolean;
   offer_label?: string | null;
   offer_ends_at?: string | null;
+  offer_price?: number | null;
+  show_countdown?: boolean;
 };
 
 export function CourseCard({ course, href }: { course: CourseCardData; href?: string }) {
   const isFlagship = course.is_flagship === true;
-  const savings = savingsPercent(Number(course.price), course.mrp == null ? null : Number(course.mrp));
+  const pricing = getOfferPricing(course);
 
   return (
     <Link
@@ -66,16 +68,27 @@ export function CourseCard({ course, href }: { course: CourseCardData; href?: st
         <div className="mt-auto flex items-end justify-between gap-3 pt-2">
           <span className="text-xs text-muted-foreground">{course.duration_weeks ? `${course.duration_weeks} weeks` : "Self paced"}</span>
           <span className="text-right">
-            {isFlagship && isOfferActive(course) && (
+            {isFlagship && pricing.active && course.offer_label && (
               <span className="mb-1 flex justify-end">
                 <span className={FLAGSHIP_STYLES.offerPillLight}>{course.offer_label}</span>
               </span>
             )}
-            {course.mrp && Number(course.mrp) > Number(course.price) && (
-              <span className="mr-2 text-xs text-muted-foreground line-through">{formatInr(course.mrp)}</span>
+            {isFlagship ? (
+              <>
+                {pricing.active && pricing.original !== null && (
+                  <span className="mr-2 text-xs text-muted-foreground line-through">{formatInr(pricing.original)}</span>
+                )}
+                <span className="font-bold">{formatInr(pricing.current)}</span>
+                {pricing.active && <span className={cn("ml-2", FLAGSHIP_STYLES.saveLight)}>Save {pricing.savings}%</span>}
+              </>
+            ) : (
+              <>
+                {course.mrp && Number(course.mrp) > Number(course.price) && (
+                  <span className="mr-2 text-xs text-muted-foreground line-through">{formatInr(course.mrp)}</span>
+                )}
+                <span className="font-bold">{formatInr(course.price)}</span>
+              </>
             )}
-            <span className="font-bold">{formatInr(course.price)}</span>
-            {isFlagship && savings > 0 && <span className={cn("ml-2", FLAGSHIP_STYLES.saveLight)}>Save {savings}%</span>}
           </span>
         </div>
       </div>

@@ -20,6 +20,9 @@ export type FlagshipCourse = Pick<
 > & {
   is_flagship: boolean;
   offer_label: string | null;
+  offer_price: number | null;
   offer_ends_at: string | null;
+  show_countdown: boolean;
   tools: string[];
+  language: string | null;
 };

@@ -1,4 +1,4 @@
-import { ChevronRight, FileText, Lock, PlayCircle, Video } from "lucide-react";
+import { ChevronRight, FileText, Lock, PlayCircle, Star, Video } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -14,6 +14,8 @@ import { CourseContentSection, CourseContentList, courseContentLines } from "@/c
 import { getUser } from "@/lib/auth/get-user";
 import { CATEGORY_LABEL, LEVEL_LABEL } from "@/lib/constants";
 import { FAQS } from "@/lib/content";
+import { visibleStatuses } from "@/lib/flagship";
+import { FLAGSHIP_STYLES } from "@/lib/flagship-styles";
 import { createClient } from "@/lib/supabase/server";
 import { initials } from "@/lib/utils";
 import type { LessonType } from "@/types";
@@ -23,7 +25,7 @@ type Props = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const supabase = await createClient();
-  const { data } = await supabase.from("courses").select("title, subtitle").eq("slug", slug).eq("status", "published").maybeSingle();
+  const { data } = await supabase.from("courses").select("title, subtitle").eq("slug", slug).in("status", visibleStatuses()).maybeSingle();
   return data ? { title: data.title, description: data.subtitle ?? undefined } : { title: "Course" };
 }
 
@@ -33,7 +35,7 @@ export default async function CourseDetailPage({ params }: Props) {
   const { slug } = await params;
   const supabase = await createClient();
 
-  const { data: course } = await supabase.from("courses").select("*").eq("slug", slug).eq("status", "published").maybeSingle();
+  const { data: course } = await supabase.from("courses").select("*").eq("slug", slug).in("status", visibleStatuses()).maybeSingle();
   if (!course) notFound();
 
   const { data: outline } = await supabase
@@ -79,6 +81,7 @@ export default async function CourseDetailPage({ params }: Props) {
     ...(prerequisites.length ? [{ id: "prerequisites", label: "Prerequisites" }] : []),
     ...(modules.length ? [{ id: "curriculum", label: "Curriculum" }] : []),
     ...(projects.length ? [{ id: "projects", label: "Projects" }] : []),
+    ...(course.tools?.length ? [{ id: "tools", label: "Tools you'll use" }] : []),
     ...(course.mentor_name?.trim() || course.mentor_bio?.trim() ? [{ id: "mentor", label: "Mentor" }] : []),
     ...(FAQS.length ? [{ id: "faq", label: "FAQ" }] : []),
   ];
@@ -97,6 +100,12 @@ export default async function CourseDetailPage({ params }: Props) {
         <div className="mt-6 grid gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:grid-rows-[auto_1fr] lg:items-start lg:gap-y-10">
           <div data-course-summary className="min-w-0 rounded-3xl border border-ink/10 theme-ink bg-[radial-gradient(ellipse_at_top_right,rgba(242,199,92,0.16),transparent_60%)] bg-background text-foreground p-6 sm:p-10 lg:col-start-1 lg:row-start-1">
             <div data-course-badges className="flex flex-wrap gap-2">
+              {course.is_flagship && (
+                <span className={FLAGSHIP_STYLES.flagshipBadge}>
+                  <Star aria-hidden="true" className="size-3 fill-current" />
+                  Flagship
+                </span>
+              )}
               <Badge tone="gold">{CATEGORY_LABEL[course.category]}</Badge>
               <Badge tone="muted">{LEVEL_LABEL[course.level]}</Badge>
             </div>
@@ -153,6 +162,11 @@ export default async function CourseDetailPage({ params }: Props) {
                 allows_partial: course.allows_partial,
                 duration_weeks: course.duration_weeks,
                 language: course.language,
+                is_flagship: course.is_flagship,
+                offer_price: course.offer_price === null ? null : Number(course.offer_price),
+                offer_label: course.offer_label,
+                offer_ends_at: course.offer_ends_at,
+                show_countdown: course.show_countdown,
               }}
               state={state}
               enrolledHref={enrolledHref}
@@ -213,6 +227,9 @@ export default async function CourseDetailPage({ params }: Props) {
               </CourseContentSection>}
               {projects.length > 0 && <CourseContentSection id="projects" eyebrow="Put it into practice" title="What you'll build">
                 <ol className="grid gap-4 sm:grid-cols-2">{projects.map((project, index) => <li key={index} className="rounded-2xl border border-gold-500/25 bg-gold-100/10 p-5"><span className="font-display text-3xl text-gold-700">{String(index + 1).padStart(2, "0")}</span><p className="mt-3 break-words text-sm leading-relaxed">{project}</p></li>)}</ol>
+              </CourseContentSection>}
+              {!!course.tools?.length && <CourseContentSection id="tools" eyebrow="Tools" title="Tools you'll use">
+                <ul className="flex flex-wrap gap-2">{course.tools.map((tool) => <li key={tool} className="rounded-full border border-ink/10 bg-card px-3 py-1 text-sm">{tool}</li>)}</ul>
               </CourseContentSection>}
               {(course.mentor_name?.trim() || course.mentor_bio?.trim()) && <CourseContentSection id="mentor" eyebrow="Meet your guide" title="Your course mentor">
                 {course.mentor_name?.trim() && <div className="flex items-center gap-4">
