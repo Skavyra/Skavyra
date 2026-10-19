@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Check } from "lucide-react";
 
 import { Logo, Mark, TaglineRule } from "@/components/brand/logo";
 
@@ -7,23 +8,36 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="grid min-h-dvh lg:grid-cols-2">
       <aside className="theme-ink relative hidden flex-col justify-between overflow-hidden bg-background p-10 text-foreground lg:flex">
+        <div aria-hidden="true" className="pointer-events-none absolute -left-24 top-1/4 size-[26rem] rounded-full bg-gold-300/10 blur-3xl" />
         <Logo />
-        <div className="relative z-10">
+        <div className="relative z-10 my-auto">
           <h2 className="max-w-md text-fluid-3xl">Your learning partner in the digital era</h2>
           <p className="mt-4 max-w-sm text-ivory/70">
             Courses for IT and non-IT graduates, taught by mentors who work in the field.
           </p>
+          <ul className="mt-8 flex flex-col gap-3 text-sm text-ivory/80">
+            {[
+              "Learn from mentors who work in the field",
+              "Build real projects for your portfolio",
+              "Earn a certificate on completion",
+            ].map((point) => (
+              <li key={point} className="flex items-center gap-3">
+                <span className="grid size-6 shrink-0 place-items-center rounded-full bg-ivory/10">
+                  <Check aria-hidden="true" className="size-4 text-gold-300" />
+                </span>
+                {point}
+              </li>
+            ))}
+          </ul>
           <TaglineRule className="mt-8 text-gold-300" />
         </div>
         <Mark className="pointer-events-none absolute -bottom-24 -right-24 w-[34rem] opacity-20" seam="#0D0D0D" />
       </aside>
 
-      <main className="relative flex flex-col justify-center overflow-hidden bg-[radial-gradient(ellipse_at_85%_12%,rgba(242,199,92,0.13),transparent_34%),#FBF9F4] px-6 py-12 sm:px-12">
+      <main className="relative flex flex-col justify-start overflow-hidden bg-[radial-gradient(ellipse_at_85%_12%,rgba(242,199,92,0.13),transparent_34%),#FBF9F4] px-6 py-12 sm:px-12 lg:justify-center">
+        <div className="theme-ink -mx-6 -mt-12 mb-8 bg-ink px-6 py-5 sm:-mx-12 sm:px-12 lg:hidden"><Logo /></div>
         <div className="mx-auto w-full max-w-sm rounded-3xl border border-ink/10 bg-card/85 p-6 shadow-[0_28px_80px_-50px_rgba(13,13,13,0.35)] backdrop-blur-sm sm:p-8">
-          <div className="lg:hidden">
-            <Logo seam="#FBF9F4" />
-          </div>
-          <div className="mt-8 lg:mt-0">{children}</div>
+          <div>{children}</div>
           <p className="mt-8 text-xs leading-relaxed text-muted-foreground">
             By continuing you agree to our{" "}
             <Link href="/terms" className="underline hover:text-foreground">
