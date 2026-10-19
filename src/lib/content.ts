@@ -91,6 +91,7 @@ export const FAQS = [
 
 export const ABOUT = {
   title: "Skavyra helps graduates turn a degree into a first job.",
+  mission: "Every graduate deserves a fair shot at a first job. We teach the skills employers actually ask for.",
   paragraphs: [
     "Many graduates finish college with a degree but without the practical skills employers ask for. Skavyra closes that gap with focused courses for both IT and non-IT graduates.",
     "Every course follows the same method: learn from a mentor who works in the field, build projects that prove what you can do, and get support until you land the role.",
