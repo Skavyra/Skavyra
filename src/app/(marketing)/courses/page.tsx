@@ -85,7 +85,10 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
     if (dur) query = query.gte("duration_weeks", dur.min).lte("duration_weeks", dur.max);
 
     const [{ data, count }, flagshipData] = await Promise.all([
-      query.order("sort_order", { ascending: true }).range((page - 1) * PER_PAGE, page * PER_PAGE - 1),
+      query
+        .order("is_flagship", { ascending: false })
+        .order("sort_order", { ascending: true })
+        .range((page - 1) * PER_PAGE, page * PER_PAGE - 1),
       flagshipPromise,
     ]);
     flagship = flagshipData;
