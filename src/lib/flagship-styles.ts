@@ -1,5 +1,6 @@
 // Flagship look = dark ink + gold. Normal courses stay light (paper). Reuse these classes, don't hardcode new ones.
 export const FLAGSHIP_STYLES = {
+  stripSection: "isolate",
   darkSection: "theme-ink bg-ink text-ivory",
   heroTitle: "font-display text-4xl font-bold leading-tight text-ivory sm:text-5xl",
   heroSubtitle: "text-base text-ivory/70 sm:text-lg",
