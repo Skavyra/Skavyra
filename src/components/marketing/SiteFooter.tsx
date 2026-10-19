@@ -4,10 +4,11 @@ import { useLayoutEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Link from "next/link";
+import { Instagram, MapPin, Phone } from "lucide-react";
 
 import { Logo, TaglineRule } from "@/components/brand/logo";
-import { SUPPORT_EMAIL } from "@/lib/content";
 import { WhatsAppIcon } from "@/components/marketing/WhatsAppIcon";
+import { CONTACT } from "@/lib/contact-info";
 import { whatsappLink, WHATSAPP_DEFAULT_MESSAGE } from "@/lib/whatsapp";
 
 const COLUMNS = [
@@ -70,14 +71,35 @@ export function SiteFooter() {
         <div className="flex flex-col gap-4">
           <Logo className="transition-transform duration-200 motion-safe:hover:scale-[1.02]" />
           <TaglineRule className="text-gold-300" />
-          <a href={`mailto:${SUPPORT_EMAIL}`} className="group relative w-fit text-sm text-muted-foreground transition-colors hover:text-gold-100 after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-center after:scale-x-0 after:bg-gold-300 after:transition-transform hover:after:scale-x-100">
-            {SUPPORT_EMAIL}
-          </a>
+          {CONTACT.email && (
+            <a href={`mailto:${CONTACT.email}`} className="group relative w-fit text-sm text-muted-foreground transition-colors hover:text-gold-100 after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-center after:scale-x-0 after:bg-gold-300 after:transition-transform hover:after:scale-x-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
+              {CONTACT.email}
+            </a>
+          )}
+          {CONTACT.phone && CONTACT.phoneHref && (
+            <a href={CONTACT.phoneHref} className="group relative flex w-fit items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-gold-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
+              <Phone aria-hidden="true" className="size-4" />
+              {CONTACT.phone}
+            </a>
+          )}
           {whatsappHref && (
             <a href={whatsappHref} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp us" className="group relative flex w-fit items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-gold-100 after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-center after:scale-x-0 after:bg-gold-300 after:transition-transform hover:after:scale-x-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
               <WhatsAppIcon className="size-4" />
               WhatsApp us
             </a>
+          )}
+          {CONTACT.instagramUrl && (
+            <div className="flex items-center gap-2">
+              <a href={CONTACT.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Skavyra on Instagram" className="grid size-9 place-items-center rounded-full border border-white/10 text-muted-foreground transition-colors hover:text-gold-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
+                <Instagram aria-hidden="true" className="size-4" />
+              </a>
+            </div>
+          )}
+          {CONTACT.address && (
+            <p className="flex items-start gap-2 text-sm text-muted-foreground">
+              <MapPin aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+              <span>{CONTACT.address}</span>
+            </p>
           )}
         </div>
         {COLUMNS.map((col) => (

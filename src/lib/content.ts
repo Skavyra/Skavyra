@@ -4,6 +4,7 @@
  * no rankings, no placement percentages, no invented student numbers.
  */
 import type { CourseCategory } from "@/types";
+import { CONTACT } from "@/lib/contact-info";
 
 export const HERO = {
   badge: "Courses for IT and non-IT graduates",
@@ -96,4 +97,4 @@ export const ABOUT = {
   ],
 };
 
-export const SUPPORT_EMAIL = "support@skavyra.com";
+export const SUPPORT_EMAIL = CONTACT.email;

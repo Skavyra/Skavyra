@@ -1,11 +1,10 @@
-import { Mail, Phone } from "lucide-react";
+import { Instagram, Mail, MapPin, Phone } from "lucide-react";
 import type { Metadata } from "next";
 
 import { ContactForm } from "@/components/marketing/ContactForm";
 import { WhatsAppIcon } from "@/components/marketing/WhatsAppIcon";
-import { SUPPORT_EMAIL } from "@/lib/content";
+import { CONTACT } from "@/lib/contact-info";
 import { WHATSAPP_DEFAULT_MESSAGE, whatsappLink } from "@/lib/whatsapp";
-import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -25,14 +24,12 @@ export default async function ContactPage({
       ? `Hi Skavyra, I'd like details about ${course}`
       : WHATSAPP_DEFAULT_MESSAGE;
   const whatsappHref = whatsappLink(whatsappMessage);
-
-  // support numbers come from app_settings; readable by staff only, so fall back quietly
-  const supabase = await createClient();
-  const { data: setting } = await supabase.from("app_settings").select("value").eq("key", "company").maybeSingle();
-  const company = (setting?.value ?? {}) as { support_email?: string; support_phone?: string };
+  const instagramHandle = CONTACT.instagramUrl
+    ? new URL(CONTACT.instagramUrl).pathname.split("/").filter(Boolean).at(-1)
+    : null;
 
   return (
-    <div className="container section grid gap-12 pb-24 md:pb-0 lg:grid-cols-[1fr_1.1fr]">
+    <div className="container section grid gap-12 pb-20 sm:pb-28 lg:grid-cols-[1fr_1.1fr]">
       <div className="max-w-xl">
         <h1 className="text-fluid-3xl">{isCollege ? "Bring Skavyra to your college" : "Talk to a counsellor"}</h1>
         <p className="mt-4 text-fluid-base text-muted-foreground">
@@ -43,7 +40,7 @@ export default async function ContactPage({
         {whatsappHref && (
           <div className="mt-6 rounded-2xl border border-[#25D366]/40 bg-[#25D366]/5 p-5">
             <div className="flex items-center gap-3">
-              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#25D366] text-white">
+              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#128C7E] text-white">
                 <WhatsAppIcon className="size-5" />
               </span>
               <h2 className="text-lg font-semibold">Chat on WhatsApp</h2>
@@ -56,25 +53,45 @@ export default async function ContactPage({
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Start a WhatsApp chat with Skavyra"
-              className="mt-4 inline-flex min-h-10 items-center justify-center rounded-lg bg-[#25D366] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#25D366]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300 focus-visible:ring-offset-2"
+              className="mt-4 inline-flex min-h-10 items-center justify-center rounded-lg bg-[#128C7E] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0F7A6E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300 focus-visible:ring-offset-2"
             >
               Start chat
             </a>
           </div>
         )}
-        <ul className="mt-8 flex flex-col gap-3 text-sm">
-          <li className="flex items-center gap-3">
-            <Mail className="size-4 text-gold-700" />
-            <a href={`mailto:${company.support_email ?? SUPPORT_EMAIL}`} className="hover:underline">
-              {company.support_email ?? SUPPORT_EMAIL}
-            </a>
-          </li>
-          {company.support_phone && (
+        <ul className="mt-8 flex flex-col gap-4 text-sm">
+          {CONTACT.email && (
             <li className="flex items-center gap-3">
-              <Phone className="size-4 text-gold-700" />
-              <a href={`tel:${company.support_phone.replace(/\s/g, "")}`} className="hover:underline">
-                {company.support_phone}
+              <span className="grid size-8 shrink-0 place-items-center rounded-full bg-gold-100/30">
+                <Mail aria-hidden="true" className="size-4 text-gold-700" />
+              </span>
+              <a href={`mailto:${CONTACT.email}`} className="hover:underline">{CONTACT.email}</a>
+            </li>
+          )}
+          {CONTACT.phone && CONTACT.phoneHref && (
+            <li className="flex items-center gap-3">
+              <span className="grid size-8 shrink-0 place-items-center rounded-full bg-gold-100/30">
+                <Phone aria-hidden="true" className="size-4 text-gold-700" />
+              </span>
+              <a href={CONTACT.phoneHref} className="hover:underline">{CONTACT.phone}</a>
+            </li>
+          )}
+          {CONTACT.instagramUrl && instagramHandle && (
+            <li className="flex items-center gap-3">
+              <span className="grid size-8 shrink-0 place-items-center rounded-full bg-gold-100/30">
+                <Instagram aria-hidden="true" className="size-4 text-gold-700" />
+              </span>
+              <a href={CONTACT.instagramUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                @{instagramHandle}
               </a>
+            </li>
+          )}
+          {CONTACT.address && (
+            <li className="flex items-center gap-3">
+              <span className="grid size-8 shrink-0 place-items-center rounded-full bg-gold-100/30">
+                <MapPin aria-hidden="true" className="size-4 text-gold-700" />
+              </span>
+              <span>{CONTACT.address}</span>
             </li>
           )}
         </ul>
