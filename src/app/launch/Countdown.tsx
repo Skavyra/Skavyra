@@ -48,20 +48,36 @@ export function Countdown({ target }: CountdownProps) {
     return () => clearInterval(interval);
   }, [end]);
 
+  const live = left === 0;
+  const header = (
+    <>
+      <p className="mt-10 rounded-full border border-gold-300/50 bg-gold-300/15 px-4 py-1 text-xs font-bold uppercase tracking-widest text-gold-100">
+        {live ? "Now live" : "Launching today"}
+      </p>
+      <h1 className="mt-6 font-display text-fluid-3xl font-bold sm:text-6xl">
+        {live ? "Skavyra Technologies is live" : "Skavyra Technologies is launching"}
+      </h1>
+      <p className="mt-4 max-w-md text-ivory/70">Your learning partner in the digital era.</p>
+    </>
+  );
+
   if (left === 0) {
     return (
-      <div className="mt-10 flex flex-col items-center">
-        <Confetti />
-        <h2 className="font-display text-4xl text-gold-100 sm:text-6xl">We are live</h2>
-        <Link href="/" className="mt-8 inline-flex items-center rounded-full bg-gold-300 px-8 py-4 font-semibold text-ink hover:bg-gold-100">
-          Explore Skavyra
-        </Link>
-      </div>
+      <>
+        {header}
+        <div className="mt-10 flex flex-col items-center">
+          <Confetti />
+          <Link href="/" className="inline-flex items-center rounded-full bg-gold-300 px-8 py-4 font-semibold text-ink hover:bg-gold-100">
+            Explore Skavyra
+          </Link>
+        </div>
+      </>
     );
   }
 
   return (
     <>
+      {header}
       <style>{`@keyframes launchflip{from{transform:rotateX(90deg);opacity:0}to{transform:rotateX(0);opacity:1}}`}</style>
       <div className="mt-10 grid w-full max-w-2xl grid-cols-4 gap-2 sm:gap-4">
         {UNITS.map(({ label, duration }) => {

@@ -13,13 +13,6 @@ export default function LaunchPage() {
         <div className="text-ivory">
           <Logo />
         </div>
-        <p className="mt-10 rounded-full border border-gold-300/50 bg-gold-300/15 px-4 py-1 text-xs font-bold uppercase tracking-widest text-gold-100">
-          Launching today
-        </p>
-        <h1 className="mt-6 font-display text-fluid-3xl font-bold sm:text-6xl">
-          Skavyra Technologies is launching
-        </h1>
-        <p className="mt-4 max-w-md text-ivory/70">Your learning partner in the digital era.</p>
         <Countdown target="2026-10-20T17:59:00+05:30" />
         <TaglineRule className="mt-10 text-gold-300" />
       </div>
