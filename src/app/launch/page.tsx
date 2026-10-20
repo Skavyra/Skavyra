@@ -13,7 +13,7 @@ export default function LaunchPage() {
         <div className="text-ivory">
           <Logo />
         </div>
-        <Countdown target="2026-10-20T17:50:00+05:30" />
+        <Countdown target="2026-10-20T17:52:00+05:30" />
         <TaglineRule className="mt-10 text-gold-300" />
       </div>
     </main>
