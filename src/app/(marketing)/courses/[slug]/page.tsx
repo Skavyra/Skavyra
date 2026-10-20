@@ -117,7 +117,7 @@ export default async function CourseDetailPage({ params }: Props) {
                   Flagship
                 </span>
               )}
-              <Badge tone="gold">{CATEGORY_LABEL[course.category]}</Badge>
+              <Badge tone="gold" className="border-gold-300/50 bg-gold-300/15 text-gold-100">{CATEGORY_LABEL[course.category]}</Badge>
               <Badge tone="muted">{LEVEL_LABEL[course.level]}</Badge>
             </div>
             <h1 data-course-title className="mt-4 break-words text-fluid-3xl">{course.title}</h1>

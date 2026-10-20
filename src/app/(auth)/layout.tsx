@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Check } from "lucide-react";
 
 import { Logo, Mark, TaglineRule } from "@/components/brand/logo";
@@ -35,20 +34,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </aside>
 
       <main className="relative flex flex-col justify-start overflow-hidden bg-[radial-gradient(ellipse_at_85%_12%,rgba(242,199,92,0.13),transparent_34%),#FBF9F4] px-6 py-12 sm:px-12 lg:justify-center">
-        <div className="theme-ink -mx-6 -mt-12 mb-8 bg-ink px-6 py-5 sm:-mx-12 sm:px-12 lg:hidden"><Logo /></div>
+        <div className="theme-ink -mx-6 -mt-12 mb-8 bg-ink px-6 py-5 text-ivory sm:-mx-12 sm:px-12 lg:hidden"><Logo /></div>
         <div className="mx-auto w-full max-w-sm rounded-3xl border border-ink/10 bg-card/85 p-6 shadow-[0_28px_80px_-50px_rgba(13,13,13,0.35)] backdrop-blur-sm sm:p-8">
           <div>{children}</div>
-          <p className="mt-8 text-xs leading-relaxed text-muted-foreground">
-            By continuing you agree to our{" "}
-            <Link href="/terms" className="underline hover:text-foreground">
-              terms
-            </Link>{" "}
-            and{" "}
-            <Link href="/privacy" className="underline hover:text-foreground">
-              privacy policy
-            </Link>
-            .
-          </p>
         </div>
       </main>
     </div>

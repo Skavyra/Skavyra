@@ -10,6 +10,8 @@ import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
 
+const GOOGLE_LOGIN_ENABLED = process.env.NEXT_PUBLIC_GOOGLE_LOGIN === "on";
+
 const NOTICES: Record<string, string> = {
   inactive: "This account has been switched off. Contact Skavyra if you think that is a mistake.",
   callback: "That sign-in link did not work. Request a new one.",
@@ -62,11 +64,15 @@ export function LoginForm({ next, notice }: { next?: string; notice?: string }) 
         <p className="mt-2 text-sm text-muted-foreground">Welcome back. Pick up where you left off.</p>
       </div>
 
-      <GoogleButton next={next} label="Continue with Google" />
+      {GOOGLE_LOGIN_ENABLED && (
+        <>
+          <GoogleButton next={next} label="Continue with Google" />
 
-      <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-        <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
-      </div>
+          <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
+          </div>
+        </>
+      )}
 
       <form action={onSubmit} className="flex flex-col gap-4">
         <Field label="Email" htmlFor="email">
@@ -99,6 +105,8 @@ export function LoginForm({ next, notice }: { next?: string; notice?: string }) 
           </Link>
         </p>
       </div>
+
+      <p className="text-xs leading-relaxed text-muted-foreground">By continuing you agree to our <Link href="/terms" className="underline hover:text-foreground">terms</Link> and <Link href="/privacy" className="underline hover:text-foreground">privacy policy</Link>.</p>
     </div>
   );
 }

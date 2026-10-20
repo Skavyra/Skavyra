@@ -146,8 +146,8 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
           </div>
         </div>
 
-        <div className="mt-fluid-sm grid gap-6 lg:grid-cols-[240px_1fr] lg:gap-8">
-          <aside data-courses-filters aria-label="Filters" className="flex flex-col gap-3 lg:sticky lg:top-24 lg:self-start lg:gap-6 lg:rounded-2xl lg:border lg:border-ink/10 lg:bg-card lg:p-5 lg:shadow-[0_16px_40px_-34px_rgba(13,13,13,0.4)]">
+        <div className="mt-fluid-sm grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-8">
+          <aside data-courses-filters aria-label="Filters" className="min-w-0 flex flex-col gap-3 lg:sticky lg:top-24 lg:self-start lg:gap-6 lg:rounded-2xl lg:border lg:border-ink/10 lg:bg-card lg:p-5 lg:shadow-[0_16px_40px_-34px_rgba(13,13,13,0.4)]">
             {groups.map((g) => (
               <div key={g.key} className="flex items-center gap-3 lg:block">
                 <h2 className="w-16 shrink-0 text-xs font-bold uppercase tracking-widest text-ink/60 lg:w-auto">{g.title}</h2>
@@ -176,7 +176,7 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
             ))}
           </aside>
 
-          <div className="flex flex-col gap-8">
+          <div className="min-w-0 flex flex-col gap-8">
             {hasActiveFilter && (
               <div className="flex flex-wrap items-center gap-2 text-sm">
                 {activeFilters.map(({ key, label }) => (

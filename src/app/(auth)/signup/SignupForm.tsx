@@ -13,6 +13,8 @@ import { createClient } from "@/lib/supabase/client";
 import { normalizePhone } from "@/lib/utils";
 import { safeNextPath } from "@/lib/auth/redirect";
 
+const GOOGLE_LOGIN_ENABLED = process.env.NEXT_PUBLIC_GOOGLE_LOGIN === "on";
+
 /**
  * Signs up with email and password. The handle_new_user trigger creates the
  * profile from this metadata and gives the student role.
@@ -102,11 +104,15 @@ export function SignupForm({ next }: { next?: string }) {
         <p className="mt-2 text-sm text-muted-foreground">One account for your courses, payments and certificates.</p>
       </div>
 
-      <GoogleButton next={next} label="Sign up with Google" />
+      {GOOGLE_LOGIN_ENABLED && (
+        <>
+          <GoogleButton next={next} label="Sign up with Google" />
 
-      <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-        <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
-      </div>
+          <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
+          </div>
+        </>
+      )}
 
       <form action={onSubmit} className="flex flex-col gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
