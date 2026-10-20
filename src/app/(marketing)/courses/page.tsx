@@ -150,7 +150,7 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
           <aside data-courses-filters aria-label="Filters" className="min-w-0 flex flex-col gap-3 lg:sticky lg:top-24 lg:self-start lg:gap-6 lg:rounded-2xl lg:border lg:border-ink/10 lg:bg-card lg:p-5 lg:shadow-[0_16px_40px_-34px_rgba(13,13,13,0.4)]">
             {groups.map((g) => (
               <div key={g.key} className="flex items-center gap-3 lg:block">
-                <h2 className="w-16 shrink-0 text-xs font-bold uppercase tracking-widest text-ink/60 lg:w-auto">{g.title}</h2>
+                <h2 className="w-[5.75rem] shrink-0 text-xs font-bold uppercase tracking-widest text-ink/60 lg:w-auto">{g.title}</h2>
                 <ul className="hide-scrollbar mt-0 flex min-w-0 gap-2 overflow-x-auto lg:mt-3 lg:flex-col lg:gap-1">
                   {g.options.map((o) => {
                     const active = params[g.key] === o.value;
