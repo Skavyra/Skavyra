@@ -8,12 +8,14 @@ import { isMarketingNavLinkActive, type MarketingNavLink } from "@/lib/marketing
 export function DesktopNav({ links }: { links: MarketingNavLink[] }) {
   const pathname = usePathname();
   const [hash, setHash] = useState("");
-  const [pendingLocation, setPendingLocation] = useState<{ pathname: string; hash: string } | null>(null);
+  const [search, setSearch] = useState("");
+  const [pendingLocation, setPendingLocation] = useState<{ pathname: string; hash: string; search: string } | null>(null);
 
   useEffect(() => {
     const syncLocation = () => {
       const nextHash = window.location.hash;
       setHash(nextHash);
+      setSearch(window.location.search);
       setPendingLocation(null);
     };
     syncLocation();
@@ -86,7 +88,8 @@ export function DesktopNav({ links }: { links: MarketingNavLink[] }) {
       {links.map((link) => {
         const activePathname = pendingLocation?.pathname ?? pathname;
         const activeHash = pendingLocation?.hash ?? hash;
-        const active = isMarketingNavLinkActive(link, links, activePathname, activeHash);
+        const activeSearch = pendingLocation?.search ?? search;
+        const active = isMarketingNavLinkActive(link, links, activePathname, activeHash, activeSearch);
 
         return (
           <Link
@@ -95,9 +98,9 @@ export function DesktopNav({ links }: { links: MarketingNavLink[] }) {
             onClick={(event) => {
               if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
               const destination = new URL(link.href, window.location.href);
-              const nextLocation = { pathname: destination.pathname, hash: destination.hash };
+              const nextLocation = { pathname: destination.pathname, hash: destination.hash, search: destination.search };
               setPendingLocation(
-                nextLocation.pathname === window.location.pathname && nextLocation.hash === window.location.hash
+                nextLocation.pathname === window.location.pathname && nextLocation.hash === window.location.hash && nextLocation.search === window.location.search
                   ? null
                   : nextLocation,
               );
