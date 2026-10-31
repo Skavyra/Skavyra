@@ -83,7 +83,7 @@ export function DesktopNav({ links }: { links: MarketingNavLink[] }) {
   return (
     <nav
       aria-label="Main"
-      className="hidden items-center gap-0.5 rounded-full border border-yellow-200/25 bg-black/40 p-1 shadow-[0_8px_24px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,245,190,0.16)] backdrop-blur-xl md:flex"
+      className="hdr__nav"
     >
       {links.map((link) => {
         const activePathname = pendingLocation?.pathname ?? pathname;
@@ -106,11 +106,7 @@ export function DesktopNav({ links }: { links: MarketingNavLink[] }) {
               );
             }}
             aria-current={active ? "page" : undefined}
-            className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors focus-visible:ring-white ${
-              active
-              ? "bg-yellow-300 text-black shadow-[0_1px_8px_rgba(253,224,71,0.25)]"
-              : "text-white/90 hover:bg-yellow-200/10 hover:text-yellow-100"
-            }`}
+            className={active ? "is-active" : undefined}
           >
             {link.label}
           </Link>

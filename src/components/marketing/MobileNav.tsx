@@ -1,54 +1,94 @@
 "use client";
 
-import { Menu } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
-import { Logo } from "@/components/brand/logo";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { isMarketingNavLinkActive, type MarketingNavLink } from "@/lib/marketing-nav";
 
-export function MobileNav({ links, home }: { links: { href: string; label: string }[]; home: string | null }) {
-  const [open, setOpen] = useState(false);
+import { useHeaderMenu } from "./HeaderFrame";
+
+export function MobileNavButton() {
+  const { open, setOpen } = useHeaderMenu();
+
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open menu">
-          <Menu className="!size-6" />
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="left" className="theme-ink bg-background p-6 text-foreground">
-        <SheetTitle className="sr-only">Menu</SheetTitle>
-        <Logo />
-        <nav aria-label="Mobile" className="mt-6 flex flex-col">
-          {links.map((l) => (
+    <button
+      type="button"
+      className="hdr__burger"
+      aria-controls="mnav"
+      aria-expanded={open}
+      aria-label={open ? "Close menu" : "Open menu"}
+      onClick={() => setOpen((value) => !value)}
+    >
+      {open ? <X className="ic" strokeWidth={1.75} /> : <Menu className="ic" strokeWidth={1.75} />}
+    </button>
+  );
+}
+
+export function MobileNavPanel({ links, home }: { links: MarketingNavLink[]; home: string | null }) {
+  const { open, setOpen } = useHeaderMenu();
+  const pathname = usePathname();
+  const [hash, setHash] = useState("");
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    const syncLocation = () => {
+      setHash(window.location.hash);
+      setSearch(window.location.search);
+    };
+    syncLocation();
+    window.addEventListener("hashchange", syncLocation);
+    window.addEventListener("popstate", syncLocation);
+    return () => {
+      window.removeEventListener("hashchange", syncLocation);
+      window.removeEventListener("popstate", syncLocation);
+    };
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!open) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [open, setOpen]);
+
+  return (
+    <div className="mnav" id="mnav">
+      <nav className="wrap" aria-label="Mobile">
+        {links.map((link) => {
+          const active = isMarketingNavLinkActive(link, links, pathname, hash, search);
+          return (
             <Link
-              key={l.label}
-              href={l.href}
+              key={link.label}
+              href={link.href}
               onClick={() => setOpen(false)}
-              className="border-b border-border py-4 text-lg font-semibold transition-colors hover:pl-2 hover:text-gold-100"
+              aria-current={active ? "page" : undefined}
+              className={active ? "is-active" : undefined}
             >
-              {l.label}
+              {link.label}
             </Link>
-          ))}
-        </nav>
-        <div className="mt-auto flex flex-col gap-3">
+          );
+        })}
+        <div className="mnav__act">
           {home ? (
-            <Button asChild variant="gold" size="lg">
-              <Link href={home}>Go to dashboard</Link>
-            </Button>
+            <Link className="btn btn--ink btn--block" href={home} onClick={() => setOpen(false)}>
+              Go to dashboard
+            </Link>
           ) : (
             <>
-              <Button asChild variant="gold" size="lg">
-                <Link href="/signup">Get started</Link>
-              </Button>
-              <Button asChild variant="outline" size="lg">
-                <Link href="/login">Log in</Link>
-              </Button>
+              <Link className="btn btn--line btn--block" href="/login" onClick={() => setOpen(false)}>
+                Log in
+              </Link>
+              <Link className="btn btn--ink btn--block" href="/signup" onClick={() => setOpen(false)}>
+                Get started
+              </Link>
             </>
           )}
         </div>
-      </SheetContent>
-    </Sheet>
+      </nav>
+    </div>
   );
 }

@@ -1,13 +1,11 @@
 import Link from "next/link";
 
-import { Logo } from "@/components/brand/logo";
-import { Button } from "@/components/ui/button";
+import { Mark } from "@/components/brand/logo";
 import { getUser, primaryRole } from "@/lib/auth/get-user";
 import { ROLE_HOME } from "@/lib/constants";
 
 import { HeaderFrame } from "./HeaderFrame";
-import { MagneticWrap } from "./MagneticWrap";
-import { MobileNav } from "./MobileNav";
+import { MobileNavButton, MobileNavPanel } from "./MobileNav";
 import { DesktopNav } from "./DesktopNav";
 
 /** Labels follow the approved hero design. "For colleges" goes to the contact form. */
@@ -26,34 +24,25 @@ export async function SiteHeader() {
 
   return (
     <HeaderFrame>
-      <div className="theme-ink container flex h-16 items-center justify-between gap-6 transition-[height] duration-300 group-data-[scrolled=true]:h-14 lg:h-20 lg:group-data-[scrolled=true]:h-16">
-        <Logo />
+      <div className="wrap hdr__in">
+        <Link href="/" className="logo" aria-label="Skavyra home">
+          <Mark className="mark" seam="#FFFFFF" />
+          <span className="wordmark">Skavyra</span>
+        </Link>
         <DesktopNav links={HEADER_LINKS} />
-        <div className="hidden items-center gap-5 md:flex">
+        <div className="hdr__act">
           {home ? (
-            <MagneticWrap>
-              <Button
-                asChild
-                variant="gold"
-                size="lg"
-                className="rounded-2xl bg-yellow-400 text-black shadow-[0_4px_18px_rgba(250,204,21,0.16)] hover:bg-yellow-300"
-              >
-                <Link href={home}>Go to dashboard</Link>
-              </Button>
-            </MagneticWrap>
+            <Link className="btn btn--ink btn--sm" href={home}>Go to dashboard</Link>
           ) : (
             <>
-              <Link href="/login" className="text-[0.9375rem] font-semibold hover:text-gold-100">
-                Log in
-              </Link>
-              <MagneticWrap>
-                <Button asChild variant="gold" size="lg"><Link href="/signup">Get started</Link></Button>
-              </MagneticWrap>
+              <Link href="/login" className="hdr__login">Log in</Link>
+              <Link className="btn btn--ink btn--sm" href="/signup">Get started</Link>
             </>
           )}
         </div>
-        <MobileNav links={HEADER_LINKS} home={home} />
+        <MobileNavButton />
       </div>
+      <MobileNavPanel links={HEADER_LINKS} home={home} />
     </HeaderFrame>
   );
 }
