@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope, Syne } from "next/font/google";
+import { Inter, Manrope, Plus_Jakarta_Sans, Syne } from "next/font/google";
 
 import { Toaster } from "@/components/ui/sonner";
 import { SITE } from "@/lib/constants";
@@ -8,6 +8,8 @@ import "./globals.css";
 
 const syne = Syne({ subsets: ["latin"], weight: ["600", "700", "800"], variable: "--font-syne", display: "swap" });
 const manrope = Manrope({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-manrope", display: "swap" });
+const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], weight: ["500", "600", "700", "800"], variable: "--font-jakarta", display: "swap" });
+const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-inter", display: "swap" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
@@ -31,7 +33,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en-IN" className={`${syne.variable} ${manrope.variable}`}>
+    <html lang="en-IN" className={`${syne.variable} ${manrope.variable} ${jakarta.variable} ${inter.variable}`}>
       <body suppressHydrationWarning>
         {children}
         <Toaster />

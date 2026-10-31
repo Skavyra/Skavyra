@@ -1,3 +1,5 @@
+import "@/styles/skavyra-site.css";
+
 import { SiteFooter } from "@/components/marketing/SiteFooter";
 import { SiteHeader } from "@/components/marketing/SiteHeader";
 import { MarketingPageMotion } from "@/components/marketing/MarketingPageMotion";
@@ -5,14 +7,14 @@ import { WhatsAppFloat } from "@/components/marketing/WhatsAppFloat";
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
-    <>
-      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-gold-300 focus:px-3 focus:py-2 focus:text-ink">
+    <div className="site">
+      <a href="#main" className="skip">
         Skip to content
       </a>
       <SiteHeader />
       <main id="main"><MarketingPageMotion>{children}</MarketingPageMotion></main>
       <SiteFooter />
       <WhatsAppFloat />
-    </>
+    </div>
   );
 }
