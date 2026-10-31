@@ -24,9 +24,6 @@ export default async function ContactPage({
       ? `Hi Skavyra, I'd like details about ${course}`
       : WHATSAPP_DEFAULT_MESSAGE;
   const whatsappHref = whatsappLink(whatsappMessage);
-  const instagramHandle = CONTACT.instagramUrl
-    ? new URL(CONTACT.instagramUrl).pathname.split("/").filter(Boolean).at(-1)
-    : null;
 
   return (
     <>
@@ -85,13 +82,13 @@ export default async function ContactPage({
                   <a href={CONTACT.phoneHref} className="min-w-0 break-all hover:underline">{CONTACT.phone}</a>
                 </li>
               )}
-              {CONTACT.instagramUrl && instagramHandle && (
+              {CONTACT.instagramUrl && (
                 <li className="flex items-center gap-3 rounded-xl border border-ink/10 p-3 transition-colors hover:border-gold-300">
                   <span className="grid size-8 shrink-0 place-items-center rounded-full bg-ink">
                     <Instagram aria-hidden="true" className="size-4 text-gold-300" />
                   </span>
                   <a href={CONTACT.instagramUrl} target="_blank" rel="noopener noreferrer" className="min-w-0 break-all hover:underline">
-                    @{instagramHandle}
+                    @skavyra_technologies
                   </a>
                 </li>
               )}

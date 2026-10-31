@@ -1,5 +1,5 @@
 const configuredEmail = (process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "").trim();
-const emailCandidate = configuredEmail || "skavyratechnologies@gmail.com";
+const emailCandidate = configuredEmail || "info@skavyra.com";
 const email = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailCandidate) ? emailCandidate : null;
 
 const rawPhone = (process.env.NEXT_PUBLIC_CONTACT_PHONE ?? "").trim();
@@ -14,7 +14,8 @@ const phoneHref = validPhone
   ? `tel:+${phoneDigits.length === 10 ? `91${phoneDigits}` : phoneDigits}`
   : null;
 
-const rawInstagramUrl = (process.env.NEXT_PUBLIC_INSTAGRAM_URL ?? "").trim();
+const configuredInstagramUrl = (process.env.NEXT_PUBLIC_INSTAGRAM_URL ?? "").trim();
+const rawInstagramUrl = configuredInstagramUrl || "https://www.instagram.com/skavyra_technologies/";
 let instagramUrl: string | null = null;
 if (rawInstagramUrl.startsWith("https://")) {
   try {

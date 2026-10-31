@@ -92,6 +92,7 @@ export function SiteFooter() {
             <div className="flex items-center gap-2">
               <a href={CONTACT.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Skavyra on Instagram" className="grid size-9 place-items-center rounded-full border border-white/10 text-muted-foreground transition-colors hover:text-gold-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
                 <Instagram aria-hidden="true" className="size-4" />
+                <span className="sr-only">@skavyra_technologies</span>
               </a>
             </div>
           )}
