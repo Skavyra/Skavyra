@@ -1,12 +1,7 @@
-"use client";
-
-import { useLayoutEffect, useRef } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Link from "next/link";
-import { Instagram, MapPin, Phone } from "lucide-react";
+import { Instagram, Mail, MapPin, Phone } from "lucide-react";
 
-import { Logo, TaglineRule } from "@/components/brand/logo";
+import { Mark } from "@/components/brand/logo";
 import { WhatsAppIcon } from "@/components/marketing/WhatsAppIcon";
 import { CONTACT } from "@/lib/contact-info";
 import { whatsappLink, WHATSAPP_DEFAULT_MESSAGE } from "@/lib/whatsapp";
@@ -26,7 +21,6 @@ const COLUMNS = [
     links: [
       { href: "/about", label: "About" },
       { href: "/contact", label: "Contact" },
-      { href: "/verify", label: "Verify a certificate" },
     ],
   },
   {
@@ -39,87 +33,44 @@ const COLUMNS = [
 ];
 
 export function SiteFooter() {
-  const footerRef = useRef<HTMLElement>(null);
   const whatsappHref = whatsappLink(WHATSAPP_DEFAULT_MESSAGE);
 
-  useLayoutEffect(() => {
-    const footer = footerRef.current;
-    if (!footer) return;
-
-    gsap.registerPlugin(ScrollTrigger);
-    const context = gsap.context(() => {
-      const media = gsap.matchMedia();
-      media.add("(prefers-reduced-motion: reduce)", () => {
-        gsap.from(footer, { opacity: 0, duration: 0.2, clearProps: "opacity", scrollTrigger: { trigger: footer, start: "top 94%", once: true } });
-      });
-      media.add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", () => {
-        gsap.from(footer, { opacity: 0, y: 20, duration: 0.6, ease: "power2.out", clearProps: "transform,opacity", scrollTrigger: { trigger: footer, start: "top 94%", once: true } });
-      });
-      media.add("(max-width: 767px) and (prefers-reduced-motion: no-preference)", () => {
-        gsap.from(footer, { opacity: 0, y: 10, duration: 0.45, ease: "power2.out", clearProps: "transform,opacity", scrollTrigger: { trigger: footer, start: "top 96%", once: true } });
-      });
-      return () => media.revert();
-    }, footer);
-
-    return () => context.revert();
-  }, []);
-
   return (
-    <footer ref={footerRef} className="theme-ink relative overflow-hidden border-t border-white/[0.06] bg-background text-foreground">
-      <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-32 size-96 rounded-full border border-gold-300/[0.08] shadow-[0_0_100px_rgba(142,103,24,0.08)]" />
-      <div className="container grid gap-10 py-fluid-md md:grid-cols-[1.4fr_repeat(3,1fr)]">
-        <div className="flex flex-col gap-4">
-          <Logo className="transition-transform duration-200 motion-safe:hover:scale-[1.02]" />
-          <TaglineRule className="text-gold-300" />
-          {CONTACT.email && (
-            <a href={`mailto:${CONTACT.email}`} className="group relative w-fit text-sm text-muted-foreground transition-colors hover:text-gold-100 after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-center after:scale-x-0 after:bg-gold-300 after:transition-transform hover:after:scale-x-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
-              {CONTACT.email}
-            </a>
-          )}
-          {CONTACT.phone && CONTACT.phoneHref && (
-            <a href={CONTACT.phoneHref} className="group relative flex w-fit items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-gold-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
-              <Phone aria-hidden="true" className="size-4" />
-              {CONTACT.phone}
-            </a>
-          )}
-          {whatsappHref && (
-            <a href={whatsappHref} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp us" className="group relative flex w-fit items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-gold-100 after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-center after:scale-x-0 after:bg-gold-300 after:transition-transform hover:after:scale-x-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
-              <WhatsAppIcon className="size-4" />
-              WhatsApp us
-            </a>
-          )}
-          {CONTACT.instagramUrl && (
-            <div className="flex items-center gap-2">
-              <a href={CONTACT.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Skavyra on Instagram" className="grid size-9 place-items-center rounded-full border border-white/10 text-muted-foreground transition-colors hover:text-gold-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
-                <Instagram aria-hidden="true" className="size-4" />
-                <span className="sr-only">@skavyra_technologies</span>
-              </a>
-            </div>
-          )}
-          {CONTACT.address && (
-            <p className="flex items-start gap-2 text-sm text-muted-foreground">
-              <MapPin aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-              <span>{CONTACT.address}</span>
-            </p>
-          )}
+    <footer className="ftr">
+      <div className="wrap ftr__grid">
+        <div className="ftr__brand">
+          <Link href="/" className="logo logo--light" aria-label="Skavyra home">
+            <Mark className="mark" seam="#0D0D0D" />
+            <span className="wordmark">Skavyra</span>
+          </Link>
+          <p className="tagline">Learn <i /> Build <i /> Grow</p>
+          <ul className="ftr__contact">
+            {CONTACT.email && (
+              <li><a href={`mailto:${CONTACT.email}`}><span><Mail className="ic" strokeWidth={1.75} /></span>{CONTACT.email}</a></li>
+            )}
+            {CONTACT.phone && CONTACT.phoneHref && (
+              <li><a href={CONTACT.phoneHref}><span><Phone className="ic" strokeWidth={1.75} /></span>{CONTACT.phone}</a></li>
+            )}
+            {whatsappHref && (
+              <li><a href={whatsappHref} target="_blank" rel="noopener noreferrer"><span><WhatsAppIcon className="ic" /></span>WhatsApp us</a></li>
+            )}
+            {CONTACT.instagramUrl && (
+              <li><a href={CONTACT.instagramUrl} target="_blank" rel="noopener noreferrer"><span><Instagram className="ic" strokeWidth={1.75} /></span>@skavyra_technologies</a></li>
+            )}
+            {CONTACT.address && (
+              <li><span><MapPin className="ic" strokeWidth={1.75} /></span>{CONTACT.address}</li>
+            )}
+          </ul>
         </div>
         {COLUMNS.map((col) => (
-          <div key={col.title}>
-          <h2 className="font-sans text-sm font-bold text-gold-100">{col.title}</h2>
-            <ul className="mt-4 flex flex-col gap-3">
-              {col.links.map((l) => (
-                <li key={l.href}>
-                  <Link href={l.href} className="group relative w-fit text-sm text-muted-foreground transition-colors hover:text-gold-100 after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-center after:scale-x-0 after:bg-gold-300 after:transition-transform hover:after:scale-x-100">
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+          <div className="ftr__col" key={col.title}>
+            <h4>{col.title}</h4>
+            {col.links.map((link) => <Link href={link.href} key={link.href}>{link.label}</Link>)}
           </div>
         ))}
       </div>
-      <div className="border-t border-border">
-        <p className="container py-6 text-xs text-muted-foreground">© {new Date().getFullYear()} Skavyra. All rights reserved.</p>
+      <div className="wrap ftr__bot">
+        <p>© {new Date().getFullYear()} Skavyra. All rights reserved.</p>
       </div>
     </footer>
   );
