@@ -8,8 +8,8 @@ import { CONTACT } from "@/lib/contact-info";
 
 export const HERO = {
   badge: "Courses for IT and non-IT graduates",
-  titleStart: "Your learning partner in",
-  titleAccent: "the digital era",
+  titleStart: "Your learning partner in the",
+  titleAccent: "digital era",
   body: "Learn from mentors who work in the field, build projects that prove it, and grow into the role you want.",
 };
 

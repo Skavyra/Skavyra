@@ -1,133 +1,70 @@
-"use client";
-
-import { ArrowRight } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
-import { useLayoutEffect, useRef } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { ArrowRight, BookOpen, Code, GraduationCap, Phone } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { CATEGORY_LABEL } from "@/lib/constants";
 import { HERO, HERO_FALLBACK_TRACKS } from "@/lib/content";
 import type { Course } from "@/types";
 
-import { ArcTracks, type ArcTrack } from "./ArcTracks";
 import { HeroHeadline } from "./HeroHeadline";
 
-/** Hero A, "Arc of tracks": centred badge, headline, two actions, and the arc of course cards. */
+/** Public home hero with a course ticker built from the available course data. */
 export function Hero({ courses }: { courses: Pick<Course, "title" | "slug" | "category" | "duration_weeks">[] }) {
-  const heroRef = useRef<HTMLElement>(null);
-  const arcScrollProgress = useRef(0);
-  const tracks: ArcTrack[] =
-    courses.length > 0
-      ? courses.map((c) => ({
-          title: c.title,
-          meta: [CATEGORY_LABEL[c.category], c.duration_weeks ? `${c.duration_weeks} weeks` : null].filter(Boolean).join(", "),
-          href: `/courses/${c.slug}`,
-        }))
-      : HERO_FALLBACK_TRACKS;
-
-  useLayoutEffect(() => {
-    const hero = heroRef.current;
-    if (!hero) return;
-
-    gsap.registerPlugin(ScrollTrigger);
-    const context = gsap.context(() => {
-      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (reducedMotion) return;
-
-      const background = hero.querySelector<HTMLElement>("[data-hero-background]");
-      const badge = hero.querySelector<HTMLElement>("[data-hero-badge]");
-      const characters = hero.querySelectorAll<HTMLElement>("[data-hero-char]");
-      const copy = hero.querySelector<HTMLElement>("[data-hero-copy]");
-      const actions = hero.querySelectorAll<HTMLElement>("[data-hero-action]");
-      const arc = hero.querySelector<HTMLElement>("[data-hero-arc]");
-      const headline = hero.querySelector<HTMLElement>("[data-hero-headline]");
-
-      const entrance = gsap.timeline({ defaults: { ease: "power3.out" } });
-      if (background) entrance.fromTo(background, { opacity: 0.72 }, { opacity: 1, duration: 0.7 }, 0);
-      if (badge) entrance.fromTo(badge, { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.42 }, 0.08);
-      if (characters.length) entrance.fromTo(characters, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.2, stagger: 0.009, ease: "power2.out" }, 0.28);
-      if (copy) entrance.fromTo(copy, { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.42 }, ">+=0.08");
-      if (actions.length) entrance.fromTo(actions, { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.38, stagger: 0.09 }, ">+=0.06");
-      if (arc) entrance.fromTo(arc, { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.58 }, ">+=0.08");
-
-      const scrollTransition = gsap.timeline({
-        scrollTrigger: {
-          trigger: hero,
-          start: "top top",
-          end: "bottom top",
-          scrub: 0.7,
-          onUpdate: (self) => {
-            arcScrollProgress.current = self.progress;
-          },
-        },
-      });
-      if (headline) scrollTransition.to(headline, { y: -30, autoAlpha: 0.88, ease: "none" }, 0);
-      if (background) scrollTransition.to(background, { opacity: 0.68, ease: "none" }, 0);
-      if (arc) scrollTransition.to(arc, { y: -28, scale: 0.98, autoAlpha: 0.78, ease: "none" }, 0);
-
-      const pointerQuery = gsap.matchMedia();
-      pointerQuery.add("(min-width: 1024px) and (pointer: fine)", () => {
-        const foreground = hero.querySelector<HTMLElement>("[data-hero-foreground]");
-        const moveForeground = foreground ? gsap.quickTo(foreground, "x", { duration: 0.8, ease: "power2.out" }) : null;
-        const moveArc = arc ? gsap.quickTo(arc, "x", { duration: 0.9, ease: "power2.out" }) : null;
-        const onPointerMove = (event: PointerEvent) => {
-          const bounds = hero.getBoundingClientRect();
-          const position = (event.clientX - bounds.left) / bounds.width - 0.5;
-          moveForeground?.(position * -3);
-          moveArc?.(position * 6);
-        };
-        const onPointerLeave = () => {
-          moveForeground?.(0);
-          moveArc?.(0);
-        };
-        hero.addEventListener("pointermove", onPointerMove, { passive: true });
-        hero.addEventListener("pointerleave", onPointerLeave, { passive: true });
-        return () => {
-          hero.removeEventListener("pointermove", onPointerMove);
-          hero.removeEventListener("pointerleave", onPointerLeave);
-        };
-      });
-
-      return () => pointerQuery.revert();
-    }, hero);
-
-    return () => {
-      arcScrollProgress.current = 0;
-      context.revert();
-    };
-  }, []);
+  const tracks = courses.length > 0
+    ? courses.map((course) => ({
+        title: course.title,
+        meta: [CATEGORY_LABEL[course.category], course.duration_weeks ? `${course.duration_weeks} weeks` : null].filter(Boolean).join(", "),
+        href: `/courses/${course.slug}`,
+      }))
+    : HERO_FALLBACK_TRACKS;
 
   return (
-    <section ref={heroRef} className="theme-ink relative overflow-hidden bg-background text-foreground">
-      {/* the large warm disc behind the headline */}
-      <div
-        aria-hidden="true"
-        data-hero-background
-        className="pointer-events-none absolute left-1/2 top-[18%] aspect-square w-[min(1180px,150vw)] -translate-x-1/2 rounded-full"
-        style={{ background: "radial-gradient(circle at 50% 40%, rgba(142,103,24,0.38), rgba(142,103,24,0.16) 45%, rgba(13,13,13,0) 70%)" }}
-      />
-      <div data-hero-foreground className="container relative flex flex-col items-center pt-[clamp(1.25rem,4vh,3.5rem)] text-center">
-        <p data-hero-badge className="inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-charcoal/80 px-4 py-2 text-sm font-semibold text-gold-100">
-          <span className="size-1.5 rounded-full bg-gold-300" aria-hidden="true" />
-          {HERO.badge}
-        </p>
-        <HeroHeadline titleStart={HERO.titleStart} titleAccent={HERO.titleAccent} />
-        <p data-hero-copy className="mt-4 max-w-[40rem] text-fluid-lg text-ivory/75">{HERO.body}</p>
-        <div className="mt-6 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-          <Button asChild variant="gold" size="lg" className="h-14 px-7">
-            <Link href="/courses" data-hero-action>
-              Explore courses <ArrowRight />
-            </Link>
-          </Button>
-          <Button asChild variant="outline" size="lg" className="h-14 border-white/20 px-7 hover:bg-charcoal">
-            <Link href="/contact" data-hero-action>Talk to a counsellor</Link>
-          </Button>
+    <section className="hero">
+      <p className="vlabel" aria-hidden="true">Learn <i /> Build <i /> Grow</p>
+      <div className="wrap hero__grid">
+        <div className="hero__copy">
+          <p className="over a1"><span className="over__bar" />{HERO.badge}</p>
+          <HeroHeadline titleStart={HERO.titleStart} titleAccent={HERO.titleAccent} />
+          <p className="hero__p a3">{HERO.body}</p>
+          <div className="hero__cta a4">
+            <Link className="btn btn--ink btn--lg" href="/courses">Explore courses <ArrowRight className="ic" strokeWidth={1.75} /></Link>
+            <Link className="btn btn--line btn--lg" href="/contact"><Phone className="ic" strokeWidth={1.75} />Talk to a counsellor</Link>
+          </div>
+          <div className="hero__stat a5">
+            <b><BookOpen className="ic" strokeWidth={1.75} /></b>
+            <span>Courses across IT and non-IT,<br />taught by mentors</span>
+          </div>
+        </div>
+        <div className="hero__art a-art">
+          <span className="blk blk--y hero__blk" aria-hidden="true" />
+          <span className="hero__dots" aria-hidden="true" />
+          <span className="frame hero__frame" aria-hidden="true" />
+          <figure className="hero__photo">
+            <Image src="/images/site/photo-hero-student.jpg" alt="A student smiling in front of a chalkboard" fill priority style={{ objectFit: "cover" }} />
+          </figure>
+          <div className="hero__tile">
+            <span className="hero__tile-ic"><GraduationCap className="ic" strokeWidth={1.75} /></span>
+            <b>Mentor-led</b>
+            <small>Live + recorded classes</small>
+          </div>
         </div>
       </div>
-      <div data-hero-arc className="relative mt-6">
-        <ArcTracks tracks={tracks} motionProgressRef={arcScrollProgress} />
+      <div className="tracks" aria-label="Our courses">
+        <div className="tracks__row">
+          {[false, true].map((duplicate) => (
+            <div className="tracks__set" aria-hidden={duplicate || undefined} key={duplicate ? "duplicate" : "primary"}>
+              {tracks.map((track, index) => {
+                const Icon = track.meta === "IT" || track.meta.startsWith("IT,") ? Code : BookOpen;
+                return (
+                  <Link className="track" href={"href" in track ? track.href ?? "/courses" : "/courses"} tabIndex={duplicate ? -1 : undefined} key={`${track.title}-${index}`}>
+                    <span className="track__ic"><Icon className="ic" strokeWidth={1.75} /></span>
+                    <span><span className="track__t">{track.title}</span><span className="track__m">{track.meta}</span></span>
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
