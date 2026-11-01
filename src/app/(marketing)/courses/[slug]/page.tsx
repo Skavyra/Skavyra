@@ -1,22 +1,20 @@
-import { ChevronRight, FileText, Lock, PlayCircle, Star, Video } from "lucide-react";
+import { ArrowRight, ChevronRight, FileText, Lock, Phone, PlayCircle, Star, Video } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { EnrollCard } from "@/components/marketing/EnrollCard";
+import { CourseBand } from "@/components/marketing/CourseDetailClient";
 import { CourseDetailMotion } from "@/components/marketing/CourseDetailMotion";
 import { PreviewLesson } from "@/components/player/PreviewLesson";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { CourseContentSection, CourseContentList, courseContentLines } from "@/components/marketing/CourseContentSection";
 import { MobileEnrollBar } from "@/components/marketing/MobileEnrollBar";
 import { getUser } from "@/lib/auth/get-user";
 import { CATEGORY_LABEL, LEVEL_LABEL } from "@/lib/constants";
 import { FAQS } from "@/lib/content";
 import { visibleStatuses } from "@/lib/flagship";
-import { FLAGSHIP_STYLES } from "@/lib/flagship-styles";
 import { createClient } from "@/lib/supabase/server";
 import { initials } from "@/lib/utils";
 import type { LessonType } from "@/types";
@@ -99,62 +97,120 @@ export default async function CourseDetailPage({ params }: Props) {
 
   return (
     <CourseDetailMotion>
-      <div className="container section pb-28 lg:pb-0">
-        <nav data-course-breadcrumb aria-label="Breadcrumb" className="flex items-center gap-1 text-sm text-muted-foreground">
-          <Link href="/courses" className="transition-colors hover:text-gold-700">
-            Courses
-          </Link>
-          <ChevronRight className="size-3.5" />
-          <span className="truncate text-foreground">{course.title}</span>
-        </nav>
+      <div className="cd">
+        <CourseBand />
+        <div className="wrap cd__grid">
+          <div className="cd__main">
+            <nav className="crumbs" aria-label="Breadcrumb">
+              <Link href="/">Home</Link>
+              <ChevronRight className="ic" strokeWidth={1.75} aria-hidden="true" />
+              <Link href="/courses">Courses</Link>
+              <ChevronRight className="ic" strokeWidth={1.75} aria-hidden="true" />
+              <b>{course.title}</b>
+            </nav>
 
-        <div className="mt-6 grid gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:grid-rows-[auto_1fr] lg:items-start lg:gap-y-10">
-          <div data-course-summary className="min-w-0 rounded-3xl border border-ink/10 theme-ink bg-[radial-gradient(ellipse_at_top_right,rgba(242,199,92,0.16),transparent_60%)] bg-background text-foreground p-6 sm:p-10 lg:col-start-1 lg:row-start-1">
-            <div data-course-badges className="flex flex-wrap gap-2">
-              {course.is_flagship && (
-                <span className={FLAGSHIP_STYLES.flagshipBadge}>
-                  <Star aria-hidden="true" className="size-3 fill-current" />
-                  Flagship
-                </span>
-              )}
-              <Badge tone="gold" className="border-gold-300/50 bg-gold-300/15 text-gold-100">{CATEGORY_LABEL[course.category]}</Badge>
-              <Badge tone="muted">{LEVEL_LABEL[course.level]}</Badge>
+            <div className="reveal">
+              <div className="cd__badges">
+                {course.is_flagship && <span className="tag tag--ink"><Star className="ic" strokeWidth={1.75} />Flagship</span>}
+                <span className="tag tag--y">{CATEGORY_LABEL[course.category]}</span>
+                <span className="tag">{LEVEL_LABEL[course.level]}</span>
+              </div>
+              <h1 className="cd__t" data-course-title>{course.title}</h1>
+              {course.subtitle && <p className="cd__s">{course.subtitle}</p>}
+              <dl className="cd__meta">
+                {course.duration_weeks && <div><dt>Duration</dt><dd>{course.duration_weeks} weeks</dd></div>}
+                {lessonCount > 0 && <div><dt>Lessons</dt><dd>{lessonCount}</dd></div>}
+                {totalMinutes > 0 && <div><dt>Recorded content</dt><dd>{totalMinutes < 60 ? `${totalMinutes} min` : `${Math.floor(totalMinutes / 60)} hr${totalMinutes % 60 ? ` ${totalMinutes % 60} min` : ""}`}</dd></div>}
+                {course.language && <div><dt>Language</dt><dd>{course.language}</dd></div>}
+              </dl>
+              {course.mentor_name?.trim() && <p className="cd__by"><span className="mono">{initials(course.mentor_name)}</span><span>Taught by <b>{course.mentor_name}</b>{course.mentor_company ? ` · ${course.mentor_company}` : ""}</span></p>}
+              <div className="btns">
+                <Link className="btn btn--y btn--lg" href={primaryHref}>{primaryLabel}<ArrowRight className="ic" strokeWidth={1.75} /></Link>
+                {primaryLabel !== "Talk to a counsellor" && <Link className="btn btn--line btn--lg" href={`/contact?course=${encodeURIComponent(course.title)}`}><Phone className="ic" strokeWidth={1.75} />Talk to a counsellor</Link>}
+              </div>
             </div>
-            <h1 data-course-title className="mt-4 break-words text-fluid-3xl">{course.title}</h1>
-            {course.subtitle && (
-              <p data-course-subtitle className="mt-4 max-w-2xl text-fluid-lg text-muted-foreground">{course.subtitle}</p>
-            )}
-            <dl data-course-metadata className="mt-6 flex flex-wrap gap-x-8 gap-y-2 border-t border-ivory/15 pt-5 text-sm">
-              {course.duration_weeks && (
-                <div className="flex gap-1.5">
-                  <dt className="text-muted-foreground">Duration</dt>
-                  <dd className="font-semibold">{course.duration_weeks} weeks</dd>
-                </div>
-              )}
-              {lessonCount > 0 && <div className="flex gap-1.5"><dt className="text-muted-foreground">Lessons</dt><dd className="font-semibold">{lessonCount}</dd></div>}
-              {totalMinutes > 0 && (
-                <div className="flex gap-1.5">
-                  <dt className="text-muted-foreground">Recorded content</dt>
-                  <dd className="font-semibold">{totalMinutes < 60 ? `${totalMinutes} min` : `${Math.floor(totalMinutes / 60)} hr${totalMinutes % 60 ? ` ${totalMinutes % 60} min` : ""}`}</dd>
-                </div>
-              )}
-              {course.language && (
-                <div className="flex gap-1.5">
-                  <dt className="text-muted-foreground">Language</dt>
-                  <dd className="font-semibold">{course.language}</dd>
-                </div>
-              )}
-            </dl>
-            {course.mentor_name?.trim() && <p className="mt-6 text-sm text-ivory/80">Taught by <span className="font-semibold text-gold-300">{course.mentor_name}</span>{course.mentor_company ? ` · ${course.mentor_company}` : ""}</p>}
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild variant="gold" size="lg">
-                <Link href={primaryHref}>{primaryLabel}</Link>
-              </Button>
-              {modules.length > 0 && <Button asChild variant="outline" size="lg"><a href="#curriculum">View curriculum</a></Button>}
+
+            <div data-course-content>
+              <nav aria-label="Course sections" className="hide-scrollbar mb-6 -mx-4 flex gap-2 overflow-x-auto px-4 lg:sticky lg:top-16 lg:z-20 lg:-mx-2 lg:flex-wrap lg:rounded-2xl lg:bg-background/90 lg:px-2 lg:py-3 lg:backdrop-blur lg:overflow-visible">
+                {sections.map((section) => <a key={section.id} href={`#${section.id}`} className="shrink-0 whitespace-nowrap rounded-full border border-ink/10 bg-card px-4 py-2 text-sm font-semibold transition-colors hover:border-gold-500 hover:bg-gold-100/30">{section.label}</a>)}
+              </nav>
+              <div className="space-y-6">
+                {course.description?.trim() && <CourseContentSection id="overview" eyebrow="The course" title="What this course covers"><p className="whitespace-pre-line break-words leading-relaxed text-muted-foreground">{course.description}</p></CourseContentSection>}
+                {outcomes.length > 0 && <CourseContentSection id="skills" eyebrow="Your skills" title="What you'll learn"><CourseContentList items={outcomes} columns /></CourseContentSection>}
+                {audience.length > 0 && <CourseContentSection id="audience" eyebrow="Find your fit" title="Who this course is for"><CourseContentList items={audience} columns /></CourseContentSection>}
+                {prerequisites.length > 0 && <CourseContentSection id="prerequisites" eyebrow="Before you begin" title="What you'll need"><CourseContentList items={prerequisites} /></CourseContentSection>}
+                {modules.length > 0 && <CourseContentSection id="curriculum" eyebrow="The learning path" title="Course curriculum">
+                  <p className="mb-5 text-sm text-muted-foreground">{modules.length} {modules.length === 1 ? "module" : "modules"} · {lessonCount} {lessonCount === 1 ? "lesson" : "lessons"}</p>
+                    <Accordion type="multiple" defaultValue={[modules[0].id]} className="flex flex-col gap-3">
+                      {modules.map((m, mi) => (
+                        <AccordionItem
+                          key={m.id}
+                          value={m.id}
+                          className="overflow-hidden rounded-xl border-ink/10 bg-card transition-[border-color,box-shadow] data-[state=open]:border-gold-500/50 data-[state=open]:shadow-sm"
+                        >
+                          <AccordionTrigger className="transition-colors hover:bg-muted/60 data-[state=open]:bg-gold-100/20">
+                            <span className="flex flex-1 items-center justify-between gap-4">
+                              <span>
+                                <span className="mr-2 text-muted-foreground">Module {mi + 1}</span>
+                                {m.title}
+                              </span>
+                              <span className="shrink-0 text-xs font-normal text-muted-foreground">{m.lessons.length} lessons</span>
+                            </span>
+                          </AccordionTrigger>
+                          <AccordionContent className="px-3">
+                            <ul className="flex flex-col">
+                              {m.lessons.map((l) => {
+                                const Icon = TYPE_ICON[l.lesson_type ?? "video"];
+                                return (
+                                  <li key={l.lesson_id} className="flex items-center gap-3 border-t px-2 py-3 text-foreground transition-colors hover:bg-muted/40">
+                                    <Icon className="size-4 shrink-0 text-gold-700" />
+                                    <span className="min-w-0 flex-1 truncate">{l.lesson_title}</span>
+                                    {l.is_preview ? <PreviewLesson lessonId={l.lesson_id!} title={l.lesson_title ?? ""} /> : <Lock className="size-3.5 text-muted-foreground" aria-label="Unlocks after enrolment" />}
+                                    {!!l.duration_minutes && <span className="w-14 text-right text-xs text-muted-foreground">{l.duration_minutes} min</span>}
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                </CourseContentSection>}
+                {projects.length > 0 && <CourseContentSection id="projects" eyebrow="Put it into practice" title="What you'll build" tone="dark">
+                  <ol className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    {projects.map((project, index) => {
+                      const separators = [" — ", " - "]
+                        .map((separator) => ({ separator, index: project.indexOf(separator) }))
+                        .filter((match) => match.index >= 0)
+                        .sort((a, b) => a.index - b.index);
+                      const split = separators[0];
+                      const projectTitle = split ? project.slice(0, split.index).trim() : null;
+                      const projectDescription = split ? project.slice(split.index + split.separator.length).trim() : project;
+
+                      return (
+                        <li key={index} className="rounded-2xl border border-ivory/10 bg-ivory/5 p-4">
+                          <span className="font-display text-xl text-gold-300">{String(index + 1).padStart(2, "0")}</span>
+                          {projectTitle && <h3 className="mt-2 break-words font-semibold text-ivory">{projectTitle}</h3>}
+                          <p className="mt-1 break-words text-sm leading-relaxed text-ivory/70">{projectDescription}</p>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </CourseContentSection>}
+                {!!course.tools?.length && <CourseContentSection id="tools" eyebrow="Tools" title="Tools you'll use"><ul className="flex flex-wrap gap-2">{course.tools.map((tool) => <li key={tool} className="rounded-full border border-ink/10 bg-card px-3 py-1 text-sm">{tool}</li>)}</ul></CourseContentSection>}
+                {(course.mentor_name?.trim() || course.mentor_bio?.trim()) && <CourseContentSection id="mentor" eyebrow="Meet your guide" title="Your course mentor">
+                  {course.mentor_name?.trim() && <div className="flex items-center gap-4">
+                    <Avatar className="size-16 shrink-0">{course.mentor_avatar_url && <AvatarImage src={course.mentor_avatar_url} alt="" />}<AvatarFallback className="bg-ink font-bold text-gold-300">{initials(course.mentor_name)}</AvatarFallback></Avatar>
+                    <div className="min-w-0 break-words"><h3 className="text-lg">{course.mentor_name}</h3>{course.mentor_company && <p className="mt-1 text-sm text-muted-foreground">{course.mentor_company}</p>}</div>
+                  </div>}
+                  {course.mentor_bio?.trim() && <p className="mt-5 whitespace-pre-line break-words leading-relaxed text-muted-foreground">{course.mentor_bio}</p>}
+                </CourseContentSection>}
+                {FAQS.length > 0 && <CourseContentSection id="faq" eyebrow="Good to know" title="Frequently asked questions"><Accordion type="single" collapsible className="flex flex-col gap-3">{FAQS.map((faq) => <AccordionItem key={faq.q} value={faq.q} className="rounded-xl border-ink/10"><AccordionTrigger>{faq.q}</AccordionTrigger><AccordionContent>{faq.a}</AccordionContent></AccordionItem>)}</Accordion></CourseContentSection>}
+              </div>
             </div>
           </div>
 
-          <div id="enrollment" className="min-w-0 scroll-mt-28 lg:sticky lg:top-28 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+          <aside className="cd__side"><div id="enrollment">
             <EnrollCard
               course={{
                 title: course.title,
@@ -174,96 +230,7 @@ export default async function CourseDetailPage({ params }: Props) {
               state={state}
               enrolledHref={enrolledHref}
             />
-          </div>
-
-          <div data-course-content className="min-w-0 lg:col-start-1 lg:row-start-2">
-            <nav aria-label="Course sections" className="hide-scrollbar mb-6 -mx-4 flex gap-2 overflow-x-auto px-4 lg:sticky lg:top-16 lg:z-20 lg:-mx-2 lg:flex-wrap lg:rounded-2xl lg:bg-background/90 lg:px-2 lg:py-3 lg:backdrop-blur lg:overflow-visible">
-              {sections.map((section) => <a key={section.id} href={`#${section.id}`} className="shrink-0 whitespace-nowrap rounded-full border border-ink/10 bg-card px-4 py-2 text-sm font-semibold transition-colors hover:border-gold-500 hover:bg-gold-100/30">{section.label}</a>)}
-            </nav>
-            <div className="space-y-6">
-              {course.description?.trim() && <CourseContentSection id="overview" eyebrow="The course" title="What this course covers"><p className="whitespace-pre-line break-words leading-relaxed text-muted-foreground">{course.description}</p></CourseContentSection>}
-              {outcomes.length > 0 && <CourseContentSection id="skills" eyebrow="Your skills" title="What you'll learn"><CourseContentList items={outcomes} columns /></CourseContentSection>}
-              {audience.length > 0 && <CourseContentSection id="audience" eyebrow="Find your fit" title="Who this course is for"><CourseContentList items={audience} columns /></CourseContentSection>}
-              {prerequisites.length > 0 && <CourseContentSection id="prerequisites" eyebrow="Before you begin" title="What you'll need"><CourseContentList items={prerequisites} /></CourseContentSection>}
-              {modules.length > 0 && <CourseContentSection id="curriculum" eyebrow="The learning path" title="Course curriculum">
-                <p className="mb-5 text-sm text-muted-foreground">{modules.length} {modules.length === 1 ? "module" : "modules"} · {lessonCount} {lessonCount === 1 ? "lesson" : "lessons"}</p>
-                  <Accordion type="multiple" defaultValue={[modules[0].id]} className="flex flex-col gap-3">
-                    {modules.map((m, mi) => (
-                      <AccordionItem
-                        key={m.id}
-                        value={m.id}
-                        className="overflow-hidden rounded-xl border-ink/10 bg-card transition-[border-color,box-shadow] data-[state=open]:border-gold-500/50 data-[state=open]:shadow-sm"
-                      >
-                        <AccordionTrigger className="transition-colors hover:bg-muted/60 data-[state=open]:bg-gold-100/20">
-                          <span className="flex flex-1 items-center justify-between gap-4">
-                            <span>
-                              <span className="mr-2 text-muted-foreground">Module {mi + 1}</span>
-                              {m.title}
-                            </span>
-                            <span className="shrink-0 text-xs font-normal text-muted-foreground">{m.lessons.length} lessons</span>
-                          </span>
-                        </AccordionTrigger>
-                        <AccordionContent className="px-3">
-                          <ul className="flex flex-col">
-                            {m.lessons.map((l) => {
-                              const Icon = TYPE_ICON[l.lesson_type ?? "video"];
-                              return (
-                                <li key={l.lesson_id} className="flex items-center gap-3 border-t px-2 py-3 text-foreground transition-colors hover:bg-muted/40">
-                                  <Icon className="size-4 shrink-0 text-gold-700" />
-                                  <span className="min-w-0 flex-1 truncate">{l.lesson_title}</span>
-                                  {l.is_preview ? (
-                                    <PreviewLesson lessonId={l.lesson_id!} title={l.lesson_title ?? ""} />
-                                  ) : (
-                                    <Lock className="size-3.5 text-muted-foreground" aria-label="Unlocks after enrolment" />
-                                  )}
-                                  {!!l.duration_minutes && (
-                                    <span className="w-14 text-right text-xs text-muted-foreground">{l.duration_minutes} min</span>
-                                  )}
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-              </CourseContentSection>}
-              {projects.length > 0 && <CourseContentSection id="projects" eyebrow="Put it into practice" title="What you'll build" tone="dark">
-                <ol className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                  {projects.map((project, index) => {
-                    const separators = [" — ", " - "]
-                      .map((separator) => ({ separator, index: project.indexOf(separator) }))
-                      .filter((match) => match.index >= 0)
-                      .sort((a, b) => a.index - b.index);
-                    const split = separators[0];
-                    const projectTitle = split ? project.slice(0, split.index).trim() : null;
-                    const projectDescription = split ? project.slice(split.index + split.separator.length).trim() : project;
-
-                    return (
-                      <li key={index} className="rounded-2xl border border-ivory/10 bg-ivory/5 p-4">
-                        <span className="font-display text-xl text-gold-300">{String(index + 1).padStart(2, "0")}</span>
-                        {projectTitle && <h3 className="mt-2 break-words font-semibold text-ivory">{projectTitle}</h3>}
-                        <p className="mt-1 break-words text-sm leading-relaxed text-ivory/70">{projectDescription}</p>
-                      </li>
-                    );
-                  })}
-                </ol>
-              </CourseContentSection>}
-              {!!course.tools?.length && <CourseContentSection id="tools" eyebrow="Tools" title="Tools you'll use">
-                <ul className="flex flex-wrap gap-2">{course.tools.map((tool) => <li key={tool} className="rounded-full border border-ink/10 bg-card px-3 py-1 text-sm">{tool}</li>)}</ul>
-              </CourseContentSection>}
-              {(course.mentor_name?.trim() || course.mentor_bio?.trim()) && <CourseContentSection id="mentor" eyebrow="Meet your guide" title="Your course mentor">
-                {course.mentor_name?.trim() && <div className="flex items-center gap-4">
-                  <Avatar className="size-16 shrink-0">{course.mentor_avatar_url && <AvatarImage src={course.mentor_avatar_url} alt="" />}<AvatarFallback className="bg-ink font-bold text-gold-300">{initials(course.mentor_name)}</AvatarFallback></Avatar>
-                  <div className="min-w-0 break-words"><h3 className="text-lg">{course.mentor_name}</h3>{course.mentor_company && <p className="mt-1 text-sm text-muted-foreground">{course.mentor_company}</p>}</div>
-                </div>}
-                {course.mentor_bio?.trim() && <p className="mt-5 whitespace-pre-line break-words leading-relaxed text-muted-foreground">{course.mentor_bio}</p>}
-              </CourseContentSection>}
-              {FAQS.length > 0 && <CourseContentSection id="faq" eyebrow="Good to know" title="Frequently asked questions">
-                <Accordion type="single" collapsible className="flex flex-col gap-3">{FAQS.map((faq) => <AccordionItem key={faq.q} value={faq.q} className="rounded-xl border-ink/10"><AccordionTrigger>{faq.q}</AccordionTrigger><AccordionContent>{faq.a}</AccordionContent></AccordionItem>)}</Accordion>
-              </CourseContentSection>}
-            </div>
-          </div>
+          </div></aside>
         </div>
       </div>
       <MobileEnrollBar
