@@ -1,8 +1,6 @@
 import Link from "next/link";
-import { Check, Star } from "lucide-react";
+import { ArrowRight, Check, Star, Tag } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { FLAGSHIP_STYLES } from "@/lib/flagship-styles";
 import { LEVEL_LABEL } from "@/lib/constants";
 import { formatInr, getOfferPricing } from "@/lib/utils";
 import type { FlagshipCourse } from "@/types/flagship";
@@ -18,73 +16,37 @@ export function FlagshipCard({ course }: { course: FlagshipCourse }) {
   const pricing = getOfferPricing(course);
 
   return (
-    <article id={course.slug} className={`${FLAGSHIP_STYLES.darkCard} scroll-mt-24`}>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <span className={FLAGSHIP_STYLES.flagshipBadge}>
-          <Star aria-hidden="true" className="size-3 fill-current" />
-          Flagship
-        </span>
-        <span className="text-xs text-ivory/60">
-          {LEVEL_LABEL[course.level]} · {course.duration_weeks ? `${course.duration_weeks} weeks` : "Self paced"}
-        </span>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <h3 className={FLAGSHIP_STYLES.cardTitle}>{course.title}</h3>
-        {course.subtitle && <p className={FLAGSHIP_STYLES.cardTagline}>{course.subtitle}</p>}
-      </div>
-
-      {outcomes.length > 0 && (
-        <div>
-          <h4 className="mb-3 text-sm font-semibold text-ivory">What you&apos;ll learn</h4>
-          <ul className="flex flex-col gap-2">
-            {outcomes.map((outcome, index) => (
-              <li key={`${index}-${outcome}`} className={FLAGSHIP_STYLES.outcomeItem}>
-                <Check aria-hidden="true" className="size-4 shrink-0 text-gold-100" />
-                <span>{outcome}</span>
-              </li>
-            ))}
+    <article id={course.slug} className="fp reveal">
+      <Link className="fp__img" href={`/courses/${course.slug}`} tabIndex={-1}>
+        <img src={course.cover_image_url || "/images/site/photo-classroom.jpg"} alt={`${course.title} program cover`} loading="lazy" />
+        <span className="badge-flag"><Star className="ic" strokeWidth={1.75} />Flagship</span>
+      </Link>
+      <div className="fp__b">
+        <p className="fp__lvl">{LEVEL_LABEL[course.level]} · {course.duration_weeks ? `${course.duration_weeks} weeks` : "Self paced"}</p>
+        <h2>{course.title}</h2>
+        {course.subtitle && <p className="fp__tag">{course.subtitle}</p>}
+        {outcomes.length > 0 && <>
+          <h3>What you&apos;ll learn</h3>
+          <ul className="checks">
+            {outcomes.map((outcome) => <li key={outcome}><Check className="ic" strokeWidth={1.75} /><span>{outcome}</span></li>)}
           </ul>
-        </div>
-      )}
-
-      {course.tools.length > 0 && (
-        <ul className="flex flex-wrap gap-2" aria-label="Tools covered">
-          {course.tools.map((tool) => (
-            <li key={tool} className={FLAGSHIP_STYLES.toolChip}>
-              {tool}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <div className="mt-auto flex flex-col gap-3">
-        {pricing.active && (
-          <div className="flex flex-wrap items-center gap-2">
-            {course.offer_label && <span className={FLAGSHIP_STYLES.offerPillDark}>{course.offer_label}</span>}
-            {course.show_countdown && course.offer_ends_at && <OfferCountdown endsAt={course.offer_ends_at} />}
+        </>}
+        {course.tools.length > 0 && <ul className="chips" aria-label="Tools covered">{course.tools.map((tool) => <li className="chip" key={tool}>{tool}</li>)}</ul>}
+        <div className="fp__buy">
+          <div>
+            {pricing.active && <div className="enroll__offer">
+              {course.offer_label && <span className="offerpill"><Tag className="ic" strokeWidth={1.75} />{course.offer_label}</span>}
+              {course.show_countdown && course.offer_ends_at && <span className="cdown">Offer ends in <b><OfferCountdown endsAt={course.offer_ends_at} /></b></span>}
+            </div>}
+            <div className="enroll__price">
+              <b>{formatInr(pricing.current)}</b>
+              {pricing.active && pricing.original !== null && <><s>{formatInr(pricing.original)}</s><em>Save {pricing.savings}%</em></>}
+            </div>
           </div>
-        )}
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <span className={FLAGSHIP_STYLES.priceDark}>{formatInr(pricing.current)}</span>
-          {pricing.active && pricing.original !== null && (
-            <>
-              <span className={FLAGSHIP_STYLES.mrpStruckDark}>{formatInr(pricing.original)}</span>
-              <span className={FLAGSHIP_STYLES.saveDark}>Save {pricing.savings}%</span>
-            </>
-          )}
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Button asChild variant="gold" className="w-full sm:flex-1">
-            <Link href={`/courses/${course.slug}`}>Enroll now</Link>
-          </Button>
-          <Button
-            asChild
-            variant="outline"
-            className="w-full border-ivory/30 text-ivory hover:bg-ivory/10 sm:flex-1"
-          >
-            <Link href={`/contact?course=${encodeURIComponent(course.title)}`}>Talk to us</Link>
-          </Button>
+          <div className="fp__btns">
+            <Link className="btn btn--y btn--lg" href={`/courses/${course.slug}`}>Enroll now <ArrowRight className="ic" strokeWidth={1.75} /></Link>
+            <Link className="btn btn--line btn--lg" href={`/contact?course=${encodeURIComponent(course.title)}`}>Talk to us</Link>
+          </div>
         </div>
       </div>
     </article>

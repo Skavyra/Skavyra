@@ -1158,3 +1158,10 @@ body.sheet-open{overflow:hidden}
 .site .mgrid--3{grid-template-columns:1fr}
 }
 .site .cd .chips .chip{border:1px solid var(--line);background:#fff;color:var(--ink);font-size:14px;font-weight:600;padding:7px 14px}
+.site .fp{scroll-margin-top:110px}
+.site .fp .chip{border:1px solid var(--line);background:var(--soft);color:var(--ink)}
+.site .fp:nth-child(3) .chip{border-color:#3a3a3a;background:#262626;color:#fff}
+@media (max-width:900px){
+.site .fp__btns{flex-direction:column}
+.site .fp__btns .btn{width:100%;flex:auto}
+}
