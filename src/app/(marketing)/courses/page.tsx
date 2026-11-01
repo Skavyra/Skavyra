@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Check, ChevronLeft, ChevronRight, Star, X } from "lucide-react";
 
 import { CourseCard, type CourseCardData } from "@/components/marketing/CourseCard";
+import { CoursesFilterSheet } from "@/components/marketing/CoursesFilterSheet";
 import { CoursesPageMotion } from "@/components/marketing/CoursesPageMotion";
 import { CATEGORY_LABEL, LEVEL_LABEL } from "@/lib/constants";
 import { getFlagshipCourses } from "@/lib/flagship";
@@ -154,7 +155,10 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
         </section>
 
         <div className="wrap clay">
-          <aside className="filters reveal" aria-label="Filters" data-courses-filters>
+          <CoursesFilterSheet
+            activeCount={activeFilters.length}
+            resultCount={isFlagshipCategory ? courses.length : total}
+          >
             {groups.map((group) => (
               <div className="fgroup" key={group.key}>
                 <h2>{group.title}</h2>
@@ -176,7 +180,7 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
                 </ul>
               </div>
             ))}
-          </aside>
+          </CoursesFilterSheet>
 
           <div>
             {hasActiveFilter && (
