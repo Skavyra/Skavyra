@@ -1,6 +1,48 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+
+type CourseSectionLink = { id: string; label: string };
+
+export function CourseTabsNav({ sections }: { sections: CourseSectionLink[] }) {
+  const [activeId, setActiveId] = useState("");
+
+  useEffect(() => {
+    const targets = sections
+      .map((section) => document.getElementById(section.id))
+      .filter((section): section is HTMLElement => section instanceof HTMLElement);
+    if (!targets.length || !("IntersectionObserver" in window)) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries.find((entry) => entry.isIntersecting);
+      if (!visible) return;
+      const id = (visible.target as HTMLElement).id;
+      setActiveId(id);
+      document.querySelector<HTMLAnchorElement>(`.tabsnav a[href="#${CSS.escape(id)}"]`)?.scrollIntoView({
+        block: "nearest",
+        inline: "nearest",
+      });
+    }, { rootMargin: "-45% 0px -50% 0px" });
+
+    targets.forEach((target) => observer.observe(target));
+    return () => observer.disconnect();
+  }, [sections]);
+
+  return (
+    <nav className="tabsnav" aria-label="Course sections">
+      {sections.map((section) => (
+        <a
+          key={section.id}
+          href={`#${section.id}`}
+          className={activeId === section.id ? "is-on" : undefined}
+          onClick={() => setActiveId(section.id)}
+        >
+          {section.label}
+        </a>
+      ))}
+    </nav>
+  );
+}
 
 export function CourseBand() {
   const ref = useRef<HTMLDivElement>(null);

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { EnrollCard } from "@/components/marketing/EnrollCard";
-import { CourseBand } from "@/components/marketing/CourseDetailClient";
+import { CourseBand, CourseTabsNav } from "@/components/marketing/CourseDetailClient";
 import { CourseDetailMotion } from "@/components/marketing/CourseDetailMotion";
 import { PreviewLesson } from "@/components/player/PreviewLesson";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -130,12 +130,8 @@ export default async function CourseDetailPage({ params }: Props) {
               </div>
             </div>
 
-            <div data-course-content>
-              <nav aria-label="Course sections" className="hide-scrollbar mb-6 -mx-4 flex gap-2 overflow-x-auto px-4 lg:sticky lg:top-16 lg:z-20 lg:-mx-2 lg:flex-wrap lg:rounded-2xl lg:bg-background/90 lg:px-2 lg:py-3 lg:backdrop-blur lg:overflow-visible">
-                {sections.map((section) => <a key={section.id} href={`#${section.id}`} className="shrink-0 whitespace-nowrap rounded-full border border-ink/10 bg-card px-4 py-2 text-sm font-semibold transition-colors hover:border-gold-500 hover:bg-gold-100/30">{section.label}</a>)}
-              </nav>
-              <div className="space-y-6">
-                {course.description?.trim() && <CourseContentSection id="overview" eyebrow="The course" title="What this course covers"><p className="whitespace-pre-line break-words leading-relaxed text-muted-foreground">{course.description}</p></CourseContentSection>}
+            <CourseTabsNav sections={sections} />
+            {course.description?.trim() && <CourseContentSection id="overview" eyebrow="The course" title="What this course covers"><p className="csec__p" style={{ whiteSpace: "pre-line" }}>{course.description}</p></CourseContentSection>}
                 {outcomes.length > 0 && <CourseContentSection id="skills" eyebrow="Your skills" title="What you'll learn"><CourseContentList items={outcomes} columns /></CourseContentSection>}
                 {audience.length > 0 && <CourseContentSection id="audience" eyebrow="Find your fit" title="Who this course is for"><CourseContentList items={audience} columns /></CourseContentSection>}
                 {prerequisites.length > 0 && <CourseContentSection id="prerequisites" eyebrow="Before you begin" title="What you'll need"><CourseContentList items={prerequisites} /></CourseContentSection>}
@@ -177,7 +173,7 @@ export default async function CourseDetailPage({ params }: Props) {
                     </Accordion>
                 </CourseContentSection>}
                 {projects.length > 0 && <CourseContentSection id="projects" eyebrow="Put it into practice" title="What you'll build" tone="dark">
-                  <ol className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  <ol className="projects">
                     {projects.map((project, index) => {
                       const separators = [" — ", " - "]
                         .map((separator) => ({ separator, index: project.indexOf(separator) }))
@@ -188,10 +184,10 @@ export default async function CourseDetailPage({ params }: Props) {
                       const projectDescription = split ? project.slice(split.index + split.separator.length).trim() : project;
 
                       return (
-                        <li key={index} className="rounded-2xl border border-ivory/10 bg-ivory/5 p-4">
-                          <span className="font-display text-xl text-gold-300">{String(index + 1).padStart(2, "0")}</span>
-                          {projectTitle && <h3 className="mt-2 break-words font-semibold text-ivory">{projectTitle}</h3>}
-                          <p className="mt-1 break-words text-sm leading-relaxed text-ivory/70">{projectDescription}</p>
+                        <li className="proj" key={index}>
+                          <span>{String(index + 1).padStart(2, "0")}</span>
+                          {projectTitle && <h3>{projectTitle}</h3>}
+                          <p>{projectDescription}</p>
                         </li>
                       );
                     })}
@@ -206,8 +202,6 @@ export default async function CourseDetailPage({ params }: Props) {
                   {course.mentor_bio?.trim() && <p className="mt-5 whitespace-pre-line break-words leading-relaxed text-muted-foreground">{course.mentor_bio}</p>}
                 </CourseContentSection>}
                 {FAQS.length > 0 && <CourseContentSection id="faq" eyebrow="Good to know" title="Frequently asked questions"><Accordion type="single" collapsible className="flex flex-col gap-3">{FAQS.map((faq) => <AccordionItem key={faq.q} value={faq.q} className="rounded-xl border-ink/10"><AccordionTrigger>{faq.q}</AccordionTrigger><AccordionContent>{faq.a}</AccordionContent></AccordionItem>)}</Accordion></CourseContentSection>}
-              </div>
-            </div>
           </div>
 
           <aside className="cd__side"><div id="enrollment">
