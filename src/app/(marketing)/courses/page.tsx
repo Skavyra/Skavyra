@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
-import { Check, ChevronRight, X } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Star, X } from "lucide-react";
 
 import { CourseCard, type CourseCardData } from "@/components/marketing/CourseCard";
 import { CoursesPageMotion } from "@/components/marketing/CoursesPageMotion";
-import { Pagination } from "@/components/ui/pagination";
 import { CATEGORY_LABEL, LEVEL_LABEL } from "@/lib/constants";
 import { getFlagshipCourses } from "@/lib/flagship";
 import { createClient } from "@/lib/supabase/server";
+import { formatInr, getOfferPricing } from "@/lib/utils";
 import type { CourseCategory, CourseLevel } from "@/types";
 import type { FlagshipCourse } from "@/types/flagship";
 
@@ -122,6 +123,7 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
     const option = group.options.find((item) => item.value === value);
     return value && option ? [{ key: group.key, label: option.label }] : [];
   });
+  const pageCount = Math.max(1, Math.ceil(total / PER_PAGE));
 
   return (
     <CoursesPageMotion animationKey={animationKey}>
@@ -176,7 +178,7 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
             ))}
           </aside>
 
-          <div className="min-w-0 flex flex-col gap-8">
+          <div>
             {hasActiveFilter && (
               <div className="activef">
                 {activeFilters.map(({ key, label }) => (
@@ -193,53 +195,85 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
               </div>
             )}
             {showPinnedFlagships && flagshipCardCourses.length > 0 && (
-              <section className="theme-ink relative overflow-hidden rounded-3xl bg-ink p-5 text-ivory sm:p-6" aria-label="Flagship programs">
-                <div aria-hidden="true" className="pointer-events-none absolute -left-20 -top-24 size-[22rem] rounded-full bg-gold-300/10 blur-3xl" />
-                <div className="relative z-10">
-                  <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                    <h2 className="font-display text-lg font-bold text-ivory">★ Flagship programs</h2>
-                    <Link href="/flagship" className="text-sm font-semibold text-gold-300 hover:underline">
-                      View all →
-                    </Link>
-                  </div>
-                  <ul className="hide-scrollbar -mx-1 flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 pb-1 [perspective:1000px] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 xl:grid-cols-3">
-                    {flagshipCardCourses.map((course) => (
-                      <li key={course.id} data-listing-card className="w-[85%] shrink-0 snap-start [transform-style:preserve-3d] sm:w-auto">
-                        <CourseCard course={course} />
-                      </li>
-                    ))}
-                  </ul>
+              <section className="fstrip reveal" aria-label="Flagship programs">
+                <div className="fstrip__h">
+                  <h2><Star className="ic" strokeWidth={1.75} />Flagship programs</h2>
+                  <Link href="/flagship">View all &rarr;</Link>
+                </div>
+                <div className="fmini">
+                  {flagshipCardCourses.map((course) => {
+                    const pricing = getOfferPricing(course);
+                    return (
+                      <Link className="fm" href={`/courses/${course.slug}`} key={course.id}>
+                        <span className="fm__img">
+                          <Image
+                            src={course.cover_image_url || "/images/site/photo-classroom.jpg"}
+                            alt=""
+                            fill
+                            sizes="(max-width:720px) 80vw, 120px"
+                            loading="lazy"
+                            style={{ objectFit: "cover" }}
+                          />
+                        </span>
+                        <span className="fm__b">
+                          <span className="fm__tags">
+                            <span>Flagship</span>
+                            <span>{CATEGORY_LABEL[course.category]}</span>
+                            <span>{LEVEL_LABEL[course.level]}</span>
+                          </span>
+                          <h3>{course.title}</h3>
+                          {course.subtitle && <p>{course.subtitle}</p>}
+                          <span className="fm__f">
+                            <b>{formatInr(pricing.current)}</b>
+                            {pricing.active && pricing.original !== null && <s>{formatInr(pricing.original)}</s>}
+                            {pricing.savings > 0 && <em>Save {pricing.savings}%</em>}
+                          </span>
+                        </span>
+                      </Link>
+                    );
+                  })}
                 </div>
               </section>
             )}
             {courses.length > 0 ? (
-              <ul
-                data-courses-results
-                data-courses-grid
-                className="grid gap-5 [perspective:1000px] sm:grid-cols-2 xl:grid-cols-3"
-              >
-                {courses.map((c) => (
-                  <li key={c.id} data-listing-card className="[transform-style:preserve-3d]">
-                    <CourseCard course={c} />
+              <ul className="cgrid" data-courses-results>
+                {courses.map((course) => (
+                  <li key={course.id} className="reveal">
+                    <CourseCard course={course} />
                   </li>
                 ))}
               </ul>
             ) : (
-              <div data-courses-results className="rounded-2xl border border-dashed border-gold-500/35 bg-card/70 p-10 text-center shadow-sm">
-                <p className="font-semibold">No courses match these filters.</p>
-                <Link href="/courses" className="mt-2 inline-block text-sm text-gold-700 hover:underline">
-                  Clear filters to see every course
-                </Link>
+              <div className="cempty" data-courses-results>
+                <p>No courses match these filters.</p>
+                <Link href="/courses">Clear filters to see every course</Link>
               </div>
             )}
             {!isFlagshipCategory && (
-              <div data-courses-pagination>
-                <Pagination
-                  page={page}
-                  pageCount={Math.max(1, Math.ceil(total / PER_PAGE))}
-                  total={total}
-                  hrefFor={(p) => hrefWith(params, { page: String(p) })}
-                />
+              <div className="pager">
+                {pageCount === 1 ? (
+                  <span>{total} total</span>
+                ) : (
+                  <>
+                    <span>Page {page} of {pageCount}, {total} total</span>
+                    <div className="pager__btns">
+                      {page <= 1 ? (
+                        <span className="pager__b" aria-disabled="true"><ChevronLeft className="ic" strokeWidth={1.75} />Previous</span>
+                      ) : (
+                        <Link className="pager__b" href={hrefWith(params, { page: String(page - 1) })}>
+                          <ChevronLeft className="ic" strokeWidth={1.75} />Previous
+                        </Link>
+                      )}
+                      {page >= pageCount ? (
+                        <span className="pager__b" aria-disabled="true">Next<ChevronRight className="ic" strokeWidth={1.75} /></span>
+                      ) : (
+                        <Link className="pager__b" href={hrefWith(params, { page: String(page + 1) })}>
+                          Next<ChevronRight className="ic" strokeWidth={1.75} />
+                        </Link>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>
