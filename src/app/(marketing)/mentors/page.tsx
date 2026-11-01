@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 import { ContactCta } from "@/components/marketing/ContactCta";
@@ -64,53 +65,46 @@ export default async function MentorsPage({ searchParams }: Props) {
 
   return (
     <>
-      <section className="theme-ink relative overflow-hidden bg-ink pt-fluid-lg pb-16 text-ivory sm:pb-20">
-        <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-32 size-[30rem] rounded-full bg-gold-300/15 blur-3xl" />
-        <div className="container relative z-10">
-          <p className="text-xs uppercase tracking-widest text-gold-300">OUR MENTORS</p>
-          <h1 className="mt-3 text-fluid-3xl text-ivory">Learn from people who do the work</h1>
-          <p className="mt-4 max-w-2xl text-ivory/70">Every Skavyra course is led by a mentor who practises the subject today.</p>
-          {allMentors.length > 0 && (
-            <p className="mt-6 inline-flex rounded-full border border-gold-300/40 px-4 py-1.5 text-sm font-semibold text-gold-100">
-              {allMentors.length} mentors
-            </p>
-          )}
+      <section className="pb">
+        <span className="pb__q" aria-hidden="true" />
+        <span className="pb__q2" aria-hidden="true" />
+        <span className="pb__dots" aria-hidden="true" />
+        <div className="wrap">
+          <div className="reveal">
+            <nav className="crumbs" aria-label="Breadcrumb">
+              <Link href="/">Home</Link>
+              <ChevronRight className="ic" strokeWidth={1.75} aria-hidden="true" />
+              <b>Mentors</b>
+            </nav>
+            <p className="over"><span className="over__bar" />Our mentors</p>
+            <h1 className="ptitle">Learn from people who <span className="hl">do the work</span></h1>
+            <p className="plead">Every Skavyra course is led by a mentor who practises the subject today.</p>
+            {allMentors.length > 0 && <p className="mcount"><b>{allMentors.length}</b>mentors</p>}
+          </div>
         </div>
       </section>
 
-      <nav aria-label="Filter mentors" className="container mt-8 flex flex-wrap gap-2">
-        {filters.map((filter) => {
-          const active = activeStream === filter.value;
-          return (
-            <Link
-              key={filter.value}
-              href={filter.href}
-              aria-current={active ? "page" : undefined}
-              className={`rounded-full border px-4 py-2 text-sm font-semibold ${active ? "border-ink bg-ink text-gold-300" : "border-ink/15 hover:border-gold-300"}`}
-            >
-              {filter.label}
-            </Link>
-          );
-        })}
-      </nav>
+      <div className="wrap">
+        <nav className="mfilter" aria-label="Filter mentors">
+          {filters.map((filter) => {
+            const active = activeStream === filter.value;
+            return <Link key={filter.value} href={filter.href} aria-current={active ? "page" : undefined}>{filter.label}</Link>;
+          })}
+        </nav>
 
-      <section aria-label="Mentor profiles" className="container mt-6 pb-fluid-lg">
         {filteredMentors.length > 0 ? (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredMentors.map((mentor) => (
-              <MentorCard
-                key={mentor.name}
-                mentor={{ ...mentor, categories: [...mentor.categories] }}
-              />
+          <section aria-label="Mentor profiles" className="mgrid">
+            {filteredMentors.map((mentor, index) => (
+              <MentorCard key={mentor.name} mentor={{ ...mentor, categories: [...mentor.categories] }} index={index} />
             ))}
-          </div>
+          </section>
         ) : (
-          <div className="rounded-2xl border border-dashed p-10 text-center text-ink/60">
+          <div className="cempty">
             <p>Mentor profiles appear here as courses are published.</p>
-            {stream && <Link href="/mentors" className="mt-3 inline-block font-semibold text-gold-700 hover:underline">Clear filter</Link>}
+            {stream && <Link href="/mentors">Clear filter</Link>}
           </div>
         )}
-      </section>
+      </div>
       <ContactCta />
     </>
   );

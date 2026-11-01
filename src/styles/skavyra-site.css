@@ -1165,3 +1165,5 @@ body.sheet-open{overflow:hidden}
 .site .fp__btns{flex-direction:column}
 .site .fp__btns .btn{width:100%;flex:auto}
 }
+.site .mmono.s5{background:var(--gold);color:var(--ink);border-radius:0 0 0 100%}
+.site .mmono.s6{background:var(--soft);color:var(--ink);border-radius:50% 0}

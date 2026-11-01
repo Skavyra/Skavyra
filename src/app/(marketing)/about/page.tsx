@@ -105,9 +105,9 @@ export default async function AboutPage() {
           </p>
         ) : (
           <ul className="mt-fluid-sm grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {featuredMentors.map((mentor) => (
+            {featuredMentors.map((mentor, index) => (
               <li key={mentor.name}>
-                <MentorCard mentor={{ ...mentor, bio: null, categories: [] }} />
+                <MentorCard mentor={{ ...mentor, bio: null, categories: [] }} index={index} />
               </li>
             ))}
           </ul>
