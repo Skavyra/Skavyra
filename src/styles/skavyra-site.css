@@ -1157,3 +1157,4 @@ body.sheet-open{overflow:hidden}
 @media (max-width:900px){
 .site .mgrid--3{grid-template-columns:1fr}
 }
+.site .cd .chips .chip{border:1px solid var(--line);background:#fff;color:var(--ink);font-size:14px;font-weight:600;padding:7px 14px}

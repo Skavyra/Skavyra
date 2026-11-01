@@ -1,4 +1,4 @@
-import { ArrowRight, ChevronRight, FileText, Lock, Phone, PlayCircle, Star, Video } from "lucide-react";
+﻿import { ArrowRight, ChevronRight, FileText, Lock, Phone, PlayCircle, Star, Video } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -6,9 +6,9 @@ import { notFound } from "next/navigation";
 import { EnrollCard } from "@/components/marketing/EnrollCard";
 import { CourseBand, CourseTabsNav } from "@/components/marketing/CourseDetailClient";
 import { CourseDetailMotion } from "@/components/marketing/CourseDetailMotion";
+import { FaqAccordion } from "@/components/marketing/FaqAccordion";
 import { PreviewLesson } from "@/components/player/PreviewLesson";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CourseContentSection, CourseContentList, courseContentLines } from "@/components/marketing/CourseContentSection";
 import { MobileEnrollBar } from "@/components/marketing/MobileEnrollBar";
 import { getUser } from "@/lib/auth/get-user";
@@ -123,7 +123,7 @@ export default async function CourseDetailPage({ params }: Props) {
                 {totalMinutes > 0 && <div><dt>Recorded content</dt><dd>{totalMinutes < 60 ? `${totalMinutes} min` : `${Math.floor(totalMinutes / 60)} hr${totalMinutes % 60 ? ` ${totalMinutes % 60} min` : ""}`}</dd></div>}
                 {course.language && <div><dt>Language</dt><dd>{course.language}</dd></div>}
               </dl>
-              {course.mentor_name?.trim() && <p className="cd__by"><span className="mono">{initials(course.mentor_name)}</span><span>Taught by <b>{course.mentor_name}</b>{course.mentor_company ? ` · ${course.mentor_company}` : ""}</span></p>}
+              {course.mentor_name?.trim() && <p className="cd__by"><span className="mono">{initials(course.mentor_name)}</span><span>Taught by <b>{course.mentor_name}</b>{course.mentor_company ? ` Â· ${course.mentor_company}` : ""}</span></p>}
               <div className="btns">
                 <Link className="btn btn--y btn--lg" href={primaryHref}>{primaryLabel}<ArrowRight className="ic" strokeWidth={1.75} /></Link>
                 {primaryLabel !== "Talk to a counsellor" && <Link className="btn btn--line btn--lg" href={`/contact?course=${encodeURIComponent(course.title)}`}><Phone className="ic" strokeWidth={1.75} />Talk to a counsellor</Link>}
@@ -136,33 +136,33 @@ export default async function CourseDetailPage({ params }: Props) {
                 {audience.length > 0 && <CourseContentSection id="audience" eyebrow="Find your fit" title="Who this course is for"><CourseContentList items={audience} columns /></CourseContentSection>}
                 {prerequisites.length > 0 && <CourseContentSection id="prerequisites" eyebrow="Before you begin" title="What you'll need"><CourseContentList items={prerequisites} /></CourseContentSection>}
                 {modules.length > 0 && <CourseContentSection id="curriculum" eyebrow="The learning path" title="Course curriculum">
-                  <p className="mb-5 text-sm text-muted-foreground">{modules.length} {modules.length === 1 ? "module" : "modules"} · {lessonCount} {lessonCount === 1 ? "lesson" : "lessons"}</p>
+                  <p className="csec__p">{modules.length} {modules.length === 1 ? "module" : "modules"} · {lessonCount} {lessonCount === 1 ? "lesson" : "lessons"}</p>
                     <Accordion type="multiple" defaultValue={[modules[0].id]} className="flex flex-col gap-3">
                       {modules.map((m, mi) => (
                         <AccordionItem
                           key={m.id}
                           value={m.id}
-                          className="overflow-hidden rounded-xl border-ink/10 bg-card transition-[border-color,box-shadow] data-[state=open]:border-gold-500/50 data-[state=open]:shadow-sm"
+                          className="overflow-hidden rounded-[22px] border border-[#EFE6C4] bg-white px-[22px] data-[state=open]:border-[#0D0D0D]"
                         >
-                          <AccordionTrigger className="transition-colors hover:bg-muted/60 data-[state=open]:bg-gold-100/20">
+                          <AccordionTrigger className="px-1 py-[22px] text-[18px] font-semibold text-[#0D0D0D]">
                             <span className="flex flex-1 items-center justify-between gap-4">
                               <span>
-                                <span className="mr-2 text-muted-foreground">Module {mi + 1}</span>
+                                <span className="mr-2 text-[13px] font-bold uppercase text-[#8E6718]">Module {mi + 1}</span>
                                 {m.title}
                               </span>
-                              <span className="shrink-0 text-xs font-normal text-muted-foreground">{m.lessons.length} lessons</span>
+                              <span className="shrink-0 text-[14px] font-normal text-[#5C5B57]">{m.lessons.length} lessons</span>
                             </span>
                           </AccordionTrigger>
-                          <AccordionContent className="px-3">
+                          <AccordionContent className="px-0">
                             <ul className="flex flex-col">
                               {m.lessons.map((l) => {
                                 const Icon = TYPE_ICON[l.lesson_type ?? "video"];
                                 return (
-                                  <li key={l.lesson_id} className="flex items-center gap-3 border-t px-2 py-3 text-foreground transition-colors hover:bg-muted/40">
-                                    <Icon className="size-4 shrink-0 text-gold-700" />
+                                  <li key={l.lesson_id} className="flex items-center gap-3 border-t border-[#E6E4DE] px-1 py-3 text-[15px]">
+                                    <Icon className="ic shrink-0 text-[#8E6718]" strokeWidth={1.75} />
                                     <span className="min-w-0 flex-1 truncate">{l.lesson_title}</span>
-                                    {l.is_preview ? <PreviewLesson lessonId={l.lesson_id!} title={l.lesson_title ?? ""} /> : <Lock className="size-3.5 text-muted-foreground" aria-label="Unlocks after enrolment" />}
-                                    {!!l.duration_minutes && <span className="w-14 text-right text-xs text-muted-foreground">{l.duration_minutes} min</span>}
+                                    {l.is_preview ? <PreviewLesson lessonId={l.lesson_id!} title={l.lesson_title ?? ""} /> : <Lock className="ic size-4 text-[#8E6718]" strokeWidth={1.75} aria-label="Unlocks after enrolment" />}
+                                    {!!l.duration_minutes && <span className="w-14 text-right text-sm text-[#5C5B57]">{l.duration_minutes} min</span>}
                                   </li>
                                 );
                               })}
@@ -175,7 +175,7 @@ export default async function CourseDetailPage({ params }: Props) {
                 {projects.length > 0 && <CourseContentSection id="projects" eyebrow="Put it into practice" title="What you'll build" tone="dark">
                   <ol className="projects">
                     {projects.map((project, index) => {
-                      const separators = [" — ", " - "]
+                      const separators = [" â€” ", " - "]
                         .map((separator) => ({ separator, index: project.indexOf(separator) }))
                         .filter((match) => match.index >= 0)
                         .sort((a, b) => a.index - b.index);
@@ -193,15 +193,15 @@ export default async function CourseDetailPage({ params }: Props) {
                     })}
                   </ol>
                 </CourseContentSection>}
-                {!!course.tools?.length && <CourseContentSection id="tools" eyebrow="Tools" title="Tools you'll use"><ul className="flex flex-wrap gap-2">{course.tools.map((tool) => <li key={tool} className="rounded-full border border-ink/10 bg-card px-3 py-1 text-sm">{tool}</li>)}</ul></CourseContentSection>}
+                {!!course.tools?.length && <CourseContentSection id="tools" eyebrow="Tools" title="Tools you'll use"><ul className="chips">{course.tools.map((tool) => <li className="chip" key={tool}>{tool}</li>)}</ul></CourseContentSection>}
                 {(course.mentor_name?.trim() || course.mentor_bio?.trim()) && <CourseContentSection id="mentor" eyebrow="Meet your guide" title="Your course mentor">
-                  {course.mentor_name?.trim() && <div className="flex items-center gap-4">
-                    <Avatar className="size-16 shrink-0">{course.mentor_avatar_url && <AvatarImage src={course.mentor_avatar_url} alt="" />}<AvatarFallback className="bg-ink font-bold text-gold-300">{initials(course.mentor_name)}</AvatarFallback></Avatar>
-                    <div className="min-w-0 break-words"><h3 className="text-lg">{course.mentor_name}</h3>{course.mentor_company && <p className="mt-1 text-sm text-muted-foreground">{course.mentor_company}</p>}</div>
+                  {course.mentor_name?.trim() && <div className="mentorbox">
+                    {course.mentor_avatar_url ? <img src={course.mentor_avatar_url} alt="" style={{ width: 56, height: 56, borderRadius: "50%", objectFit: "cover" }} /> : <span className="mono">{initials(course.mentor_name)}</span>}
+                    <div><h3>{course.mentor_name}</h3><p>{course.mentor_company || `Mentor, ${course.title}`}</p></div>
                   </div>}
-                  {course.mentor_bio?.trim() && <p className="mt-5 whitespace-pre-line break-words leading-relaxed text-muted-foreground">{course.mentor_bio}</p>}
+                  {course.mentor_bio?.trim() && <p className="csec__p" style={{ whiteSpace: "pre-line" }}>{course.mentor_bio}</p>}
                 </CourseContentSection>}
-                {FAQS.length > 0 && <CourseContentSection id="faq" eyebrow="Good to know" title="Frequently asked questions"><Accordion type="single" collapsible className="flex flex-col gap-3">{FAQS.map((faq) => <AccordionItem key={faq.q} value={faq.q} className="rounded-xl border-ink/10"><AccordionTrigger>{faq.q}</AccordionTrigger><AccordionContent>{faq.a}</AccordionContent></AccordionItem>)}</Accordion></CourseContentSection>}
+                {FAQS.length > 0 && <CourseContentSection id="faq" eyebrow="Good to know" title="Frequently asked questions"><FaqAccordion items={FAQS} variant="inline" /></CourseContentSection>}
           </div>
 
           <aside className="cd__side"><div id="enrollment">
