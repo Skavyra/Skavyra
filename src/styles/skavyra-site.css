@@ -1127,8 +1127,8 @@ body.sheet-open{overflow:hidden}
 @media (prefers-reduced-motion:reduce){
 .site .split .sw__i{transform:none!important;opacity:1!important}
 }
-.site .fh__q,.site .ab__logo,.site .pb__q,.site .pb__q2,.site .auth__q{display:none!important}
-.site .fstrip::before,.site .cd__band::after,.site .mentorbox::after,.site .enroll__img::after,.site .mission::after{display:none!important;content:none!important}
+.site .auth__q{display:none!important}
+.site .fstrip::before,.site .cd__band::after,.site .mentorbox::after,.site .enroll__img::after{display:none!important;content:none!important}
 .site .fstrip__h{padding-right:0}
 .site .incard__ic,.site .incard:nth-child(2) .incard__ic,.site .incard:nth-child(3) .incard__ic,.site .incard:nth-child(4) .incard__ic{border-radius:50%!important}
 .site .mmono.s2,.site .mmono.s4{border-radius:50%!important}
