@@ -1,12 +1,9 @@
 "use client";
 
+import { ArrowRight } from "lucide-react";
 import { useState, useTransition } from "react";
 
 import { submitContact } from "@/actions/contact";
-import { Button } from "@/components/ui/button";
-import { Field } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 
 export function ContactForm({
   compact = false,
@@ -23,16 +20,14 @@ export function ContactForm({
 
   if (done) {
     return (
-      <div role="status" className="rounded-2xl border border-gold-300 bg-gold-100/20 p-6">
-        <p className="font-display text-lg font-bold">Thanks, we have your number.</p>
-        <p className="mt-2 text-sm text-muted-foreground">A counsellor will call you back, usually within one working day.</p>
+      <div role="status" className="preview-note is-on">
+        <p>Thanks, we have your number. A counsellor will call you back, usually within one working day.</p>
       </div>
     );
   }
 
   return (
     <form
-      className="flex flex-col gap-4"
       action={(formData) => {
         setError(null);
         start(async () => {
@@ -43,35 +38,37 @@ export function ContactForm({
       }}
     >
       {topic && <input type="hidden" name="topic" value={topic} />}
-      <div className={compact ? "flex flex-col gap-4" : "grid gap-4 sm:grid-cols-2"}>
-        <Field label="Your name" htmlFor="c-name">
-          <Input id="c-name" name="full_name" autoComplete="name" required />
-        </Field>
-        <Field label="Mobile number" htmlFor="c-phone">
-          <Input id="c-phone" name="phone" type="tel" inputMode="numeric" autoComplete="tel" required />
-        </Field>
+      <div className="frow">
+        <label className={compact ? undefined : "field"} htmlFor="c-name">
+          Your name
+          <input id="c-name" name="full_name" autoComplete="name" required placeholder="Your name" />
+        </label>
+        <label className={compact ? undefined : "field"} htmlFor="c-phone">
+          Mobile number
+          <input id="c-phone" name="phone" type="tel" inputMode="numeric" autoComplete="tel" required placeholder="Mobile number" />
+        </label>
       </div>
       {!compact && (
         <>
-          <Field label="Email (optional)" htmlFor="c-email">
-            <Input id="c-email" name="email" type="email" autoComplete="email" />
-          </Field>
-          <Field label="Course you are interested in (optional)" htmlFor="c-course">
-            <Input id="c-course" name="interested_course_text" defaultValue={defaultCourse} />
-          </Field>
-          <Field label="Anything we should know (optional)" htmlFor="c-msg">
-            <Textarea id="c-msg" name="remarks" rows={4} />
-          </Field>
+          <label className="field" htmlFor="c-email">
+            Email <small>(optional)</small>
+            <input id="c-email" name="email" type="email" autoComplete="email" placeholder="Email" />
+          </label>
+          <label className="field" htmlFor="c-course">
+            Course you are interested in <small>(optional)</small>
+            <input id="c-course" name="interested_course_text" defaultValue={defaultCourse} placeholder="Course you are interested in" />
+          </label>
+          <label className="field" htmlFor="c-msg">
+            Anything we should know <small>(optional)</small>
+            <textarea id="c-msg" name="remarks" rows={4} placeholder="Anything we should know" />
+          </label>
         </>
       )}
-      {error && (
-        <p role="alert" className="text-sm font-medium text-destructive">
-          {error}
-        </p>
-      )}
-      <Button type="submit" size="lg" loading={pending}>
-        {compact ? "Request a call back" : "Send"}
-      </Button>
+      {error && <p role="alert" className="preview-note is-on">{error}</p>}
+      <button type="submit" className="btn btn--ink btn--block btn--lg" disabled={pending}>
+        {pending ? "Sending…" : compact ? "Request a call back" : "Send"}
+        <ArrowRight className="ic" strokeWidth={1.75} />
+      </button>
     </form>
   );
 }
