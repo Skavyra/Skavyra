@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Check, X } from "lucide-react";
+import { Check, ChevronRight, X } from "lucide-react";
 
 import { CourseCard, type CourseCardData } from "@/components/marketing/CourseCard";
 import { CoursesPageMotion } from "@/components/marketing/CoursesPageMotion";
@@ -8,7 +8,6 @@ import { Pagination } from "@/components/ui/pagination";
 import { CATEGORY_LABEL, LEVEL_LABEL } from "@/lib/constants";
 import { getFlagshipCourses } from "@/lib/flagship";
 import { createClient } from "@/lib/supabase/server";
-import { cn } from "@/lib/utils";
 import type { CourseCategory, CourseLevel } from "@/types";
 import type { FlagshipCourse } from "@/types/flagship";
 
@@ -126,47 +125,48 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
 
   return (
     <CoursesPageMotion animationKey={animationKey}>
-      <div className="container section">
-        <div className="theme-ink relative overflow-hidden rounded-3xl bg-ink px-6 py-10 text-ivory shadow-[0_30px_70px_-46px_rgba(13,13,13,0.6)] sm:px-10 sm:py-14">
-          <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-32 size-[28rem] rounded-full bg-gold-300/15 blur-3xl" />
-          <div className="relative z-10">
-            <p className="text-xs uppercase tracking-widest text-gold-300">All courses</p>
-            <h1 data-courses-heading className="mt-3 text-fluid-3xl text-ivory">Explore courses</h1>
-            <p data-courses-description className="mt-3 max-w-2xl text-ivory/70">
-              IT and non-IT courses led by mentors from the industry. Filter by stream, level and duration to find your fit.
-            </p>
-            <ul className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-ivory/75">
-              {["Mentor-led", "Real projects", "Certificate on completion"].map((point) => (
-                <li key={point} className="inline-flex items-center gap-2">
-                  <Check aria-hidden="true" className="size-4 text-gold-300" />
-                  {point}
-                </li>
-              ))}
-            </ul>
+      <>
+        <section className="pb">
+          <span className="pb__q" aria-hidden="true" />
+          <span className="pb__q2" aria-hidden="true" />
+          <span className="pb__dots" aria-hidden="true" />
+          <div className="wrap">
+            <div className="reveal">
+              <nav className="crumbs" aria-label="Breadcrumb">
+                <Link href="/">Home</Link>
+                <ChevronRight className="ic" strokeWidth={1.75} aria-hidden="true" />
+                <b>Courses</b>
+              </nav>
+              <p className="over"><span className="over__bar" />All courses</p>
+              <h1 className="ptitle" data-courses-heading>Explore <span className="hl">courses</span></h1>
+              <p className="plead" data-courses-description>
+                IT and non-IT courses led by mentors from the industry. Filter by stream, level and duration to find your fit.
+              </p>
+              <ul className="ticks">
+                {["Mentor-led", "Real projects", "Certificate on completion"].map((point) => (
+                  <li key={point}><Check className="ic" strokeWidth={1.75} aria-hidden="true" />{point}</li>
+                ))}
+              </ul>
+            </div>
           </div>
-        </div>
+        </section>
 
-        <div className="mt-fluid-sm grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-8">
-          <aside data-courses-filters aria-label="Filters" className="min-w-0 flex flex-col gap-3 lg:sticky lg:top-24 lg:self-start lg:gap-6 lg:rounded-2xl lg:border lg:border-ink/10 lg:bg-card lg:p-5 lg:shadow-[0_16px_40px_-34px_rgba(13,13,13,0.4)]">
-            {groups.map((g) => (
-              <div key={g.key} className="flex items-center gap-3 lg:block">
-                <h2 className="w-[5.75rem] shrink-0 text-xs font-bold uppercase tracking-widest text-ink/60 lg:w-auto">{g.title}</h2>
-                <ul className="hide-scrollbar mt-0 flex min-w-0 gap-2 overflow-x-auto lg:mt-3 lg:flex-col lg:gap-1">
-                  {g.options.map((o) => {
-                    const active = params[g.key] === o.value;
+        <div className="wrap clay">
+          <aside className="filters reveal" aria-label="Filters" data-courses-filters>
+            {groups.map((group) => (
+              <div className="fgroup" key={group.key}>
+                <h2>{group.title}</h2>
+                <ul>
+                  {group.options.map((option) => {
+                    const active = params[group.key] === option.value;
                     return (
-                      <li key={o.value} className="shrink-0">
+                      <li key={option.value}>
                         <Link
-                          href={hrefWith(params, { [g.key]: active ? "" : o.value })}
+                          className="fbtn"
+                          href={hrefWith(params, { [group.key]: active ? "" : option.value })}
                           aria-current={active ? "true" : undefined}
-                          className={cn(
-                            "block rounded-lg border px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 lg:border-transparent",
-                            active
-                              ? "border-ink bg-ink font-semibold text-gold-300 shadow-sm lg:border-ink"
-                              : "bg-card text-foreground/80 hover:border-gold-300 hover:bg-gold-100/30 lg:bg-transparent lg:hover:bg-muted",
-                          )}
                         >
-                          {o.label}
+                          {option.label}
                         </Link>
                       </li>
                     );
@@ -178,18 +178,18 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
 
           <div className="min-w-0 flex flex-col gap-8">
             {hasActiveFilter && (
-              <div className="flex flex-wrap items-center gap-2 text-sm">
+              <div className="activef">
                 {activeFilters.map(({ key, label }) => (
                   <Link
                     key={key}
                     href={hrefWith(params, { [key]: "" })}
                     aria-label={`Remove filter ${label}`}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-gold-300 bg-gold-100/30 px-3 py-1 font-semibold text-ink hover:bg-gold-100/50"
+                    className="achip"
                   >
-                    {label}<X aria-hidden="true" className="size-3.5" />
+                    {label}<X className="ic" strokeWidth={1.75} aria-hidden="true" />
                   </Link>
                 ))}
-                <Link href="/courses" className="font-semibold text-gold-700 hover:underline">Clear all</Link>
+                <Link className="aclear" href="/courses">Clear all</Link>
               </div>
             )}
             {showPinnedFlagships && flagshipCardCourses.length > 0 && (
@@ -244,7 +244,7 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
             )}
           </div>
         </div>
-      </div>
+      </>
     </CoursesPageMotion>
   );
 }
