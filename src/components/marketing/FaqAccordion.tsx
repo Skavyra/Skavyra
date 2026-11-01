@@ -1,28 +1,51 @@
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import Image from "next/image";
+import { Plus } from "lucide-react";
+
 import { FAQS } from "@/lib/content";
 
-import { SectionHeading } from "./SectionHeading";
+type FaqItem = { q: string; a: string };
 
-/** Two columns on desktop, first question open, per the wireframe. */
-export function FaqAccordion({ items = FAQS }: { items?: { q: string; a: string }[] }) {
-  const half = Math.ceil(items.length / 2);
-  const columns = [items.slice(0, half), items.slice(half)];
+/** Native details keep every question closed until a visitor opens it. */
+export function FaqAccordion({
+  items = FAQS,
+  variant = "full",
+}: {
+  items?: FaqItem[];
+  variant?: "full" | "inline";
+}) {
+  const list = (
+    <div className="faqs__list reveal">
+      {items.map((item) => (
+        <details className="faq" key={item.q}>
+          <summary>{item.q}<span className="faq__pm"><Plus className="ic" strokeWidth={1.75} /></span></summary>
+          <div className="faq__a"><p>{item.a}</p></div>
+        </details>
+      ))}
+    </div>
+  );
+
+  if (variant === "inline") return list;
+
   return (
-    <section className="section bg-ivory/60">
-      <div className="container">
-        <SectionHeading title="Questions students ask" />
-        <div className="mt-fluid-sm grid items-start gap-3 lg:grid-cols-2">
-          {columns.map((col, c) => (
-            <Accordion key={c} type="single" collapsible defaultValue={c === 0 ? "q-0" : undefined} className="flex flex-col gap-3">
-              {col.map((f, i) => (
-                <AccordionItem key={f.q} value={`q-${i}`} className="overflow-hidden border-ink/10 bg-card shadow-[0_10px_28px_-26px_rgba(13,13,13,0.45)] transition-[transform,border-color,box-shadow] duration-200 motion-safe:hover:-translate-y-px data-[state=open]:border-gold-500/50">
-                  <AccordionTrigger>{f.q}</AccordionTrigger>
-                  <AccordionContent className="faq-answer-motion">{f.a}</AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          ))}
+    <section className="sec sec--grey faqs" id="faq">
+      <div className="wrap faqs__grid">
+        <div className="faqs__intro reveal">
+          <p className="over"><span className="over__bar" />Good to know</p>
+          <h2 className="h2">Questions students <span className="hl">ask</span></h2>
+          <div className="faqs__art">
+            <span className="blk blk--y faqs__blk" aria-hidden="true" />
+            <figure className="faqs__photo">
+              <Image
+                src="/images/site/photo-mentor.jpg"
+                alt="A mentor reviewing work with a student"
+                fill
+                sizes="(max-width:900px) 90vw, 430px"
+                style={{ objectFit: "cover" }}
+              />
+            </figure>
+          </div>
         </div>
+        {list}
       </div>
     </section>
   );
