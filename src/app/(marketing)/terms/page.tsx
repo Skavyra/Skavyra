@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 
 import { SUPPORT_EMAIL } from "@/lib/content";
+import { slugify } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Terms of use" };
 
@@ -33,19 +36,22 @@ const SECTIONS = [
 
 export default function TermsPage() {
   return (
-    <div className="container section max-w-3xl">
-      <h1 className="text-fluid-3xl">Terms of use</h1>
-      <p className="mt-4 text-muted-foreground">
-        The rules for using Skavyra and its courses. Write to {SUPPORT_EMAIL} if anything is unclear.
-      </p>
-      <div className="mt-10 flex flex-col gap-8">
-        {SECTIONS.map((s) => (
-          <section key={s.title}>
-            <h2 className="text-fluid-xl">{s.title}</h2>
-            <p className="mt-3 leading-relaxed text-foreground/85">{s.body}</p>
-          </section>
-        ))}
+    <>
+      <section className="pb">
+        <span className="pb__q" aria-hidden="true" />
+        <span className="pb__q2" aria-hidden="true" />
+        <span className="pb__dots" aria-hidden="true" />
+        <div className="wrap"><div className="reveal">
+          <nav className="crumbs" aria-label="Breadcrumb"><Link href="/">Home</Link><ChevronRight className="ic" strokeWidth={1.75} /><b>Terms of use</b></nav>
+          <p className="over"><span className="over__bar" />Legal</p>
+          <h1 className="ptitle">Terms of <span className="hl">use</span></h1>
+          <p className="plead">The rules for using Skavyra and its courses. {SUPPORT_EMAIL && <>Write to <a className="alink" href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> if anything is unclear.</>}</p>
+        </div></div>
+      </section>
+      <div className="wrap legal">
+        <aside className="toc"><small>On this page</small>{SECTIONS.map((s) => <a key={s.title} href={`#${slugify(s.title)}`}>{s.title}</a>)}</aside>
+        <div className="prose">{SECTIONS.map((s, i) => <section key={s.title} id={slugify(s.title)} className="reveal"><h2><b>{String(i + 1).padStart(2, "0")}</b>{s.title}</h2><p>{s.body}</p></section>)}</div>
       </div>
-    </div>
+    </>
   );
 }
