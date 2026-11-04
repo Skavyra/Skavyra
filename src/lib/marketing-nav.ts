@@ -23,7 +23,7 @@ export function isMarketingNavLinkActive(
 ) {
   const { path, hash, query } = splitHref(link.href);
 
-  if (query) return pathname === path && queryMatches(query, currentSearch);
+  if (query) return pathname === path && (!currentSearch || queryMatches(query, currentSearch));
 
   const queryDestinationIsActive = links.some((candidate) => {
     const candidateHref = splitHref(candidate.href);
