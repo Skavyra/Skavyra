@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Check, Phone } from "lucide-react";
+import { ArrowRight, Award, Check, Clock, Globe, Phone } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 
 import { requestEnrollment } from "@/actions/contact";
@@ -55,7 +55,7 @@ export function EnrollCard({
           ? { ok: true, text: "Your request was sent. A counsellor will contact you to confirm the plan and enrollment." }
           : { ok: false, text: r.error });
       } catch {
-        setMessage({ ok: false, text: "We couldnâ€™t send your request. Please try again." });
+        setMessage({ ok: false, text: "We couldn’t send your request. Please try again." });
       } finally {
         requestStarted.current = false;
       }
@@ -99,7 +99,7 @@ export function EnrollCard({
           <Link className="btn btn--ink btn--block btn--lg" href={`/signup?next=${encodeURIComponent(`/courses/${course.slug}`)}`}>Enroll now<ArrowRight className="ic" strokeWidth={1.75} /></Link>
         ) : state === "student" ? (
           <button type="button" className="btn btn--ink btn--block btn--lg" disabled={pending} onClick={handleRequest}>
-            {pending ? "Sending requestâ€¦" : "Request enrollment"}
+            {pending ? "Sending request…" : "Request enrollment"}
           </button>
         ) : null}
 
@@ -124,10 +124,10 @@ export function EnrollCard({
         )}
 
         <ul className="enroll__list">
-          {course.duration_weeks && <li><Check className="ic" strokeWidth={1.75} />{course.duration_weeks} weeks</li>}
-          {course.language && <li><Check className="ic" strokeWidth={1.75} />Taught in {course.language}</li>}
+          {course.duration_weeks && <li><Clock className="ic" strokeWidth={1.75} />{course.duration_weeks} weeks</li>}
+          {course.language && <li><Globe className="ic" strokeWidth={1.75} />Taught in {course.language}</li>}
           {course.allows_partial && <li><Check className="ic" strokeWidth={1.75} />Installment plans available</li>}
-          <li><Check className="ic" strokeWidth={1.75} />Certificate on completion</li>
+          <li><Award className="ic" strokeWidth={1.75} />Certificate on completion</li>
         </ul>
         {state === "guest" && (
           <p className="enroll__note">

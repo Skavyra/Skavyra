@@ -38,16 +38,14 @@ export function ContactForm({
       }}
     >
       {topic && <input type="hidden" name="topic" value={topic} />}
-      <div className="frow">
-        <label className={compact ? undefined : "field"} htmlFor="c-name">
-          Your name
-          <input id="c-name" name="full_name" autoComplete="name" required placeholder="Your name" />
-        </label>
-        <label className={compact ? undefined : "field"} htmlFor="c-phone">
-          Mobile number
-          <input id="c-phone" name="phone" type="tel" inputMode="numeric" autoComplete="tel" required placeholder="Mobile number" />
-        </label>
-      </div>
+      <label className={compact ? undefined : "field"} htmlFor="c-name">
+        Your name
+        <input id="c-name" name="full_name" autoComplete="name" required placeholder="Your name" />
+      </label>
+      <label className={compact ? undefined : "field"} htmlFor="c-phone">
+        Mobile number
+        <input id="c-phone" name="phone" type="tel" inputMode="numeric" autoComplete="tel" required placeholder="Mobile number" />
+      </label>
       {!compact && (
         <>
           <label className="field" htmlFor="c-email">

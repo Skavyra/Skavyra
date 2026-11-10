@@ -78,7 +78,7 @@ export default async function MentorsPage({ searchParams }: Props) {
             </nav>
             <p className="over"><span className="over__bar" />Our mentors</p>
             <h1 className="ptitle">Learn from people who <span className="hl">do the work</span></h1>
-            <p className="plead">Every Skavyra course is led by a mentor who practises the subject today.</p>
+            <p className="plead mentors__lead">Every Skavyra course is led by a mentor who practises the subject today.</p>
             {allMentors.length > 0 && <p className="mcount"><b>{allMentors.length}</b>mentors</p>}
           </div>
         </div>

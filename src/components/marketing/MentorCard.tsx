@@ -16,7 +16,7 @@ export function MentorCard({ mentor, index = 0 }: { mentor: MentorCardData; inde
   const showsIt = mentor.categories.some((category) => category === "it" || category === "both");
   const showsNonIt = mentor.categories.some((category) => category === "non_it" || category === "both");
   const categoryLabel = showsIt && showsNonIt ? "IT · Non-IT" : showsIt ? "IT" : showsNonIt ? "Non-IT" : null;
-  const avatarClass = `mmono s${(index % 6) + 1}`;
+  const avatarClass = `mmono s${(index % 4) + 1}`;
 
   return (
     <article className={`mcard${mentor.bio ? " mcard--bio" : ""} reveal`}>

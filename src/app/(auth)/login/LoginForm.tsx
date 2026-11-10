@@ -1,13 +1,11 @@
 "use client";
 
+import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
 import { GoogleButton } from "@/components/marketing/GoogleButton";
-import { Button } from "@/components/ui/button";
-import { Field } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
 
 const GOOGLE_LOGIN_ENABLED = process.env.NEXT_PUBLIC_GOOGLE_LOGIN === "on";
@@ -22,6 +20,7 @@ export function LoginForm({ next, notice }: { next?: string; notice?: string }) 
   const router = useRouter();
   const [error, setError] = useState<string | null>(notice ? (NOTICES[notice] ?? null) : null);
   const [pending, setPending] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const submitting = useRef(false);
 
   async function onSubmit(formData: FormData) {
@@ -60,8 +59,8 @@ export function LoginForm({ next, notice }: { next?: string; notice?: string }) 
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-fluid-2xl">Log in</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Welcome back. Pick up where you left off.</p>
+        <h1>Log in</h1>
+        <p className="mt-2 text-base text-muted-foreground">Welcome back. Pick up where you left off.</p>
       </div>
 
       {GOOGLE_LOGIN_ENABLED && (
@@ -75,38 +74,30 @@ export function LoginForm({ next, notice }: { next?: string; notice?: string }) 
       )}
 
       <form action={onSubmit} className="flex flex-col gap-4">
-        <Field label="Email" htmlFor="email">
-          <Input id="email" name="email" type="email" autoComplete="email" required />
-        </Field>
-        <Field label="Password" htmlFor="password">
-          <Input id="password" name="password" type="password" autoComplete="current-password" required />
-        </Field>
+        <label className="field" htmlFor="email">Email<input id="email" name="email" type="email" autoComplete="email" required /></label>
+        <label className="field" htmlFor="password">Password<span className="pw"><input id="password" name="password" type={showPassword ? "text" : "password"} autoComplete="current-password" required /><button type="button" aria-label="Show password" onClick={() => setShowPassword((shown) => !shown)}>{showPassword ? <EyeOff className="ic" strokeWidth={1.75} /> : <Eye className="ic" strokeWidth={1.75} />}</button></span></label>
         {error && (
           <p role="alert" className="rounded-xl border border-destructive/20 bg-destructive/5 px-3.5 py-3 text-sm font-medium leading-relaxed text-destructive">
             {error}
           </p>
         )}
-        <Button type="submit" size="lg" loading={pending}>
-          Log in
-        </Button>
+        <button className="btn btn--ink btn--block btn--lg" type="submit" disabled={pending}>Log in <ArrowRight className="ic" strokeWidth={1.75} /></button>
       </form>
 
       <div className="flex flex-col gap-2 text-sm">
-        <Link href="/forgot-password" className="font-semibold text-gold-700 hover:underline">
-          Forgot your password?
-        </Link>
-        <p className="text-muted-foreground">
+        <p className="auth__row"><Link href="/forgot-password" className="alink">Forgot your password?</Link></p>
+        <p className="auth__alt">
           New to Skavyra?{" "}
           <Link
             href={next ? `/signup?next=${encodeURIComponent(next)}` : "/signup"}
-            className="font-semibold text-foreground hover:underline"
+            className="alink"
           >
             Create an account
           </Link>
         </p>
       </div>
 
-      <p className="text-xs leading-relaxed text-muted-foreground">By continuing you agree to our <Link href="/terms" className="underline hover:text-foreground">terms</Link> and <Link href="/privacy" className="underline hover:text-foreground">privacy policy</Link>.</p>
+      <p className="auth__fine">By continuing you agree to our <Link href="/terms" className="alink">terms</Link> and <Link href="/privacy" className="alink">privacy policy</Link>.</p>
     </div>
   );
 }

@@ -55,7 +55,6 @@ export default async function CourseDetailPage({ params }: Props) {
     if (row.lesson_id) m.lessons.push(row);
   }
   const lessonCount = modules.reduce((sum, module) => sum + module.lessons.length, 0);
-  const totalMinutes = (outline ?? []).reduce((s, l) => s + (l.duration_minutes ?? 0), 0);
 
   const user = await getUser();
   let state: "guest" | "student" | "enrolled" | "staff" = "guest";
@@ -119,11 +118,10 @@ export default async function CourseDetailPage({ params }: Props) {
               {course.subtitle && <p className="cd__s">{course.subtitle}</p>}
               <dl className="cd__meta">
                 {course.duration_weeks && <div><dt>Duration</dt><dd>{course.duration_weeks} weeks</dd></div>}
-                {lessonCount > 0 && <div><dt>Lessons</dt><dd>{lessonCount}</dd></div>}
-                {totalMinutes > 0 && <div><dt>Recorded content</dt><dd>{totalMinutes < 60 ? `${totalMinutes} min` : `${Math.floor(totalMinutes / 60)} hr${totalMinutes % 60 ? ` ${totalMinutes % 60} min` : ""}`}</dd></div>}
                 {course.language && <div><dt>Language</dt><dd>{course.language}</dd></div>}
+                <div><dt>Level</dt><dd>{LEVEL_LABEL[course.level]}</dd></div>
               </dl>
-              {course.mentor_name?.trim() && <p className="cd__by"><span className="mono">{initials(course.mentor_name)}</span><span>Taught by <b>{course.mentor_name}</b>{course.mentor_company ? ` Â· ${course.mentor_company}` : ""}</span></p>}
+              {course.mentor_name?.trim() && <p className="cd__by"><span className="mono">{initials(course.mentor_name)}</span><span>Taught by <b>{course.mentor_name}</b>{course.mentor_company ? ` · ${course.mentor_company}` : ""}</span></p>}
               <div className="btns">
                 <Link className="btn btn--y btn--lg" href={primaryHref}>{primaryLabel}<ArrowRight className="ic" strokeWidth={1.75} /></Link>
                 {primaryLabel !== "Talk to a counsellor" && <Link className="btn btn--line btn--lg" href={`/contact?course=${encodeURIComponent(course.title)}`}><Phone className="ic" strokeWidth={1.75} />Talk to a counsellor</Link>}
@@ -175,7 +173,7 @@ export default async function CourseDetailPage({ params }: Props) {
                 {projects.length > 0 && <CourseContentSection id="projects" eyebrow="Put it into practice" title="What you'll build" tone="dark">
                   <ol className="projects">
                     {projects.map((project, index) => {
-                      const separators = [" â€” ", " - "]
+                      const separators = [" \u2014 ", " - "]
                         .map((separator) => ({ separator, index: project.indexOf(separator) }))
                         .filter((match) => match.index >= 0)
                         .sort((a, b) => a.index - b.index);

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Check, Star, Tag } from "lucide-react";
+import { ArrowRight, Check, Sparkles, Star } from "lucide-react";
 
 import { LEVEL_LABEL } from "@/lib/constants";
 import { formatInr, getOfferPricing } from "@/lib/utils";
@@ -35,7 +35,7 @@ export function FlagshipCard({ course }: { course: FlagshipCourse }) {
         <div className="fp__buy">
           <div>
             {pricing.active && <div className="enroll__offer">
-              {course.offer_label && <span className="offerpill"><Tag className="ic" strokeWidth={1.75} />{course.offer_label}</span>}
+              {course.offer_label && <span className="offerpill"><Sparkles className="ic" strokeWidth={1.75} />{course.offer_label}</span>}
               {course.show_countdown && course.offer_ends_at && <span className="cdown">Offer ends in <b><OfferCountdown endsAt={course.offer_ends_at} /></b></span>}
             </div>}
             <div className="enroll__price">

@@ -21,12 +21,13 @@ const { isMarketingNavLinkActive } = loadTs('src/lib/marketing-nav.ts');
 const links = [
   { href: '/', label: 'Home' },
   { href: '/courses', label: 'Courses' },
+  { href: '/contact', label: 'Contact' },
   { href: '/contact?topic=college', label: 'For colleges' },
   { href: '/about#mentors', label: 'Mentors' },
   { href: '/about', label: 'About' },
 ];
-const activeLabels = (pathname, hash = '') => links
-  .filter((link) => isMarketingNavLinkActive(link, links, pathname, hash))
+const activeLabels = (pathname, hash = '', search = '') => links
+  .filter((link) => isMarketingNavLinkActive(link, links, pathname, hash, search))
   .map((link) => link.label);
 
 test('About is the only active item on /about without a hash', () => {
@@ -39,6 +40,12 @@ test('Mentors is the only active item on /about#mentors', () => {
 
 test('course subpages keep Courses active without activating Home', () => {
   assert.deepEqual(activeLabels('/courses/data-analytics'), ['Courses']);
+});
+
+test('Contact and For colleges activate only for their matching contact destination', () => {
+  assert.deepEqual(activeLabels('/contact'), ['Contact']);
+  assert.deepEqual(activeLabels('/contact', '', '?topic=college'), ['For colleges']);
+  assert.deepEqual(activeLabels('/contact', '', '?course=Data%20Analysis'), ['Contact']);
 });
 
 test('selecting Home after visiting About and Mentors activates only Home', () => {

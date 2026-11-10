@@ -5,10 +5,12 @@ import Link from "next/link";
 
 import { SiteFooter } from "@/components/marketing/SiteFooter";
 import { SiteHeader } from "@/components/marketing/SiteHeader";
+import { WhatsAppFloat } from "@/components/marketing/WhatsAppFloat";
 
 export default function NotFound() {
   return (
     <div className="site">
+      <title>Page not found</title>
       <SiteHeader />
       <main id="main">
         <section className="nf">
@@ -26,6 +28,7 @@ export default function NotFound() {
         </section>
       </main>
       <SiteFooter />
+      <WhatsAppFloat />
     </div>
   );
 }

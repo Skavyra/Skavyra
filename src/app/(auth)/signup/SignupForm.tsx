@@ -1,14 +1,12 @@
 "use client";
 
+import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
 import { GoogleButton } from "@/components/marketing/GoogleButton";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Field } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
 import { normalizePhone } from "@/lib/utils";
 import { safeNextPath } from "@/lib/auth/redirect";
@@ -24,6 +22,7 @@ export function SignupForm({ next }: { next?: string }) {
   const [error, setError] = useState<string | null>(null);
   const [agreed, setAgreed] = useState(false);
   const [pending, setPending] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const submitting = useRef(false);
 
   async function onSubmit(formData: FormData) {
@@ -100,8 +99,8 @@ export function SignupForm({ next }: { next?: string }) {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-fluid-2xl">Create your account</h1>
-        <p className="mt-2 text-sm text-muted-foreground">One account for your courses, payments and certificates.</p>
+        <h1>Create your account</h1>
+        <p className="mt-2 text-base text-muted-foreground">One account for your courses, payments and certificates.</p>
       </div>
 
       {GOOGLE_LOGIN_ENABLED && (
@@ -116,22 +115,12 @@ export function SignupForm({ next }: { next?: string }) {
 
       <form action={onSubmit} className="flex flex-col gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="First name" htmlFor="first_name">
-            <Input id="first_name" name="first_name" autoComplete="given-name" required />
-          </Field>
-          <Field label="Last name" htmlFor="last_name">
-            <Input id="last_name" name="last_name" autoComplete="family-name" />
-          </Field>
+          <label className="field" htmlFor="first_name">First name<input id="first_name" name="first_name" autoComplete="given-name" required /></label>
+          <label className="field" htmlFor="last_name">Last name<input id="last_name" name="last_name" autoComplete="family-name" /></label>
         </div>
-        <Field label="Email" htmlFor="email">
-          <Input id="email" name="email" type="email" autoComplete="email" required />
-        </Field>
-        <Field label="Mobile number" htmlFor="phone" hint="Your counsellor uses this to reach you.">
-          <Input id="phone" name="phone" type="tel" inputMode="numeric" autoComplete="tel" required />
-        </Field>
-        <Field label="Password" htmlFor="password" hint="At least 8 characters.">
-          <Input id="password" name="password" type="password" autoComplete="new-password" required />
-        </Field>
+        <label className="field" htmlFor="email">Email<input id="email" name="email" type="email" autoComplete="email" required /></label>
+        <label className="field" htmlFor="phone">Mobile number<small>Your counsellor uses this to reach you.</small><input id="phone" name="phone" type="tel" inputMode="numeric" autoComplete="tel" required /></label>
+        <label className="field" htmlFor="password">Password<small>At least 8 characters.</small><span className="pw"><input id="password" name="password" type={showPassword ? "text" : "password"} autoComplete="new-password" required /><button type="button" aria-label="Show password" onClick={() => setShowPassword((shown) => !shown)}>{showPassword ? <EyeOff className="ic" strokeWidth={1.75} /> : <Eye className="ic" strokeWidth={1.75} />}</button></span></label>
 
         <label className="flex items-start gap-3 rounded-xl border border-ink/10 bg-background/60 p-3.5 text-sm">
           <Checkbox checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} className="mt-0.5" />
@@ -153,14 +142,12 @@ export function SignupForm({ next }: { next?: string }) {
             {error}
           </p>
         )}
-        <Button type="submit" size="lg" loading={pending}>
-          Create account
-        </Button>
+        <button className="btn btn--ink btn--block btn--lg" type="submit" disabled={pending}>Create account <ArrowRight className="ic" strokeWidth={1.75} /></button>
       </form>
 
-      <p className="text-sm text-muted-foreground">
+      <p className="auth__alt">
         Already have an account?{" "}
-        <Link href={next ? `/login?next=${encodeURIComponent(next)}` : "/login"} className="font-semibold text-foreground hover:underline">
+        <Link href={next ? `/login?next=${encodeURIComponent(next)}` : "/login"} className="alink">
           Log in
         </Link>
       </p>

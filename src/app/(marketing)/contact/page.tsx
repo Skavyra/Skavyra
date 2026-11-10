@@ -1,4 +1,4 @@
-import { ArrowRight, Instagram, Mail, MapPin, Phone, PhoneCall } from "lucide-react";
+import { ArrowRight, ChevronRight, Instagram, Mail, MapPin, Phone, PhoneCall } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -50,8 +50,8 @@ export default async function ContactPage({
         <div className="wrap">
           <div className="pb__grid">
             <div className="reveal">
-              <div className="crumbs"><Link href="/">Home</Link><span aria-hidden="true">›</span><b>{isCollege ? "For colleges" : "Contact us"}</b></div>
-              <p className="over">{isCollege ? "For colleges" : "Contact us"}</p>
+              <nav className="crumbs" aria-label="Breadcrumb"><Link href="/">Home</Link><ChevronRight className="ic" strokeWidth={1.75} aria-hidden="true" /><b>{isCollege ? "For colleges" : "Contact us"}</b></nav>
+              <p className="over"><span className="over__bar" />{isCollege ? "For colleges" : "Contact us"}</p>
               <h1 className="ptitle">
                 {isCollege ? <>Bring Skavyra to your <span className="hl">college</span></> : <>Talk to a <span className="hl">counsellor</span></>}
               </h1>

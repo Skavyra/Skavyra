@@ -1,12 +1,10 @@
 "use client";
 
+import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Field } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
 
 /**
@@ -18,6 +16,8 @@ export function ResetPasswordForm() {
   const [ready, setReady] = useState<boolean | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     createClient()
@@ -47,11 +47,9 @@ export function ResetPasswordForm() {
   if (ready === false) {
     return (
       <div className="flex flex-col gap-5">
-        <h1 className="text-fluid-2xl">This link has expired</h1>
-        <p className="text-sm text-muted-foreground">Reset links work once and last one hour. Request a new one.</p>
-        <Button asChild size="lg" className="self-start">
-          <Link href="/forgot-password">Send a new link</Link>
-        </Button>
+        <h1>This link has expired</h1>
+        <p className="text-base text-muted-foreground">Reset links work once and last one hour. Request a new one.</p>
+        <Link className="btn btn--ink btn--lg" href="/forgot-password">Send a new link <ArrowRight className="ic" strokeWidth={1.75} /></Link>
       </div>
     );
   }
@@ -59,24 +57,18 @@ export function ResetPasswordForm() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-fluid-2xl">Set a new password</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Choose something you have not used here before.</p>
+        <h1>Set a new password</h1>
+        <p className="mt-2 text-base text-muted-foreground">Choose something you have not used here before.</p>
       </div>
       <form action={onSubmit} className="flex flex-col gap-4">
-        <Field label="New password" htmlFor="password" hint="At least 8 characters.">
-          <Input id="password" name="password" type="password" autoComplete="new-password" required />
-        </Field>
-        <Field label="Confirm new password" htmlFor="confirm">
-          <Input id="confirm" name="confirm" type="password" autoComplete="new-password" required />
-        </Field>
+        <label className="field" htmlFor="password">New password<small>At least 8 characters.</small><span className="pw"><input id="password" name="password" type={showPassword ? "text" : "password"} autoComplete="new-password" required /><button type="button" aria-label="Show password" onClick={() => setShowPassword((shown) => !shown)}>{showPassword ? <EyeOff className="ic" strokeWidth={1.75} /> : <Eye className="ic" strokeWidth={1.75} />}</button></span></label>
+        <label className="field" htmlFor="confirm">Confirm new password<span className="pw"><input id="confirm" name="confirm" type={showConfirm ? "text" : "password"} autoComplete="new-password" required /><button type="button" aria-label="Show password" onClick={() => setShowConfirm((shown) => !shown)}>{showConfirm ? <EyeOff className="ic" strokeWidth={1.75} /> : <Eye className="ic" strokeWidth={1.75} />}</button></span></label>
         {error && (
           <p role="alert" className="text-sm font-medium text-destructive">
             {error}
           </p>
         )}
-        <Button type="submit" size="lg" loading={pending} disabled={ready === null}>
-          Save new password
-        </Button>
+        <button className="btn btn--ink btn--block btn--lg" type="submit" disabled={pending || ready === null}>Save new password <ArrowRight className="ic" strokeWidth={1.75} /></button>
       </form>
     </div>
   );
