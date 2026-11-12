@@ -13,7 +13,6 @@ export const HEADER_LINKS = [
   { href: "/", label: "Home" },
   { href: "/courses", label: "Courses" },
   { href: "/flagship", label: "Flagship" },
-  { href: "/contact", label: "Contact" },
   { href: "/contact?topic=college", label: "For colleges" },
   { href: "/mentors", label: "Mentors" },
   { href: "/about", label: "About" },

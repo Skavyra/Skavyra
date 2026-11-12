@@ -15,11 +15,18 @@ export const HERO = {
 
 /** Shown in the hero arc only until real courses are published. Taken from the approved hero design. */
 export const HERO_FALLBACK_TRACKS: { title: string; meta: string }[] = [
-  { title: "Accounting & Tally", meta: "Non-IT, 8 weeks" },
-  { title: "Digital Marketing", meta: "Non-IT, 10 weeks" },
-  { title: "Data Analytics", meta: "IT, 12 weeks" },
-  { title: "Full Stack Dev", meta: "IT, 16 weeks" },
-  { title: "UI/UX Design", meta: "IT, 12 weeks" },
+  { title: "Data Analysis", meta: "IT, 12 weeks" },
+  { title: "Programming in Java", meta: "IT, 12 weeks" },
+  { title: "Python Programming", meta: "IT, 12 weeks" },
+  { title: "Digital Marketing", meta: "Non-IT, 12 weeks" },
+  { title: "Nanotechnology", meta: "Non-IT, 12 weeks" },
+  { title: "Android App Development", meta: "IT, 12 weeks" },
+  { title: "Medical Coding", meta: "Non-IT, 12 weeks" },
+  { title: "Cloud Computing", meta: "IT, 12 weeks" },
+  { title: "Cybersecurity & Ethical Hacking", meta: "IT, 12 weeks" },
+  { title: "Software Testing", meta: "IT, 12 weeks" },
+  { title: "DSA with Python", meta: "IT, 12 weeks" },
+  { title: "Full-Stack Web Development", meta: "IT, 12 weeks" },
 ];
 
 export const CATEGORIES: { label: string; category: CourseCategory; icon: "code" | "chart" | "pen" | "megaphone" | "calculator" | "users" }[] = [

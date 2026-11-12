@@ -17,18 +17,18 @@ export default async function HomePage() {
   const [{ data }, flagship] = await Promise.all([
     supabase
       .from("courses")
-      .select("id, slug, title, subtitle, category, level, cover_image_url, price, mrp, duration_weeks")
+      .select("id, slug, title, subtitle, description, category, level, cover_image_url, price, mrp, duration_weeks")
       .eq("status", "published")
       .eq("is_flagship", false)
       .order("sort_order", { ascending: true })
-      .limit(12),
+      .limit(200),
     getFlagshipCourses(),
   ]);
   const courses = data ?? [];
 
   return (
     <>
-      <Hero courses={courses} />
+      <Hero courses={courses.slice(0, 12)} />
       <FlagshipStrip courses={flagship} />
       <CategoryGrid />
       <CourseGrid courses={courses} />

@@ -13,7 +13,7 @@ const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700"], 
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
-  title: { default: `${SITE.name} | ${SITE.tagline}`, template: `%s | ${SITE.name}` },
+  title: { default: `${SITE.name} — Your learning partner in the digital era`, template: `%s — ${SITE.name}` },
   description: SITE.description,
   verification: { google: "8vNMy_ZhdncrgwJGfkolKIpUd99PvL3U4NrphlA-ACI"},
   icons: { icon: "/favicon.svg" },

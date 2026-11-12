@@ -259,7 +259,7 @@
 .site .ftr__col h4{font-family:var(--disp);font-weight:600;font-size:18px;letter-spacing:-.02em;color:#fff;margin-bottom:8px}
 .site .ftr__col a{color:rgba(255,255,255,.62);font-size:15px;width:fit-content;transition:color .2s,transform .2s}
 .site .ftr__col a:hover{color:var(--y);transform:translateX(4px)}
-.site .ftr__bot{margin-top:72px;padding-top:24px;padding-bottom:28px;border-top:1px solid #262626;font-size:14px;color:rgba(255,255,255,.5)}
+.site .ftr__bot{margin-top:14px;padding-top:24px;padding-bottom:28px;border-top:1px solid #262626;font-size:14px;color:rgba(255,255,255,.5)}
 .site .wa{position:fixed;right:24px;bottom:24px;z-index:40;display:flex;align-items:center;gap:10px;height:52px;padding:0 20px 0 16px;background:var(--ink);color:#fff;font-weight:600;font-size:15px;box-shadow:0 14px 30px -12px rgba(0,0,0,.5);border-left:4px solid var(--y);transition:transform .25s var(--ease)}
 .site .wa .ic{color:#25D366;width:22px;height:22px}
 .site .wa:hover{transform:translateY(-3px)}
@@ -380,7 +380,7 @@
 .site .ftr{margin-top:76px;padding-top:60px}
 .site .ftr__grid{grid-template-columns:1fr 1fr;gap:36px}
 .site .ftr__col:last-child{grid-column:1/-1}
-.site .ftr__bot{margin-top:48px}
+.site .ftr__bot{margin-top:104px}
 .site .wa{right:16px;bottom:16px;width:56px;height:56px;padding:0;justify-content:center;border-left:0;border-bottom:4px solid var(--y)}
 .site .wa span{display:none}
 }
@@ -600,8 +600,8 @@
 .site .pager button:disabled{opacity:.35;cursor:not-allowed}
 .site .pager button:not(:disabled):hover{background:var(--ink);color:#fff}
 .site .ccard__p s{font-weight:500;color:var(--mute2);margin-right:6px;font-size:14px}
-.site .cd{position:relative}
-.site .cd__band{position:absolute;left:0;right:0;top:0;height:470px;background:var(--cream);z-index:-1;overflow:hidden}
+.site .cd{position:relative;isolation:isolate}
+.site .cd__band{position:absolute;left:0;right:0;top:0;height:438px;background:var(--cream);z-index:-1;overflow:hidden}
 .site .cd__band::after{content:"";position:absolute;left:-80px;bottom:-80px;width:240px;height:240px;border-radius:0 100% 0 0;background:var(--y);opacity:.9}
 .site .cd__grid{display:grid;grid-template-columns:minmax(0,1fr) 384px;gap:56px;padding-top:44px;padding-bottom:110px;align-items:start}
 .site .cd__main{min-width:0}
@@ -775,6 +775,8 @@
 .site .mfilter button,.site .mfilter a{height:44px;padding:0 22px;border:1.5px solid var(--ink);background:#fff;font-weight:600;font-size:15px;cursor:pointer;border-radius:999px;transition:background .2s,color .2s}
 .site .mfilter button[aria-pressed=true],.site .mfilter a[aria-current=page]{background:var(--ink);color:#fff}
 .site .mfilter button:not([aria-pressed=true]):hover,.site .mfilter a:not([aria-current=page]):hover{background:var(--y)}
+.site .mfilter a{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:var(--ink)}
+.site .mfilter a[aria-current=page]{color:#fff}
 .site .mgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px;padding:34px 0 110px}
 .site .mgrid>[hidden]{display:none}
 .site .mcard{position:relative;display:flex;flex-direction:column;padding:26px;background:#fff;border:1px solid var(--line);transition:transform .3s var(--ease),box-shadow .3s,border-color .3s;overflow:hidden}
@@ -925,7 +927,7 @@
 .site .fstrip__h h2{font-size:20px}
 .site .pager{flex-direction:column;align-items:stretch;text-align:center}
 .site .pager__btns button{flex:1;justify-content:center}
-.site .cd__band{height:520px}
+.site .cd__band{height:426px}
 .site .cd__grid{padding-top:28px}
 .site .cd__t{font-size:34px}
 .site .cd__s{font-size:17px}
@@ -1169,3 +1171,11 @@ body.sheet-open{overflow:hidden}
 }
 .site .mmono.s5{background:var(--gold);color:var(--ink);border-radius:0 0 0 100%}
 .site .mmono.s6{background:var(--soft);color:var(--ink);border-radius:50% 0}
+.site .terms-link{color:inherit;text-decoration:underline;text-underline-offset:3px}
+.site .terms-link:hover{color:var(--ink)}
+
+/* mobile: filter chips show on the page like the demo (no Filters sheet) */
+@media (max-width:720px){
+.site .fopen,.site .fsheet__head,.site .fsheet__foot,.site .fscrim{display:none!important}
+.site .filters{position:static!important;left:auto;right:auto;bottom:auto;top:auto;transform:none!important;visibility:visible!important;max-height:none;overflow:visible;box-shadow:none;border-radius:0;margin:0 0 22px;padding:18px;background:var(--soft);border-top:4px solid var(--y);gap:14px;z-index:auto}
+}

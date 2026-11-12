@@ -54,9 +54,10 @@ export function CourseBand() {
       const buttons = root?.querySelector<HTMLElement>(".cd__main .btns");
       if (!band || !root || !buttons) return;
 
-      const rootTop = root.getBoundingClientRect().top + window.scrollY;
-      const buttonsTop = buttons.getBoundingClientRect().top + window.scrollY;
-      band.style.height = `${Math.max(0, buttonsTop - rootTop - 16)}px`;
+      // offsetTop ignores the reveal animation's transform, so the band is sized from the layout, not a moving box
+      let buttonsTop = 0;
+      for (let el: HTMLElement | null = buttons; el && el !== root; el = el.offsetParent as HTMLElement | null) buttonsTop += el.offsetTop;
+      band.style.height = `${Math.max(0, buttonsTop - 16)}px`;
     };
 
     measure();

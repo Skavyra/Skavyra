@@ -4,10 +4,12 @@ import Link from "next/link";
 import { Check, ChevronLeft, ChevronRight, Star, X } from "lucide-react";
 
 import { CourseCard, type CourseCardData } from "@/components/marketing/CourseCard";
+import { CourseSearch } from "@/components/marketing/CourseSearch";
 import { CoursesFilterSheet } from "@/components/marketing/CoursesFilterSheet";
 import { CoursesPageMotion } from "@/components/marketing/CoursesPageMotion";
 import { CATEGORY_LABEL, LEVEL_LABEL } from "@/lib/constants";
 import { getFlagshipCourses } from "@/lib/flagship";
+import { scoreCourse, searchTerms } from "@/lib/course-search";
 import { createClient } from "@/lib/supabase/server";
 import { formatInr, getOfferPricing } from "@/lib/utils";
 import type { CourseCategory, CourseLevel } from "@/types";
@@ -43,8 +45,8 @@ function toCourseCardData(course: FlagshipCourse): CourseCardData {
   };
 }
 
-type Params = { category?: string; level?: string; duration?: string; page?: string };
 
+type Params = { category?: string; level?: string; duration?: string; page?: string; q?: string };
 function hrefWith(current: Params, patch: Partial<Params>) {
   const next = { ...current, ...patch };
   if (patch.category !== undefined || patch.level !== undefined || patch.duration !== undefined) delete next.page;
@@ -65,18 +67,27 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
 
   if (isFlagshipCategory) {
     flagship = await flagshipPromise;
+    const terms = searchTerms(params.q);
     courses = flagship.map(toCourseCardData).filter(
       (course) =>
         (!LEVELS.includes(params.level as CourseLevel) || course.level === params.level) &&
         (!dur || (course.duration_weeks !== null && course.duration_weeks >= dur.min && course.duration_weeks <= dur.max)),
     );
+    if (terms.length) {
+      courses = courses
+        .map((course) => ({ course, score: scoreCourse({ title: course.title, subtitle: course.subtitle, description: null }, terms) }))
+        .filter((x) => x.score >= 0)
+        .sort((a, b) => b.score - a.score)
+        .map((x) => x.course);
+    }
     total = courses.length;
   } else {
     const supabase = await createClient();
+    const terms = searchTerms(params.q);
     let query = supabase
       .from("courses")
       .select(
-        "id, slug, title, subtitle, category, level, cover_image_url, price, mrp, duration_weeks, is_flagship, offer_label, offer_price, offer_ends_at, show_countdown",
+        "id, slug, title, subtitle, description, category, level, cover_image_url, price, mrp, duration_weeks, is_flagship, offer_label, offer_price, offer_ends_at, show_countdown",
         { count: "exact" },
       )
       .eq("status", "published");
@@ -86,25 +97,43 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
     if (LEVELS.includes(params.level as CourseLevel)) query = query.eq("level", params.level as CourseLevel);
     if (dur) query = query.gte("duration_weeks", dur.min).lte("duration_weeks", dur.max);
 
-    const [{ data, count }, flagshipData] = await Promise.all([
-      query
-        .order("is_flagship", { ascending: false })
-        .order("sort_order", { ascending: true })
-        .range((page - 1) * PER_PAGE, page * PER_PAGE - 1),
-      flagshipPromise,
-    ]);
-    flagship = flagshipData;
-    courses = data ?? [];
-    total = count ?? 0;
+    const ordered = query
+      .order("is_flagship", { ascending: false })
+      .order("sort_order", { ascending: true });
+    if (terms.length) {
+      // search reads the overview text too, so it ranks the whole matching list here, then pages it
+      const [{ data }, flagshipData] = await Promise.all([ordered, flagshipPromise]);
+      const ranked = (data ?? [])
+        .map((row) => ({ row, score: scoreCourse(row, terms) }))
+        .filter((x) => x.score >= 0)
+        .sort((a, b) => b.score - a.score);
+      flagship = flagshipData;
+      total = ranked.length;
+      courses = ranked
+        .slice((page - 1) * PER_PAGE, page * PER_PAGE)
+        .map(({ row }) => {
+          const { description: _omit, ...card } = row;
+          return card as CourseCardData;
+        });
+    } else {
+      const [{ data, count }, flagshipData] = await Promise.all([
+        ordered.range((page - 1) * PER_PAGE, page * PER_PAGE - 1),
+        flagshipPromise,
+      ]);
+      flagship = flagshipData;
+      courses = (data ?? []) as CourseCardData[];
+      total = count ?? 0;
+    }
   }
   const flagshipCardCourses = flagship.map(toCourseCardData);
-  const showPinnedFlagships = !params.category && !params.level && !params.duration && page === 1;
+  const showPinnedFlagships = !params.category && !params.level && !params.duration && !params.q && page === 1;
   const animationKey = [
     isFlagshipCategory ? "flagship" : "",
     params.category ?? "",
     params.level ?? "",
     params.duration ?? "",
     params.page ?? "",
+    params.q ?? "",
     total,
     courses.map((course) => course.slug).join(","),
   ].join("|");
@@ -118,7 +147,7 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
     { title: "Level", key: "level", options: LEVELS.map((l) => ({ value: l, label: LEVEL_LABEL[l] })) },
     { title: "Duration", key: "duration", options: DURATIONS.map((d) => ({ value: d.value, label: d.label })) },
   ];
-  const hasActiveFilter = Boolean(params.category || params.level || params.duration);
+  const hasActiveFilter = Boolean(params.category || params.level || params.duration || params.q);
   const activeFilters = groups.flatMap((group) => {
     const value = params[group.key];
     const option = group.options.find((item) => item.value === value);
@@ -183,6 +212,12 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
           </CoursesFilterSheet>
 
           <div>
+            <CourseSearch
+              initial={params.q ?? ""}
+              category={params.category}
+              level={params.level}
+              duration={params.duration}
+            />
             {hasActiveFilter && (
               <div className="activef">
                 {activeFilters.map(({ key, label }) => (
@@ -249,7 +284,7 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
               </ul>
             ) : (
               <div className="cempty" data-courses-results>
-                <p>No courses match these filters.</p>
+                <p>{params.q ? `No courses match "${params.q}".` : "No courses match these filters."}</p>
                 <Link href="/courses">Clear filters to see every course</Link>
               </div>
             )}

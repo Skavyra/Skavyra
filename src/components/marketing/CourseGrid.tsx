@@ -5,6 +5,9 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { CourseCard, type CourseCardData } from "./CourseCard";
+import { scoreCourse, searchTerms } from "@/lib/course-search";
+
+type PopularCourse = CourseCardData & { description?: string | null };
 
 const TABS = [
   { key: "all", label: "All" },
@@ -13,14 +16,20 @@ const TABS = [
 ] as const;
 
 /** Home page "Popular courses": six published courses with All / IT / Non-IT tabs. */
-export function CourseGrid({ courses }: { courses: CourseCardData[] }) {
+export function CourseGrid({ courses }: { courses: PopularCourse[] }) {
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("all");
   const [query, setQuery] = useState("");
-  const normalizedQuery = query.trim().toLowerCase();
-  const visible = courses
-    .filter((course) => (tab === "all" || course.category === tab || course.category === "both")
-      && (!normalizedQuery || `${course.title} ${course.subtitle ?? ""}`.toLowerCase().includes(normalizedQuery)))
-    .slice(0, 6);
+  const normalizedQuery = query.trim();
+  const terms = searchTerms(normalizedQuery);
+  const inTab = courses.filter((course) => tab === "all" || course.category === tab || course.category === "both");
+  const visible = terms.length
+    ? inTab
+        .map((course) => ({ course, score: scoreCourse(course, terms) }))
+        .filter((x) => x.score >= 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 6)
+        .map((x) => x.course)
+    : inTab.slice(0, 6);
 
   return (
     <section className="sec courses" id="courses">
@@ -68,7 +77,7 @@ export function CourseGrid({ courses }: { courses: CourseCardData[] }) {
         ) : (
           <p className="empty">
             {normalizedQuery
-              ? `No course matches "${query.trim()}" yet. Leave your number below and a counsellor will help you find the right one.`
+              ? `No course matches "${normalizedQuery}" yet. Leave your number below and a counsellor will help you find the right one.`
               : "New courses in this stream are on the way. Leave your number below and a counsellor will tell you when they open."}
           </p>
         )}

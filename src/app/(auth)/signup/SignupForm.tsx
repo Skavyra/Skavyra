@@ -122,15 +122,15 @@ export function SignupForm({ next }: { next?: string }) {
         <label className="field" htmlFor="phone">Mobile number<small>Your counsellor uses this to reach you.</small><input id="phone" name="phone" type="tel" inputMode="numeric" autoComplete="tel" required /></label>
         <label className="field" htmlFor="password">Password<small>At least 8 characters.</small><span className="pw"><input id="password" name="password" type={showPassword ? "text" : "password"} autoComplete="new-password" required /><button type="button" aria-label="Show password" onClick={() => setShowPassword((shown) => !shown)}>{showPassword ? <EyeOff className="ic" strokeWidth={1.75} /> : <Eye className="ic" strokeWidth={1.75} />}</button></span></label>
 
-        <label className="flex items-start gap-3 rounded-xl border border-ink/10 bg-background/60 p-3.5 text-sm">
+        <label className="flex items-start gap-3 text-sm">
           <Checkbox checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} className="mt-0.5" />
           <span className="text-muted-foreground">
             I accept the{" "}
-            <Link href="/terms" className="underline hover:text-foreground">
+            <Link href="/terms" className="terms-link">
               terms
             </Link>{" "}
             and{" "}
-            <Link href="/privacy" className="underline hover:text-foreground">
+            <Link href="/privacy" className="terms-link">
               privacy policy
             </Link>
             .
