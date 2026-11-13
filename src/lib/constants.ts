@@ -27,9 +27,10 @@ export const SITE = {
 
 export type NavItem = { href: string; label: string; icon: NavIconName };
 
-/** Where each role lands after sign in. Admin wins over employee, employee over student. */
+/** Where each role lands after sign in. Admin wins over HR, HR over employee, employee over student. */
 export const ROLE_HOME: Record<AppRole, string> = {
   admin: "/admin",
+  hr: "/hr",
   employee: "/employee",
   student: "/dashboard",
 };
@@ -66,6 +67,14 @@ export const ADMIN_NAV: NavItem[] = [
   { href: "/admin/offer-letters", label: "Offer letters", icon: "FileSignature" },
   { href: "/admin/reports", label: "Reports", icon: "BarChart3" },
   { href: "/admin/settings", label: "Settings", icon: "Settings" },
+];
+
+export const HR_NAV: NavItem[] = [
+  { href: "/hr", label: "Dashboard", icon: "LayoutDashboard" },
+  { href: "/hr/employees", label: "Employees", icon: "Users" },
+  { href: "/hr/leads", label: "Leads", icon: "PhoneCall" },
+  { href: "/hr/offer-letters", label: "Offer letters", icon: "FileSignature" },
+  { href: "/hr/reports", label: "Reports", icon: "BarChart3" },
 ];
 
 export const LEAD_STATUSES: { value: LeadStatus; label: string; tone: Tone }[] = [

@@ -5,6 +5,7 @@ import { updateSession } from "@/lib/supabase/middleware";
 /** Each panel belongs to exactly one role. Anyone else is sent to their own home. */
 const PANELS: { prefix: string; roles: string[] }[] = [
   { prefix: "/admin", roles: ["admin"] },
+  { prefix: "/hr", roles: ["hr", "admin"] },
   { prefix: "/employee", roles: ["employee"] },
   { prefix: "/dashboard", roles: ["student"] },
 ];
@@ -13,6 +14,7 @@ const AUTH_PAGES = ["/login", "/signup", "/forgot-password"];
 
 function homeFor(roles: string[]) {
   if (roles.includes("admin")) return "/admin";
+  if (roles.includes("hr")) return "/hr";
   if (roles.includes("employee")) return "/employee";
   if (roles.includes("student")) return "/dashboard";
   return "/";

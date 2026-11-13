@@ -11,6 +11,7 @@ import { UploadStep } from "@/components/leads/import/UploadStep";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { usePanelBase } from "@/hooks/use-panel-base";
 import { toast } from "@/hooks/use-toast";
 import { applyMapping, matchHeaders, OFFER_FIELDS } from "@/lib/excel/header-match";
 import { toIsoDate, type ParsedSheet } from "@/lib/excel/parse";
@@ -27,6 +28,7 @@ function invalid(row: Record<string, string>) {
 }
 
 export function BulkUpload() {
+  const base = usePanelBase();
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [sheet, setSheet] = useState<ParsedSheet | null>(null);
@@ -44,7 +46,7 @@ export function BulkUpload() {
           {done.skipped} rows were missing a name, email, role or joining date and were skipped.
         </p>
         <Button asChild>
-          <Link href="/admin/offer-letters">Go to offer letters</Link>
+          <Link href={`${base}/offer-letters`}>Go to offer letters</Link>
         </Button>
       </div>
     );

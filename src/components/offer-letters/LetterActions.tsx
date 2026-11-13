@@ -5,8 +5,10 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { usePanelBase } from "@/hooks/use-panel-base";
 
 export function LetterActions({ letterId }: { letterId: string }) {
+  const base = usePanelBase();
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -25,7 +27,7 @@ export function LetterActions({ letterId }: { letterId: string }) {
         <Eye /> PDF
       </Button>
       <Button asChild variant="ghost" size="sm">
-        <Link href={`/admin/offer-letters/new?id=${letterId}`}>
+        <Link href={`${base}/offer-letters/new?id=${letterId}`}>
           <Pencil /> Edit
         </Link>
       </Button>

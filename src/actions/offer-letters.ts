@@ -8,10 +8,15 @@ import { firstError, formToObject } from "@/lib/validations/common";
 import { offerLetterSchema } from "@/lib/validations/offer-letter";
 import type { ActionResult, Json, LetterStatus } from "@/types";
 
+function revalidateLetters() {
+  revalidatePath("/admin/offer-letters");
+  revalidatePath("/hr/offer-letters");
+}
+
 /** New or edited letter. The letter number (SKV/OL/2026/0001) comes from the insert trigger. */
 export async function saveOfferLetter(letterId: string | null, formData: FormData): Promise<ActionResult<{ id: string }>> {
-  const user = await currentUserWithRole("admin");
-  if (!user) return { ok: false, error: "Only admins can manage offer letters." };
+  const user = await currentUserWithRole(["admin", "hr"]);
+  if (!user) return { ok: false, error: "Only admins and HR can manage offer letters." };
 
   const parsed = offerLetterSchema.safeParse(formToObject(formData));
   if (!parsed.success) return { ok: false, error: firstError(parsed.error) };
@@ -21,7 +26,7 @@ export async function saveOfferLetter(letterId: string | null, formData: FormDat
   if (letterId) {
     const { error } = await supabase.from("offer_letters").update(values).eq("id", letterId);
     if (error) return { ok: false, error: error.message };
-    revalidatePath("/admin/offer-letters");
+    revalidateLetters();
     return { ok: true, data: { id: letterId } };
   }
 
@@ -39,7 +44,7 @@ export async function saveOfferLetter(letterId: string | null, formData: FormDat
     .select("id")
     .single();
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/admin/offer-letters");
+  revalidateLetters();
   return { ok: true, data: { id: data.id } };
 }
 
@@ -50,8 +55,8 @@ export async function importOfferLetters(input: {
   detectedColumns: string[];
   rows: Record<string, string>[];
 }): Promise<ActionResult<{ inserted: number; skipped: number }>> {
-  const user = await currentUserWithRole("admin");
-  if (!user) return { ok: false, error: "Only admins can import offer letters." };
+  const user = await currentUserWithRole(["admin", "hr"]);
+  if (!user) return { ok: false, error: "Only admins and HR can import offer letters." };
   const supabase = await createClient();
 
   const { data: template } = await supabase
@@ -71,15 +76,15 @@ export async function importOfferLetters(input: {
     ...(template?.id ? { p_template_id: template.id } : {}),
   });
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/admin/offer-letters");
+  revalidateLetters();
   const summary = data as { inserted: number; skipped: number };
   return { ok: true, data: { inserted: summary.inserted, skipped: summary.skipped } };
 }
 
 /** After the browser uploads the PDF to offer-letters/<id>.pdf. */
 export async function markLetterGenerated(letterId: string, pdfPath: string): Promise<ActionResult> {
-  const user = await currentUserWithRole("admin");
-  if (!user) return { ok: false, error: "Only admins can generate letters." };
+  const user = await currentUserWithRole(["admin", "hr"]);
+  if (!user) return { ok: false, error: "Only admins and HR can generate letters." };
   const supabase = await createClient();
   const { data: current } = await supabase.from("offer_letters").select("status").eq("id", letterId).single();
   const keepStatus = current && ["sent", "accepted", "declined"].includes(current.status);
@@ -93,19 +98,19 @@ export async function markLetterGenerated(letterId: string, pdfPath: string): Pr
     })
     .eq("id", letterId);
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/admin/offer-letters");
+  revalidateLetters();
   return { ok: true, data: undefined };
 }
 
 export async function setLetterStatus(letterId: string, status: LetterStatus): Promise<ActionResult> {
-  const user = await currentUserWithRole("admin");
-  if (!user) return { ok: false, error: "Only admins can update letters." };
+  const user = await currentUserWithRole(["admin", "hr"]);
+  if (!user) return { ok: false, error: "Only admins and HR can update letters." };
   const supabase = await createClient();
   const { error } = await supabase
     .from("offer_letters")
     .update({ status, ...(status === "sent" ? { sent_at: new Date().toISOString() } : {}) })
     .eq("id", letterId);
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/admin/offer-letters");
+  revalidateLetters();
   return { ok: true, data: undefined };
 }

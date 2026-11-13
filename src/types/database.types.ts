@@ -1440,7 +1440,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "employee" | "student"
+      app_role: "admin" | "employee" | "student" | "hr"
       course_status: "draft" | "published" | "archived"
       course_category: "it" | "non_it" | "both"
       course_level: "beginner" | "intermediate" | "advanced"

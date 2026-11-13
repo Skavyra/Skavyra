@@ -10,7 +10,7 @@ export const createStaffSchema = z.object({
     .transform((v) => (v === "" ? undefined : v))
     .refine((v) => v === undefined || v.length >= 10, "Password must be at least 10 characters, or leave it empty to send an invite")
     .optional(),
-  role: z.enum(["employee", "admin", "student"]),
+  role: z.enum(["employee", "admin", "student", "hr"]),
   first_name: z.string().trim().min(1, "Enter a first name"),
   last_name: z.string().trim(),
   phone: optionalPhone,

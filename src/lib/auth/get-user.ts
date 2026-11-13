@@ -28,6 +28,7 @@ export const getUser = cache(async (): Promise<SessionUser | null> => {
 
 export function primaryRole(roles: AppRole[]): AppRole {
   if (roles.includes("admin")) return "admin";
+  if (roles.includes("hr")) return "hr";
   if (roles.includes("employee")) return "employee";
   return "student";
 }

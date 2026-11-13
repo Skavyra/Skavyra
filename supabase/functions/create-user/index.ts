@@ -1,11 +1,11 @@
-// Admin creates an employee, another admin, or a student account.
+// Admin or HR creates an account. HR may only create employee and student accounts.
 // The Admin API needs the service role, so this never lives in the browser.
 //
 // POST /functions/v1/create-user
 // {
 //   "email": "counsellor@skavyra.com",
 //   "password": "optional — omit to send an invite instead",
-//   "role": "employee" | "admin" | "student",
+//   "role": "employee" | "admin" | "student" | "hr",
 //   "first_name": "...", "last_name": "...", "phone": "...",
 //   "employee_code": "...", "designation": "...", "department": "...",
 //   "date_of_joining": "2026-02-01", "reporting_manager_id": "uuid"
@@ -46,8 +46,9 @@ Deno.serve(async (req) => {
   if (userErr || !user) return json({ error: "not authenticated" }, 401);
 
   const { data: roles } = await asUser.from("user_roles").select("role").eq("user_id", user.id);
-  const isAdmin = (roles ?? []).some((r: { role: string }) => r.role === "admin");
-  if (!isAdmin) return json({ error: "forbidden: admin only" }, 403);
+  const callerRoles = (roles ?? []).map((r: { role: string }) => r.role);
+  const isAdmin = callerRoles.includes("admin");
+  if (!isAdmin && !callerRoles.includes("hr")) return json({ error: "forbidden: admin or HR only" }, 403);
 
   let body: Record<string, string | undefined>;
   try {
@@ -59,8 +60,13 @@ Deno.serve(async (req) => {
   const email = (body.email ?? "").trim().toLowerCase();
   const role = body.role ?? "employee";
   if (!email) return json({ error: "email is required" }, 400);
-  if (!["admin", "employee", "student"].includes(role)) {
-    return json({ error: "role must be admin, employee or student" }, 400);
+  if (!["admin", "employee", "student", "hr"].includes(role)) {
+    return json({ error: "role must be admin, employee, student or hr" }, 400);
+  }
+  // Escalation guard. provision_user() enforces the same rule for callers that skip this function.
+  const GRANTABLE: Record<string, string[]> = { admin: ["admin", "hr", "employee", "student"], hr: ["employee", "student"] };
+  if (!isAdmin && !GRANTABLE.hr.includes(role)) {
+    return json({ error: "HR can only create counsellor and student accounts" }, 403);
   }
 
   const admin = createClient(url, serviceKey, { auth: { persistSession: false } });

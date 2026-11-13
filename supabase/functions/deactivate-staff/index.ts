@@ -1,4 +1,4 @@
-// Admin deactivates a counsellor and hands their open leads to someone else.
+// Admin or HR deactivates a counsellor (HR may not deactivate admins or other HR users) and hands their open leads to someone else.
 //
 // POST /functions/v1/deactivate-staff
 // { "user_id": "uuid", "reassign_to": "uuid | null", "ban": false }
@@ -36,14 +36,24 @@ Deno.serve(async (req) => {
   if (!user) return json({ error: "not authenticated" }, 401);
 
   const { data: roles } = await asUser.from("user_roles").select("role").eq("user_id", user.id);
-  if (!(roles ?? []).some((r: { role: string }) => r.role === "admin")) {
-    return json({ error: "forbidden: admin only" }, 403);
+  const callerRoles = (roles ?? []).map((r: { role: string }) => r.role);
+  const callerIsAdmin = callerRoles.includes("admin");
+  if (!callerIsAdmin && !callerRoles.includes("hr")) {
+    return json({ error: "forbidden: admin or HR only" }, 403);
   }
 
   const { user_id, reassign_to, ban } = await req.json();
   if (!user_id) return json({ error: "user_id is required" }, 400);
 
   const admin = createClient(url, serviceKey, { auth: { persistSession: false } });
+
+  // Escalation guard. deactivate_staff() enforces the same rule for direct RPC callers.
+  if (!callerIsAdmin) {
+    const { data: targetRoles } = await admin.from("user_roles").select("role").eq("user_id", user_id);
+    if ((targetRoles ?? []).some((r: { role: string }) => r.role === "admin" || r.role === "hr")) {
+      return json({ error: "HR cannot deactivate admin or HR accounts" }, 403);
+    }
+  }
 
   const { data, error } = await admin.rpc("deactivate_staff", {
     p_user_id: user_id,

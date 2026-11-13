@@ -41,9 +41,12 @@ export type EmployeeRecord = {
 export function EmployeeDialog({
   employee,
   managers,
+  canGrantStaffRoles = false,
 }: {
   employee?: EmployeeRecord;
   managers: { id: string; name: string }[];
+  /** Admins can create admin and HR logins. HR gets Counsellor and Student only; the server refuses anything else. */
+  canGrantStaffRoles?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -108,7 +111,9 @@ export function EmployeeDialog({
                 <Field label="Role" htmlFor="role">
                   <NativeSelect id="role" name="role" defaultValue="employee">
                     <option value="employee">Counsellor</option>
-                    <option value="admin">Admin</option>
+                    <option value="student">Student</option>
+                    {canGrantStaffRoles && <option value="hr">HR</option>}
+                    {canGrantStaffRoles && <option value="admin">Admin</option>}
                   </NativeSelect>
                 </Field>
               </>

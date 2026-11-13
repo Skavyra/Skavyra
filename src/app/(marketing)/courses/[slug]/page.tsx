@@ -60,7 +60,7 @@ export default async function CourseDetailPage({ params }: Props) {
   let state: "guest" | "student" | "enrolled" | "staff" = "guest";
   let enrolledHref: string | undefined;
   if (user) {
-    if (user.roles.includes("admin") || user.roles.includes("employee")) state = "staff";
+    if (user.roles.includes("admin") || user.roles.includes("hr") || user.roles.includes("employee")) state = "staff";
     else {
       const { data: enr } = await supabase.from("enrollments").select("id").eq("user_id", user.id).eq("course_id", course.id).maybeSingle();
       state = enr ? "enrolled" : "student";

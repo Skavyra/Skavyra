@@ -28,10 +28,13 @@ export function DeactivateDialog({
   employee,
   openLeads,
   others,
+  canReactivate = true,
 }: {
   employee: { id: string; name: string; is_active: boolean };
   openLeads: number;
   others: { id: string; name: string }[];
+  /** Reactivation edits profiles.is_active, which only admins may change. */
+  canReactivate?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -40,6 +43,7 @@ export function DeactivateDialog({
   const [pending, start] = useTransition();
 
   if (employee.is_active === false) {
+    if (!canReactivate) return <span className="text-xs text-muted-foreground">Inactive</span>;
     return (
       <Button
         variant="outline"

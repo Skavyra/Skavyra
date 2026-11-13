@@ -14,6 +14,7 @@ import type { ActionResult, Json } from "@/types";
 function revalidateLeads() {
   revalidatePath("/employee", "layout");
   revalidatePath("/admin", "layout");
+  revalidatePath("/hr", "layout");
 }
 
 /** Friendly message for the live-phone unique index, naming who already has the lead. */
@@ -122,10 +123,10 @@ export async function updateLead(leadId: string, formData: FormData, courseIds: 
   return { ok: true, data: undefined };
 }
 
-/** Admin only: change who owns one lead. */
+/** Admin or HR: change who owns one lead. */
 export async function reassignLead(leadId: string, employeeId: string | null): Promise<ActionResult> {
-  const user = await currentUserWithRole("admin");
-  if (!user) return { ok: false, error: "Only admins can reassign leads." };
+  const user = await currentUserWithRole(["admin", "hr"]);
+  if (!user) return { ok: false, error: "Only admins and HR can reassign leads." };
   const supabase = await createClient();
   const { error } = await supabase
     .from("student_leads")
@@ -198,8 +199,8 @@ export async function uploadPaymentProof(leadId: string, formData: FormData): Pr
 
 /** Round-robin split across the chosen counsellors, via assign_leads(). */
 export async function assignLeads(leadIds: string[], employeeIds: string[]): Promise<ActionResult<{ count: number }>> {
-  const user = await currentUserWithRole("admin");
-  if (!user) return { ok: false, error: "Only admins can assign leads." };
+  const user = await currentUserWithRole(["admin", "hr"]);
+  if (!user) return { ok: false, error: "Only admins and HR can assign leads." };
   if (leadIds.length === 0) return { ok: false, error: "Select at least one lead." };
   if (employeeIds.length === 0) return { ok: false, error: "Pick at least one counsellor." };
 
@@ -214,8 +215,8 @@ export async function assignLeads(leadIds: string[], employeeIds: string[]): Pro
 export async function findExistingPhones(
   phones: string[],
 ): Promise<ActionResult<{ phone: string; interested_course_text: string | null }[]>> {
-  const user = await currentUserWithRole("admin");
-  if (!user) return { ok: false, error: "Only admins can import leads." };
+  const user = await currentUserWithRole(["admin", "hr"]);
+  if (!user) return { ok: false, error: "Only admins and HR can import leads." };
   const supabase = await createClient();
   const unique = Array.from(new Set(phones.map(normalizePhone).filter((p) => p.length === 10)));
   const found: { phone: string; interested_course_text: string | null }[] = [];
@@ -241,8 +242,8 @@ export async function importLeads(input: {
   detectedColumns: string[];
   rows: Record<string, string>[];
 }): Promise<ActionResult<ImportSummary>> {
-  const user = await currentUserWithRole("admin");
-  if (!user) return { ok: false, error: "Only admins can import leads." };
+  const user = await currentUserWithRole(["admin", "hr"]);
+  if (!user) return { ok: false, error: "Only admins and HR can import leads." };
   if (input.rows.length === 0) return { ok: false, error: "There are no rows to import." };
 
   const supabase = await createClient();

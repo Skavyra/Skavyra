@@ -23,6 +23,6 @@ export async function GET(request: NextRequest) {
 
   const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", data.user.id);
   const list = (roles ?? []).map((r) => r.role);
-  const home = list.includes("admin") ? "/admin" : list.includes("employee") ? "/employee" : "/dashboard";
+  const home = list.includes("admin") ? "/admin" : list.includes("hr") ? "/hr" : list.includes("employee") ? "/employee" : "/dashboard";
   return NextResponse.redirect(`${origin}${home}`);
 }

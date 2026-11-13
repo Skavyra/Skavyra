@@ -9,6 +9,7 @@ import type { StudentLead } from "@/types";
 
 import { ActivityTimeline, type ActivityRow } from "./ActivityTimeline";
 import { LeadDetailForm } from "./LeadDetailForm";
+import { LeadSummary } from "./LeadSummary";
 
 /** Right-side panel opened by ?lead=<id>; closing it clears the parameter. */
 export function LeadDrawer({
@@ -17,12 +18,15 @@ export function LeadDrawer({
   courses,
   selectedCourseIds,
   assigneeName,
+  readOnly = false,
 }: {
   lead: StudentLead;
   activities: ActivityRow[];
   courses: { id: string; title: string }[];
   selectedCourseIds: string[];
   assigneeName?: string | null;
+  /** HR can read a lead but the database refuses their edits, so show a summary instead of the form. */
+  readOnly?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -50,7 +54,11 @@ export function LeadDrawer({
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[1fr_260px]">
-          <LeadDetailForm lead={lead} courses={courses} selectedCourseIds={selectedCourseIds} />
+          {readOnly ? (
+            <LeadSummary lead={lead} courses={courses.filter((c) => selectedCourseIds.includes(c.id))} />
+          ) : (
+            <LeadDetailForm lead={lead} courses={courses} selectedCourseIds={selectedCourseIds} />
+          )}
           <div>
             <h3 className="font-display text-sm font-bold">History</h3>
             <div className="mt-3">

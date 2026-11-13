@@ -8,6 +8,7 @@ import { useState, useTransition } from "react";
 import { findExistingPhones, importLeads } from "@/actions/leads";
 import { DistributeDialog, type Counsellor } from "@/components/leads/DistributeDialog";
 import { Button } from "@/components/ui/button";
+import { usePanelBase } from "@/hooks/use-panel-base";
 import { toast } from "@/hooks/use-toast";
 import { flagLeadRows, type RowFlag } from "@/lib/excel/dedupe";
 import { applyMapping, LEAD_FIELDS, matchHeaders } from "@/lib/excel/header-match";
@@ -21,6 +22,7 @@ import { UploadStep } from "./UploadStep";
 const STEPS = ["Upload", "Match columns", "Check and import"];
 
 export function ImportWizard({ counsellors }: { counsellors: Counsellor[] }) {
+  const base = usePanelBase();
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [sheet, setSheet] = useState<ParsedSheet | null>(null);
@@ -91,7 +93,7 @@ export function ImportWizard({ counsellors }: { counsellors: Counsellor[] }) {
             <DistributeDialog leadIds={done.lead_ids} counsellors={counsellors} mode="distribute" />
           )}
           <Button asChild variant="outline">
-            <Link href="/admin/leads">Go to leads</Link>
+            <Link href={`${base}/leads`}>Go to leads</Link>
           </Button>
           <Button
             variant="ghost"

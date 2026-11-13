@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
+import { usePanelBase } from "@/hooks/use-panel-base";
 import { toast } from "@/hooks/use-toast";
 import { toDateInput } from "@/lib/utils";
 import type { OfferLetter } from "@/types";
@@ -19,6 +20,7 @@ export function LetterForm({
   letter: OfferLetter | null;
   managers: { id: string; name: string }[];
 }) {
+  const base = usePanelBase();
   const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +34,7 @@ export function LetterForm({
         return;
       }
       toast.success("Letter saved");
-      router.push(thenPreview ? `/admin/offer-letters?preview=${result.data.id}` : "/admin/offer-letters");
+      router.push(thenPreview ? `${base}/offer-letters?preview=${result.data.id}` : `${base}/offer-letters`);
     });
   }
 

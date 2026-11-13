@@ -33,6 +33,7 @@ export function useRole() {
     roles,
     loading,
     isAdmin: roles.includes("admin"),
+    isHr: roles.includes("hr"),
     isEmployee: roles.includes("employee"),
     isStudent: roles.includes("student"),
   };
