@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/dashboard/EmptyState";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { DeactivateDialog } from "@/components/staff/DeactivateDialog";
 import { RemoveEmployeeDialog } from "@/components/staff/RemoveEmployeeDialog";
+import { EmployeeViewDialog } from "@/components/staff/EmployeeViewDialog";
 import { EmployeeDialog, type EmployeeRecord } from "@/components/staff/EmployeeDialog";
 import { Badge } from "@/components/ui/badge";
 import { requireRole } from "@/lib/auth/require-role";
@@ -16,7 +17,7 @@ import type { PanelProps } from "./types";
 
 type Row = EmployeeRecord & { is_active: boolean; is_admin: boolean; is_hr: boolean; openLeads: number };
 
-export async function EmployeesView({ roles }: PanelProps) {
+export async function EmployeesView({ base, roles }: PanelProps) {
   const user = await requireRole(roles);
   // An admin who also holds the hr role is an admin everywhere.
   const actorIsAdmin = user.roles.includes("admin");
@@ -49,11 +50,21 @@ export async function EmployeesView({ roles }: PanelProps) {
     department: e.department,
     employment_type: e.employment_type,
     date_of_joining: e.date_of_joining,
+    reporting_manager_id: e.reporting_manager_id,
     is_active: e.is_active,
     is_admin: adminIds.has(e.id),
     is_hr: hrIds.has(e.id),
     openLeads: counts.get(e.id) ?? 0,
   }));
+
+  // Reporting managers can be anyone on staff, admins included, even an admin with no employees row (the column points at profiles).
+  const staffIds = [...new Set((roleRows ?? []).filter((r) => ["admin", "hr", "employee"].includes(r.role)).map((r) => r.user_id))];
+  const { data: staffProfiles } = staffIds.length
+    ? await supabase.from("profiles").select("id, first_name, last_name, email").in("id", staffIds).eq("is_active", true)
+    : { data: [] };
+  const reportingOptions = (staffProfiles ?? [])
+    .map((p) => ({ id: p.id, name: fullName(p) || p.email }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const managers = rows.filter((r) => r.is_active).map((r) => ({ id: r.id, name: fullName(r) || r.email }));
 
@@ -84,11 +95,23 @@ export async function EmployeesView({ roles }: PanelProps) {
       header: "",
       className: "text-right",
       cell: (r) => {
-        // HR may not touch admin or HR accounts, so those rows get no actions at all.
-        if (!actorIsAdmin && (r.is_admin || r.is_hr)) return <span className="block text-right text-xs text-muted-foreground">Managed by admin</span>;
+        const view = (
+          <EmployeeViewDialog
+            employee={r}
+            name={fullName(r) || r.email}
+            isActive={r.is_active}
+            roleLabels={[r.is_admin ? "Admin" : null, r.is_hr ? "HR" : null, !r.is_admin && !r.is_hr ? "Counsellor" : null].filter(Boolean) as string[]}
+            openLeads={r.openLeads}
+            reportingManager={reportingOptions.find((m) => m.id === r.reporting_manager_id)?.name ?? null}
+            leadsHref={`${base}/leads?assignee=${r.id}`}
+          />
+        );
+        // HR may not touch admin or HR accounts, so those rows get View only.
+        if (!actorIsAdmin && (r.is_admin || r.is_hr)) return <span className="flex items-center justify-end gap-2">{view}<span className="text-xs text-muted-foreground">Managed by admin</span></span>;
         return (
-        <span className="flex justify-end gap-2">
-          <EmployeeDialog employee={r} managers={managers} canGrantStaffRoles={actorIsAdmin} />
+        <span className="flex flex-wrap justify-end gap-2 max-lg:justify-start">
+          {view}
+          <EmployeeDialog employee={r} managers={reportingOptions} canGrantStaffRoles={actorIsAdmin} />
           <DeactivateDialog
             employee={{ id: r.id, name: fullName(r) || r.email, is_active: r.is_active }}
             openLeads={r.openLeads}
@@ -107,18 +130,19 @@ export async function EmployeesView({ roles }: PanelProps) {
       <PageHeader
         title="Employees"
         description={actorIsAdmin ? "Counsellors, HR and admins, and the leads they hold." : "Counsellors and the leads they hold."}
-        actions={<EmployeeDialog managers={managers} canGrantStaffRoles={actorIsAdmin} />}
+        actions={<EmployeeDialog managers={reportingOptions} canGrantStaffRoles={actorIsAdmin} />}
       />
       <DataTable
         rows={rows}
         columns={columns}
         rowKey={(r) => r.id}
+        cardsBelow="lg"
         empty={
           <EmptyState
             icon={Users}
             title="No employees yet"
             description="Add your first counsellor and they can start working leads straight away."
-            action={<EmployeeDialog managers={[]} canGrantStaffRoles={actorIsAdmin} />}
+            action={<EmployeeDialog managers={reportingOptions} canGrantStaffRoles={actorIsAdmin} />}
           />
         }
       />

@@ -32,6 +32,7 @@ export type EmployeeRecord = {
   department: string | null;
   employment_type: "intern" | "full_time" | "contract";
   date_of_joining: string | null;
+  reporting_manager_id?: string | null;
 };
 
 /**
@@ -45,7 +46,7 @@ export function EmployeeDialog({
 }: {
   employee?: EmployeeRecord;
   managers: { id: string; name: string }[];
-  /** Admins can create admin and HR logins. HR gets Counsellor and Student only; the server refuses anything else. */
+  /** Admins can create any login. HR gets Counsellor only; the server refuses anything else. */
   canGrantStaffRoles?: boolean;
 }) {
   const router = useRouter();
@@ -58,8 +59,8 @@ export function EmployeeDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {editing ? (
-          <Button variant="outline" size="sm">
-            <Pencil /> Edit
+          <Button variant="outline" size="icon" className="size-8" title="Edit" aria-label="Edit employee">
+            <Pencil />
           </Button>
         ) : (
           <Button>
@@ -111,7 +112,7 @@ export function EmployeeDialog({
                 <Field label="Role" htmlFor="role">
                   <NativeSelect id="role" name="role" defaultValue="employee">
                     <option value="employee">Counsellor</option>
-                    <option value="student">Student</option>
+                    {canGrantStaffRoles && <option value="student">Student</option>}
                     {canGrantStaffRoles && <option value="hr">HR</option>}
                     {canGrantStaffRoles && <option value="admin">Admin</option>}
                   </NativeSelect>
@@ -133,7 +134,7 @@ export function EmployeeDialog({
             <Field label="Date of joining" htmlFor="date_of_joining">
               <Input id="date_of_joining" name="date_of_joining" type="date" defaultValue={toDateInput(employee?.date_of_joining)} />
             </Field>
-            {editing ? (
+            {editing && (
               <Field label="Employment type" htmlFor="employment_type">
                 <NativeSelect id="employment_type" name="employment_type" defaultValue={employee?.employment_type ?? "full_time"}>
                   <option value="full_time">Full time</option>
@@ -141,18 +142,19 @@ export function EmployeeDialog({
                   <option value="contract">Contract</option>
                 </NativeSelect>
               </Field>
-            ) : (
-              <Field label="Reporting manager" htmlFor="reporting_manager_id">
-                <NativeSelect id="reporting_manager_id" name="reporting_manager_id" defaultValue="">
-                  <option value="">No manager</option>
-                  {managers.map((m) => (
+            )}
+            <Field label="Reporting manager" htmlFor="reporting_manager_id">
+              <NativeSelect id="reporting_manager_id" name="reporting_manager_id" defaultValue={employee?.reporting_manager_id ?? ""}>
+                <option value="">No manager</option>
+                {managers
+                  .filter((m) => m.id !== employee?.id)
+                  .map((m) => (
                     <option key={m.id} value={m.id}>
                       {m.name}
                     </option>
                   ))}
-                </NativeSelect>
-              </Field>
-            )}
+              </NativeSelect>
+            </Field>
           </div>
 
           {error && (

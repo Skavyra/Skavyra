@@ -1,6 +1,6 @@
 "use client";
 
-import { UserMinus } from "lucide-react";
+import { UserCheck, UserMinus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -47,7 +47,10 @@ export function DeactivateDialog({
     return (
       <Button
         variant="outline"
-        size="sm"
+        size="icon"
+        className="size-8"
+        title="Reactivate"
+        aria-label="Reactivate"
         loading={pending}
         onClick={() =>
           start(async () => {
@@ -61,7 +64,7 @@ export function DeactivateDialog({
           })
         }
       >
-        Reactivate
+        <UserCheck />
       </Button>
     );
   }
@@ -69,8 +72,8 @@ export function DeactivateDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <UserMinus /> Deactivate
+        <Button variant="outline" size="icon" className="size-8" title="Deactivate" aria-label="Deactivate">
+          <UserMinus />
         </Button>
       </DialogTrigger>
       <DialogContent>

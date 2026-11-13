@@ -29,8 +29,8 @@ export async function createUserAccount(
 
   const parsed = createStaffSchema.safeParse(formToObject(formData));
   if (!parsed.success) return { ok: false, error: firstError(parsed.error) };
-  if (!user.roles.includes("admin") && parsed.data.role !== "employee" && parsed.data.role !== "student") {
-    return { ok: false, error: "HR can only create counsellor and student accounts." };
+  if (!user.roles.includes("admin") && parsed.data.role !== "employee") {
+    return { ok: false, error: "HR can only create counsellor accounts." };
   }
 
   const body = Object.fromEntries(Object.entries(parsed.data).filter(([, v]) => v !== null && v !== undefined && v !== ""));
@@ -52,6 +52,7 @@ const employeeUpdateSchema = z.object({
   employee_code: optionalText,
   date_of_joining: optionalText,
   employment_type: z.enum(["intern", "full_time", "contract"]),
+  reporting_manager_id: z.string().uuid().nullable().optional().or(z.literal("").transform(() => null)),
 });
 
 export async function updateEmployee(employeeId: string, formData: FormData): Promise<ActionResult> {

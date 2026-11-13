@@ -20,7 +20,7 @@ export function RemoveEmployeeDialog({ employee, others }: {
   const router = useRouter();
   return (
     <Dialog open={open} onOpenChange={(value) => { if (!pending) setOpen(value); }}>
-      <DialogTrigger asChild><Button variant="destructive" size="sm"><Trash2 /> Remove</Button></DialogTrigger>
+      <DialogTrigger asChild><Button variant="destructive" size="icon" className="size-8" title="Remove" aria-label="Remove employee"><Trash2 /></Button></DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Remove {employee.name}?</DialogTitle>

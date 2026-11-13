@@ -10,6 +10,8 @@ export type Column<T> = {
   hideOnCard?: boolean;
 };
 
+// An unlabelled column holds row actions. On the mobile card it gets its own full-width line instead of half a cell.
+
 /**
  * One definition, two layouts: a table from md up, stacked cards below, which
  * is how the admin screens are meant to behave on a phone.
@@ -22,6 +24,7 @@ export function DataTable<T>({
   onRowHref,
   empty,
   selection,
+  cardsBelow = "md",
 }: {
   rows: T[];
   columns: Column<T>[];
@@ -30,12 +33,16 @@ export function DataTable<T>({
   onRowHref?: (row: T) => string;
   empty?: React.ReactNode;
   selection?: { render: (row: T) => React.ReactNode; header?: React.ReactNode };
+  /** Wide tables can switch to cards below lg instead of scrolling sideways. */
+  cardsBelow?: "md" | "lg";
 }) {
+  const tableCls = cardsBelow === "lg" ? "hidden lg:block" : "hidden md:block";
+  const cardsCls = cardsBelow === "lg" ? "lg:hidden" : "md:hidden";
   if (rows.length === 0 && empty) return <>{empty}</>;
 
   return (
     <>
-      <div className="hidden rounded-xl border bg-card md:block">
+      <div className={`${tableCls} rounded-xl border bg-card`}>
         <Table>
           <TableHeader>
             <TableRow>
@@ -71,7 +78,7 @@ export function DataTable<T>({
         </Table>
       </div>
 
-      <ul className="flex flex-col gap-3 md:hidden">
+      <ul className={`flex flex-col gap-3 ${cardsCls}`}>
         {rows.map((row) => {
           const href = onRowHref?.(row);
           const title = cardTitle?.(row) ?? columns[0].cell(row);
@@ -92,10 +99,16 @@ export function DataTable<T>({
               <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                 {columns.slice(1).map((c) =>
                   c.hideOnCard ? null : (
-                    <div key={c.key} className="min-w-0">
-                      <dt className="text-xs text-muted-foreground">{c.header}</dt>
-                      <dd className="truncate">{c.cell(row)}</dd>
-                    </div>
+                    c.header === "" ? (
+                      <div key={c.key} className="col-span-2 border-t pt-3">
+                        {c.cell(row)}
+                      </div>
+                    ) : (
+                      <div key={c.key} className="min-w-0">
+                        <dt className="text-xs text-muted-foreground">{c.header}</dt>
+                        <dd className="truncate">{c.cell(row)}</dd>
+                      </div>
+                    )
                   ),
                 )}
               </dl>

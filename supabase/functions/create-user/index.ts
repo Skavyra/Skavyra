@@ -1,4 +1,4 @@
-// Admin or HR creates an account. HR may only create employee and student accounts.
+// Admin or HR creates an account. HR may only create employee accounts.
 // The Admin API needs the service role, so this never lives in the browser.
 //
 // POST /functions/v1/create-user
@@ -64,9 +64,9 @@ Deno.serve(async (req) => {
     return json({ error: "role must be admin, employee, student or hr" }, 400);
   }
   // Escalation guard. provision_user() enforces the same rule for callers that skip this function.
-  const GRANTABLE: Record<string, string[]> = { admin: ["admin", "hr", "employee", "student"], hr: ["employee", "student"] };
+  const GRANTABLE: Record<string, string[]> = { admin: ["admin", "hr", "employee", "student"], hr: ["employee"] };
   if (!isAdmin && !GRANTABLE.hr.includes(role)) {
-    return json({ error: "HR can only create counsellor and student accounts" }, 403);
+    return json({ error: "HR can only create counsellor accounts" }, 403);
   }
 
   const admin = createClient(url, serviceKey, { auth: { persistSession: false } });
