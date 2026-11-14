@@ -4,25 +4,41 @@ import Link from "next/link";
 
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { PageHeader } from "@/components/dashboard/PageHeader";
+import { SearchFilters } from "@/components/dashboard/SearchFilters";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { requireRole } from "@/lib/auth/require-role";
 import { CATEGORY_LABEL, LEVEL_LABEL } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
-import { formatInr } from "@/lib/utils";
+import { PAYMENT_RULES } from "@/lib/payment-plan";
+import { formatInr, sanitizeSearchTerm } from "@/lib/utils";
+import type { CourseCategory, CourseLevel } from "@/types";
 
 export const metadata: Metadata = { title: "Courses" };
 
 /** Read-only catalogue so counsellors can answer questions on a call. */
-export default async function EmployeeCoursesPage() {
+type CourseSearch = { q?: string; category?: string; level?: string; fee?: string; plan?: string };
+
+export default async function EmployeeCoursesPage({ searchParams }: { searchParams: Promise<CourseSearch> }) {
   await requireRole("employee");
+  const params = await searchParams;
   const supabase = await createClient();
 
-  const { data: courses } = await supabase
-    .from("courses")
-    .select("*")
-    .eq("status", "published")
-    .order("sort_order", { ascending: true });
+  let query = supabase.from("courses").select("*").eq("status", "published");
+  if (sanitizeSearchTerm(params.q)) {
+    const term = sanitizeSearchTerm(params.q);
+    query = query.or(`title.ilike.%${term}%,subtitle.ilike.%${term}%,mentor_name.ilike.%${term}%`);
+  }
+  if (params.category && params.category in CATEGORY_LABEL) query = query.eq("category", params.category as CourseCategory);
+  if (params.level && params.level in LEVEL_LABEL) query = query.eq("level", params.level as CourseLevel);
+  if (params.fee === "low") query = query.lt("price", 10000);
+  if (params.fee === "mid") query = query.gte("price", 10000).lt("price", PAYMENT_RULES.splitFromFee);
+  if (params.fee === "high") query = query.gte("price", PAYMENT_RULES.splitFromFee);
+  if (params.plan === "full") query = query.lt("price", PAYMENT_RULES.splitFromFee);
+  if (params.plan === "split") query = query.gte("price", PAYMENT_RULES.splitFromFee);
+
+  const { data: courses } = await query.order("sort_order", { ascending: true });
+  const filtered = Boolean(params.q || params.category || params.level || params.fee || params.plan);
 
   const { data: outline } = await supabase.from("course_outline").select("course_id, module_title, module_order").order("module_order");
   const modulesByCourse = new Map<string, string[]>();
@@ -34,9 +50,40 @@ export default async function EmployeeCoursesPage() {
 
   return (
     <>
-      <PageHeader title="Courses" description="Fees, length and syllabus, so you can answer on the call." />
+      <PageHeader
+        title="Courses"
+        description={`${(courses ?? []).length} ${(courses ?? []).length === 1 ? "course" : "courses"}. Fees, length and syllabus, so you can answer on the call.`}
+      />
+      <SearchFilters
+        placeholder="Search course, topic or mentor"
+        filters={[
+          { key: "category", label: "Any category", options: Object.entries(CATEGORY_LABEL).map(([value, label]) => ({ value, label })) },
+          { key: "level", label: "Any level", options: Object.entries(LEVEL_LABEL).map(([value, label]) => ({ value, label })) },
+          {
+            key: "fee",
+            label: "Any fee",
+            options: [
+              { value: "low", label: "Under ₹10,000" },
+              { value: "mid", label: `₹10,000 to ₹${(PAYMENT_RULES.splitFromFee - 1).toLocaleString("en-IN")}` },
+              { value: "high", label: `₹${PAYMENT_RULES.splitFromFee.toLocaleString("en-IN")} and above` },
+            ],
+          },
+          {
+            key: "plan",
+            label: "Any payment plan",
+            options: [
+              { value: "full", label: "Full payment only" },
+              { value: "split", label: `Full or ${PAYMENT_RULES.firstPercent}% now` },
+            ],
+          },
+        ]}
+      />
       {(courses ?? []).length === 0 ? (
-        <EmptyState icon={BookOpen} title="No published courses yet" description="Published courses appear here." />
+        filtered ? (
+          <EmptyState icon={BookOpen} title="No courses match" description="Try a different search or clear the filters." />
+        ) : (
+          <EmptyState icon={BookOpen} title="No published courses yet" description="Published courses appear here." />
+        )
       ) : (
         <Accordion type="single" collapsible className="flex flex-col gap-3">
           {(courses ?? []).map((c) => (
@@ -58,9 +105,9 @@ export default async function EmployeeCoursesPage() {
                     <dd className="font-semibold text-foreground">{LEVEL_LABEL[c.level]}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-muted-foreground">Installments</dt>
+                    <dt className="text-xs text-muted-foreground">Payment</dt>
                     <dd className="font-semibold text-foreground">
-                      {c.allows_partial ? `Allowed${c.min_first_payment ? `, first ${formatInr(c.min_first_payment)}` : ""}` : "Full payment only"}
+                      {c.allows_partial ? "Full, or 30% now and 70% within 10 days" : "Full payment only"}
                     </dd>
                   </div>
                   <div>

@@ -13,7 +13,7 @@ import type { Counsellor } from "./DistributeDialog";
 import { LeadTable, type LeadRow } from "./LeadTable";
 
 /** Selection, the bulk bar and Export live here so the page stays a server component. */
-export function AdminLeadList({ leads, counsellors }: { leads: LeadRow[]; counsellors: Counsellor[] }) {
+export function AdminLeadList({ leads, counsellors, isAdmin = false }: { leads: LeadRow[]; counsellors: Counsellor[]; isAdmin?: boolean }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const allOnPage = leads.length > 0 && leads.every((l) => selected.has(l.id));
 
@@ -60,6 +60,7 @@ export function AdminLeadList({ leads, counsellors }: { leads: LeadRow[]; counse
       <LeadTable
         leads={leads}
         showAssignee
+        canEdit={isAdmin}
         selected={selected}
         onSelect={(id, checked) =>
           setSelected((prev) => {
@@ -76,6 +77,7 @@ export function AdminLeadList({ leads, counsellors }: { leads: LeadRow[]; counse
         leadIds={[...selected]}
         counsellors={counsellors}
         onClear={() => setSelected(new Set())}
+        isAdmin={isAdmin}
       />
     </>
   );

@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
+import { dbError } from "@/lib/errors";
+
 import { getUser } from "@/lib/auth/get-user";
 import { currentUserWithRole } from "@/lib/auth/require-role";
 import { callEdgeFunction } from "@/lib/edge";
@@ -49,7 +51,7 @@ export async function verifyPayment(paymentId: string): Promise<ActionResult> {
   if (payment.status === "success") return { ok: false, error: "This payment is already verified." };
 
   const { error } = await supabase.rpc("apply_payment", { p_payment_id: paymentId, p_method: "upi" });
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError(error) };
 
   await supabase.from("payments").update({ verified_by: user.id, verified_at: new Date().toISOString() }).eq("id", paymentId);
 
@@ -72,7 +74,7 @@ export async function rejectPayment(paymentId: string, reason: string): Promise<
     })
     .eq("id", paymentId)
     .neq("status", "success");
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError(error) };
   revalidatePath("/admin/payments");
   return { ok: true, data: undefined };
 }
@@ -88,7 +90,7 @@ export async function linkPaymentToEnrollment(paymentId: string, enrollmentId: s
     .from("payments")
     .update({ enrollment_id: enr.id, user_id: enr.user_id })
     .eq("id", paymentId);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError(error) };
   revalidatePath("/admin/payments");
   return { ok: true, data: undefined };
 }

@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { SearchFilters } from "@/components/dashboard/SearchFilters";
 import { LeadDrawer } from "@/components/leads/LeadDrawer";
 import { LeadTable } from "@/components/leads/LeadTable";
-import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/ui/pagination";
 import { requireRole } from "@/lib/auth/require-role";
 import { fetchLeadDetail, fetchLeads, FOLLOW_UP_FILTER, LEAD_STATUS_FILTER, type LeadQuery } from "@/lib/leads-query";
@@ -36,11 +34,6 @@ export default async function EmployeeLeadsPage({
       <PageHeader
         title="My leads"
         description={`${total} ${total === 1 ? "lead" : "leads"} assigned to you.`}
-        actions={
-          <Button asChild>
-            <Link href="/employee/leads/new">Add lead</Link>
-          </Button>
-        }
       />
       <SearchFilters placeholder="Search name, phone or college" filters={[LEAD_STATUS_FILTER, FOLLOW_UP_FILTER]} />
       <LeadTable leads={leads} />
@@ -53,6 +46,7 @@ export default async function EmployeeLeadsPage({
           activities={detail.activities}
           courses={detail.courses}
           selectedCourseIds={detail.selectedCourseIds}
+          payments={detail.payments}
         />
       )}
     </>

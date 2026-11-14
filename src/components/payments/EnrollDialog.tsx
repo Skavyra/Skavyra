@@ -21,9 +21,9 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
+import { canSplit, PAYMENT_RULES, splitAmounts } from "@/lib/payment-plan";
 import { cn, formatInr } from "@/lib/utils";
 
-import { InstallmentBuilder, type InstallmentDraft } from "./InstallmentBuilder";
 
 type Student = { id: string; name: string; email: string; phone: string | null };
 export type EnrollCourse = { id: string; title: string; price: number; allows_partial: boolean };
@@ -38,12 +38,15 @@ export function EnrollDialog({ courses, leadId }: { courses: EnrollCourse[]; lea
   const [courseId, setCourseId] = useState(courses[0]?.id ?? "");
   const [plan, setPlan] = useState<"full" | "partial">("full");
   const [totalInput, setTotalInput] = useState("");
-  const [rows, setRows] = useState<InstallmentDraft[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
   const course = courses.find((c) => c.id === courseId);
   const total = totalInput === "" ? (course?.price ?? 0) : Number(totalInput) || 0;
+  const splitAllowed = canSplit(total);
+  const split = splitAmounts(total);
+  // a fee that drops under the limit (a discount) cannot stay on the split plan
+  const effectivePlan = splitAllowed ? plan : "full";
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -180,7 +183,6 @@ export function EnrollDialog({ courses, leadId }: { courses: EnrollCourse[]; lea
                 setCourseId(e.target.value);
                 setTotalInput("");
                 setPlan("full");
-                setRows([]);
               }}
             >
               {courses.map((c) => (
@@ -201,28 +203,42 @@ export function EnrollDialog({ courses, leadId }: { courses: EnrollCourse[]; lea
           </Field>
         </div>
 
-        <div className="flex gap-2">
-          {(["full", "partial"] as const).map((p) => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => {
-                setPlan(p);
-                if (p === "partial" && rows.length === 0) {
-                  setRows([{ seq: 1, label: "Registration", amount: total, due_date: "" }]);
-                }
-              }}
-              className={cn(
-                "rounded-full border px-4 py-1.5 text-sm font-semibold",
-                plan === p ? "border-ink bg-ink text-ivory" : "hover:border-gold-300",
-              )}
-            >
-              {p === "full" ? "Full payment" : "Installments"}
-            </button>
-          ))}
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap gap-2">
+            {(["full", "partial"] as const).map((p) => {
+              const blocked = p === "partial" && !splitAllowed;
+              return (
+                <button
+                  key={p}
+                  type="button"
+                  disabled={blocked}
+                  onClick={() => setPlan(p)}
+                  className={cn(
+                    "rounded-full border px-4 py-1.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50",
+                    effectivePlan === p ? "border-ink bg-ink text-ivory" : "hover:border-gold-300",
+                  )}
+                >
+                  {p === "full" ? "Full payment" : `${PAYMENT_RULES.firstPercent}% now, rest in ${PAYMENT_RULES.balanceDays} days`}
+                </button>
+              );
+            })}
+          </div>
+          {!splitAllowed ? (
+            <p className="text-sm text-muted-foreground">
+              Fees below {formatInr(PAYMENT_RULES.splitFromFee)} are paid in full.
+            </p>
+          ) : effectivePlan === "partial" ? (
+            <p className="rounded-lg bg-muted p-3 text-sm">
+              {formatInr(split.first)} ({PAYMENT_RULES.firstPercent}%) is due now. The other {formatInr(split.balance)} is due within{" "}
+              {PAYMENT_RULES.balanceDays} days of the first payment.
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Fees of {formatInr(PAYMENT_RULES.splitFromFee)} or more can also be split: {PAYMENT_RULES.firstPercent}% now and the rest within{" "}
+              {PAYMENT_RULES.balanceDays} days.
+            </p>
+          )}
         </div>
-
-        {plan === "partial" && <InstallmentBuilder total={total} rows={rows} onChange={setRows} />}
 
         {error && (
           <p role="alert" className="text-sm font-medium text-destructive">
@@ -243,14 +259,8 @@ export function EnrollDialog({ courses, leadId }: { courses: EnrollCourse[]; lea
                 const result = await createEnrollment({
                   user_id: student!.id,
                   course_id: courseId,
-                  plan,
+                  plan: effectivePlan,
                   total_amount: total,
-                  installments: rows.map((r, i) => ({
-                    seq: i + 1,
-                    label: r.label || `Installment ${i + 1}`,
-                    amount: r.amount,
-                    due_date: r.due_date,
-                  })),
                   lead_id: leadId ?? null,
                 });
                 if (!result.ok) {

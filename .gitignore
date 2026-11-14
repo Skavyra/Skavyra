@@ -40,3 +40,22 @@ Thumbs.db
 *.swo
 .idea/
 .vscode/
+
+# Markdown files stay local, except the README
+*.md
+!README.md
+!/README.md
+
+# AI tool and agent files (local to each developer)
+/.agents/
+/.claude/
+/.mcp.json
+/skills-lock.json
+
+# Supabase local state
+/supabase/.branches/
+
+# Test output
+/test-results/
+/playwright-report/
+

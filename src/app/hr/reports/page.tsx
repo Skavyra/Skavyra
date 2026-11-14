@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
-import { ReportsView } from "@/components/panels/ReportsView";
+import { ReportsView, type ReportParams } from "@/components/panels/ReportsView";
 
 export const metadata: Metadata = { title: "Reports" };
 
-export default function Page() {
-  return <ReportsView base="/hr" roles={["hr", "admin"]} />;
+export default async function Page({ searchParams }: { searchParams: Promise<ReportParams> }) {
+  return <ReportsView base="/hr" roles={["hr", "admin"]} params={await searchParams} />;
 }

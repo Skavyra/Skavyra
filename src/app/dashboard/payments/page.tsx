@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { requireRole } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
+import { effectiveInstallmentStatus } from "@/lib/payment-plan";
 import { formatDate, formatInr } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Payments" };
@@ -60,7 +61,7 @@ export default async function StudentPaymentsPage() {
       {list.map((enrollment) => {
         const rows = (installments ?? []).filter((i) => i.enrollment_id === enrollment.id);
         const enrollmentBalance = Number(enrollment.balance_amount ?? 0);
-        const firstPending = rows.find((i) => i.status === "pending");
+        const firstPending = rows.find((i) => i.status !== "paid" && i.status !== "waived");
         return (
           <section key={enrollment.id} className="mt-8">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -91,7 +92,7 @@ export default async function StudentPaymentsPage() {
                         <TableCell>
                           {i.status === "paid" ? (
                             <Badge tone="success">Paid</Badge>
-                          ) : i.status === "overdue" ? (
+                          ) : effectiveInstallmentStatus(i.status, i.due_date) === "overdue" ? (
                             <Badge tone="danger">Overdue</Badge>
                           ) : (
                             <Badge tone="neutral">Pending</Badge>

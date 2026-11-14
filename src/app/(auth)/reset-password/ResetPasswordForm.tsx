@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { createClient } from "@/lib/supabase/client";
+import { passwordProblem } from "@/lib/validations/password";
 
 /**
  * Reached from the email link, which the callback route turns into a session.
@@ -29,7 +30,8 @@ export function ResetPasswordForm() {
     const password = String(formData.get("password") ?? "");
     const confirm = String(formData.get("confirm") ?? "");
     setError(null);
-    if (password.length < 8) return setError("Use a password of at least 8 characters.");
+    const issue = passwordProblem(password);
+    if (issue) return setError(issue);
     if (password !== confirm) return setError("The two passwords do not match.");
 
     setPending(true);
@@ -61,7 +63,7 @@ export function ResetPasswordForm() {
         <p className="mt-2 text-base text-muted-foreground">Choose something you have not used here before.</p>
       </div>
       <form action={onSubmit} className="flex flex-col gap-4">
-        <label className="field" htmlFor="password">New password<small>At least 8 characters.</small><span className="pw"><input id="password" name="password" type={showPassword ? "text" : "password"} autoComplete="new-password" required /><button type="button" aria-label="Show password" onClick={() => setShowPassword((shown) => !shown)}>{showPassword ? <EyeOff className="ic" strokeWidth={1.75} /> : <Eye className="ic" strokeWidth={1.75} />}</button></span></label>
+        <label className="field" htmlFor="password">New password<small>At least 10 characters, with a letter and a number.</small><span className="pw"><input id="password" name="password" type={showPassword ? "text" : "password"} autoComplete="new-password" required /><button type="button" aria-label="Show password" onClick={() => setShowPassword((shown) => !shown)}>{showPassword ? <EyeOff className="ic" strokeWidth={1.75} /> : <Eye className="ic" strokeWidth={1.75} />}</button></span></label>
         <label className="field" htmlFor="confirm">Confirm new password<span className="pw"><input id="confirm" name="confirm" type={showConfirm ? "text" : "password"} autoComplete="new-password" required /><button type="button" aria-label="Show password" onClick={() => setShowConfirm((shown) => !shown)}>{showConfirm ? <EyeOff className="ic" strokeWidth={1.75} /> : <Eye className="ic" strokeWidth={1.75} />}</button></span></label>
         {error && (
           <p role="alert" className="text-sm font-medium text-destructive">

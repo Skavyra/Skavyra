@@ -1,10 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+
+import { dbError } from "@/lib/errors";
 import { z } from "zod";
 
 import { currentUserWithRole } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
+import { canSplit } from "@/lib/payment-plan";
 import { slugify } from "@/lib/utils";
 import { firstError, formToObject } from "@/lib/validations/common";
 import { courseSchema, courseValidationError, lessonSchema, moduleSchema } from "@/lib/validations/course";
@@ -42,7 +45,7 @@ export async function createCourse(title: string): Promise<ActionResult<{ id: st
     .insert({ title: clean, slug, price: 0, status: "draft", created_by: user.id })
     .select("id")
     .single();
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError(error) };
   revalidateCourse();
   return { ok: true, data: { id: data.id } };
 }
@@ -50,7 +53,8 @@ export async function createCourse(title: string): Promise<ActionResult<{ id: st
 export async function updateCourse(courseId: string, formData: FormData): Promise<ActionResult> {
   if (!(await adminOnly())) return { ok: false, error: "Only admins can edit courses." };
   const raw = formToObject(formData);
-  const allowsPartial = raw.allows_partial === "on";
+  // installments follow the price: 30% now and 70% within 10 days, only from the split limit up
+  const allowsPartial = canSplit(Number(raw.price) || 0);
   const isFlagship = raw.is_flagship === "on";
   const showCountdown = raw.show_countdown === "on";
   const tools = [...new Set((raw.tools ?? "").split(/\r?\n/).map((tool) => tool.trim()).filter(Boolean))];
@@ -60,13 +64,13 @@ export async function updateCourse(courseId: string, formData: FormData): Promis
     is_flagship: isFlagship,
     show_countdown: showCountdown,
     tools,
-    min_first_payment: allowsPartial ? raw.min_first_payment : null,
+    min_first_payment: null,
   });
   if (!parsed.success) return { ok: false, error: courseValidationError(parsed.error) };
 
   const supabase = await createClient();
   const { error } = await supabase.from("courses").update(parsed.data).eq("id", courseId);
-  if (error) return { ok: false, error: error.code === "23505" ? "Another course already uses this URL slug." : error.message };
+  if (error) return { ok: false, error: error.code === "23505" ? "Another course already uses this URL slug." : dbError(error) };
   revalidateCourse(courseId);
   return { ok: true, data: undefined };
 }
@@ -83,7 +87,7 @@ export async function setCourseImage(
     .from("courses")
     .update(field === "cover_image_url" ? { cover_image_url: url } : { mentor_avatar_url: url })
     .eq("id", courseId);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError(error) };
   revalidateCourse(courseId);
   return { ok: true, data: undefined };
 }
@@ -95,16 +99,16 @@ export async function setCourseStatus(courseId: string, status: CourseStatus): P
 
   if (status === "published") {
     const { data: course, error: loadError } = await supabase.from("courses").select("published_at").eq("id", courseId).single();
-    if (loadError) return { ok: false, error: loadError.message };
+    if (loadError) return { ok: false, error: dbError(loadError) };
     if (!course) return { ok: false, error: "Course not found." };
     const { error } = await supabase
       .from("courses")
       .update({ status, published_at: course.published_at ?? new Date().toISOString() })
       .eq("id", courseId);
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: dbError(error) };
   } else {
     const { error } = await supabase.from("courses").update({ status }).eq("id", courseId);
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: dbError(error) };
   }
   revalidateCourse(courseId);
   return { ok: true, data: undefined };
@@ -118,12 +122,12 @@ export async function deleteCourse(courseId: string): Promise<ActionResult> {
   if (!z.string().uuid().safeParse(courseId).success) return { ok: false, error: "Invalid course." };
   const supabase = await createClient();
   const { count, error: enrollmentError } = await supabase.from("enrollments").select("id", { count: "exact", head: true }).eq("course_id", courseId);
-  if (enrollmentError) return { ok: false, error: enrollmentError.message };
+  if (enrollmentError) return { ok: false, error: dbError(enrollmentError) };
   if (count) return { ok: false, error: "This course has enrollments. Unpublish it instead to preserve student history." };
   const { data, error } = await supabase.from("courses").delete().eq("id", courseId).select("id").maybeSingle();
   if (error) return { ok: false, error: error.code === "23503"
     ? "This course has linked records, such as enrollments. Unpublish it instead to preserve student history."
-    : error.message };
+    : dbError(error) };
   if (!data) return { ok: false, error: "Course not found or deletion is not permitted." };
   revalidateCourse(courseId);
   return { ok: true, data: undefined };
@@ -137,7 +141,7 @@ export async function saveModule(courseId: string, moduleId: string | null, form
 
   if (moduleId) {
     const { error } = await supabase.from("course_modules").update(parsed.data).eq("id", moduleId);
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: dbError(error) };
   } else {
     const { count } = await supabase
       .from("course_modules")
@@ -146,7 +150,7 @@ export async function saveModule(courseId: string, moduleId: string | null, form
     const { error } = await supabase
       .from("course_modules")
       .insert({ ...parsed.data, course_id: courseId, sort_order: count ?? 0 });
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: dbError(error) };
   }
   revalidateCourse(courseId);
   return { ok: true, data: undefined };
@@ -156,7 +160,7 @@ export async function deleteModule(courseId: string, moduleId: string): Promise<
   if (!(await adminOnly())) return { ok: false, error: "Only admins can edit courses." };
   const supabase = await createClient();
   const { error } = await supabase.from("course_modules").delete().eq("id", moduleId);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError(error) };
   revalidateCourse(courseId);
   return { ok: true, data: undefined };
 }
@@ -178,7 +182,7 @@ export async function reorder(
         ? supabase.from("lessons").update({ sort_order: index, module_id: moduleId }).eq("id", id)
         : supabase.from(table).update({ sort_order: index }).eq("id", id);
     const { error } = await update;
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: dbError(error) };
   }
   revalidateCourse(courseId);
   return { ok: true, data: undefined };
@@ -209,7 +213,7 @@ export async function saveLesson(
   const supabase = await createClient();
   if (lessonId) {
     const { error } = await supabase.from("lessons").update(values).eq("id", lessonId);
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: dbError(error) };
     revalidateCourse(courseId);
     return { ok: true, data: { id: lessonId } };
   }
@@ -219,7 +223,7 @@ export async function saveLesson(
     .insert({ ...values, module_id: moduleId, sort_order: count ?? 0 })
     .select("id")
     .single();
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError(error) };
   revalidateCourse(courseId);
   return { ok: true, data: { id: data.id } };
 }
@@ -228,7 +232,7 @@ export async function deleteLesson(courseId: string, lessonId: string): Promise<
   if (!(await adminOnly())) return { ok: false, error: "Only admins can edit courses." };
   const supabase = await createClient();
   const { error } = await supabase.from("lessons").delete().eq("id", lessonId);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError(error) };
   revalidateCourse(courseId);
   return { ok: true, data: undefined };
 }
@@ -243,7 +247,7 @@ export async function addLessonResource(
   if (!resource.title.trim()) return { ok: false, error: "Give the resource a title." };
   const supabase = await createClient();
   const { error } = await supabase.from("lesson_resources").insert({ lesson_id: lessonId, ...resource });
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError(error) };
   revalidateCourse(courseId);
   return { ok: true, data: undefined };
 }
@@ -253,7 +257,7 @@ export async function deleteLessonResource(courseId: string, resourceId: string,
   const supabase = await createClient();
   await supabase.storage.from("lesson-resources").remove([storagePath]);
   const { error } = await supabase.from("lesson_resources").delete().eq("id", resourceId);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError(error) };
   revalidateCourse(courseId);
   return { ok: true, data: undefined };
 }

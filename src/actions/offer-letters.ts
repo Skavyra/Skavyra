@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
+import { dbError } from "@/lib/errors";
+
 import { currentUserWithRole } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
 import { firstError, formToObject } from "@/lib/validations/common";
@@ -25,7 +27,7 @@ export async function saveOfferLetter(letterId: string | null, formData: FormDat
   const supabase = await createClient();
   if (letterId) {
     const { error } = await supabase.from("offer_letters").update(values).eq("id", letterId);
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: dbError(error) };
     revalidateLetters();
     return { ok: true, data: { id: letterId } };
   }
@@ -43,7 +45,7 @@ export async function saveOfferLetter(letterId: string | null, formData: FormDat
     .insert({ ...values, letter_no: "", template_id: template?.id ?? null, created_by: user.id, status: "draft" })
     .select("id")
     .single();
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError(error) };
   revalidateLetters();
   return { ok: true, data: { id: data.id } };
 }
@@ -75,7 +77,7 @@ export async function importOfferLetters(input: {
     p_rows: input.rows as Json,
     ...(template?.id ? { p_template_id: template.id } : {}),
   });
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError(error) };
   revalidateLetters();
   const summary = data as { inserted: number; skipped: number };
   return { ok: true, data: { inserted: summary.inserted, skipped: summary.skipped } };
@@ -97,7 +99,7 @@ export async function markLetterGenerated(letterId: string, pdfPath: string): Pr
       ...(keepStatus ? {} : { status: "generated" as const }),
     })
     .eq("id", letterId);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError(error) };
   revalidateLetters();
   return { ok: true, data: undefined };
 }
@@ -110,7 +112,7 @@ export async function setLetterStatus(letterId: string, status: LetterStatus): P
     .from("offer_letters")
     .update({ status, ...(status === "sent" ? { sent_at: new Date().toISOString() } : {}) })
     .eq("id", letterId);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError(error) };
   revalidateLetters();
   return { ok: true, data: undefined };
 }

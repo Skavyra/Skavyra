@@ -1,15 +1,23 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
+
+import { dbError } from "@/lib/errors";
 
 import { currentUserWithRole } from "@/lib/auth/require-role";
-import { BUCKETS } from "@/lib/constants";
+import { BUCKETS, LEAD_STATUSES } from "@/lib/constants";
 import { chunk } from "@/lib/excel/dedupe";
 import { createClient } from "@/lib/supabase/server";
 import { firstError, formToObject } from "@/lib/validations/common";
 import { leadCreateSchema, leadUpdateSchema, paymentProofSchema } from "@/lib/validations/lead";
-import { fullName, normalizePhone } from "@/lib/utils";
-import type { ActionResult, Json } from "@/types";
+import { paymentOptions, PURPOSE_OF } from "@/lib/payment-plan";
+import { fullName, getOfferPricing, normalizePhone } from "@/lib/utils";
+import type { ActionResult, Json, LeadStatus } from "@/types";
+
+const uuid = z.string().uuid();
+const leadIdList = z.array(uuid).min(1, "Select at least one lead.").max(5000, "Too many leads at once. Select fewer.");
+const importPlanSchema = z.array(z.object({ employee_id: uuid, phones: z.array(z.string().max(30)).max(20000) })).max(200);
 
 function revalidateLeads() {
   revalidatePath("/employee", "layout");
@@ -29,17 +37,15 @@ async function duplicateMessage(phone: string) {
 }
 
 /**
- * Add lead. An employee's lead is assigned to themselves (the RLS insert
- * policy requires it). An admin's lead stays unassigned until distributed.
+ * Add lead. Admin and HR only: a counsellor adding their own leads would let them pad their numbers, so leads
+ * come from imports and from admin/HR. The lead stays unassigned until it is handed to a counsellor.
  */
 export async function createLead(formData: FormData): Promise<ActionResult<{ id: string }>> {
-  const user = await currentUserWithRole(["admin", "employee"]);
-  if (!user) return { ok: false, error: "Only staff can add leads." };
+  const user = await currentUserWithRole(["admin", "hr"]);
+  if (!user) return { ok: false, error: "Only admins and HR can add leads." };
 
   const parsed = leadCreateSchema.safeParse(formToObject(formData));
   if (!parsed.success) return { ok: false, error: firstError(parsed.error) };
-
-  const isAdmin = user.roles.includes("admin");
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("student_leads")
@@ -47,8 +53,8 @@ export async function createLead(formData: FormData): Promise<ActionResult<{ id:
       ...parsed.data,
       source: "manual",
       created_by: user.id,
-      assigned_employee_id: isAdmin ? null : user.id,
-      assigned_at: isAdmin ? null : new Date().toISOString(),
+      assigned_employee_id: null,
+      assigned_at: null,
     })
     .select("id")
     .single();
@@ -58,7 +64,7 @@ export async function createLead(formData: FormData): Promise<ActionResult<{ id:
       const isEmail = error.message.includes("email");
       return { ok: false, error: isEmail ? "This email is already on another lead." : await duplicateMessage(parsed.data.phone) };
     }
-    return { ok: false, error: error.message };
+    return { ok: false, error: dbError(error) };
   }
   revalidateLeads();
   return { ok: true, data: { id: data.id } };
@@ -72,6 +78,7 @@ export async function createLead(formData: FormData): Promise<ActionResult<{ id:
 export async function updateLead(leadId: string, formData: FormData, courseIds: string[]): Promise<ActionResult> {
   const user = await currentUserWithRole(["admin", "employee"]);
   if (!user) return { ok: false, error: "Only staff can update leads." };
+  if (!uuid.safeParse(leadId).success || !z.array(uuid).max(100).safeParse(courseIds).success) return { ok: false, error: "That request was not valid." };
 
   const parsed = leadUpdateSchema.safeParse(formToObject(formData));
   if (!parsed.success) return { ok: false, error: firstError(parsed.error) };
@@ -98,7 +105,7 @@ export async function updateLead(leadId: string, formData: FormData, courseIds: 
     .eq("id", leadId);
   if (error) {
     if (error.code === "23505") return { ok: false, error: await duplicateMessage(parsed.data.phone) };
-    return { ok: false, error: error.message };
+    return { ok: false, error: dbError(error) };
   }
 
   if (!statusChanged) {
@@ -116,7 +123,7 @@ export async function updateLead(leadId: string, formData: FormData, courseIds: 
     const { error: lcErr } = await supabase
       .from("lead_courses")
       .insert(courseIds.map((course_id) => ({ lead_id: leadId, course_id })));
-    if (lcErr) return { ok: false, error: `Saved, but courses of interest failed: ${lcErr.message}` };
+    if (lcErr) return { ok: false, error: `Saved, but courses of interest failed. Open the lead and save again.` };
   }
 
   revalidateLeads();
@@ -127,6 +134,7 @@ export async function updateLead(leadId: string, formData: FormData, courseIds: 
 export async function reassignLead(leadId: string, employeeId: string | null): Promise<ActionResult> {
   const user = await currentUserWithRole(["admin", "hr"]);
   if (!user) return { ok: false, error: "Only admins and HR can reassign leads." };
+  if (!uuid.safeParse(leadId).success || (employeeId !== null && !uuid.safeParse(employeeId).success)) return { ok: false, error: "That request was not valid." };
   const supabase = await createClient();
   const { error } = await supabase
     .from("student_leads")
@@ -136,15 +144,20 @@ export async function reassignLead(leadId: string, employeeId: string | null): P
       assigned_at: employeeId ? new Date().toISOString() : null,
     })
     .eq("id", leadId);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError(error) };
   revalidateLeads();
   return { ok: true, data: undefined };
 }
 
-/** Counsellor logs an offline UPI payment. Saved as pending; an admin verifies it. */
+/**
+ * Counsellor logs an offline UPI payment. Saved as pending; an admin verifies it. The amount is not taken from the
+ * form: it is worked out here from the course's current fee and what is already logged for this lead and course
+ * (full fee, or the first 30%, or the remaining balance), so it cannot be typed wrong or invented.
+ */
 export async function uploadPaymentProof(leadId: string, formData: FormData): Promise<ActionResult> {
   const user = await currentUserWithRole(["admin", "employee"]);
   if (!user) return { ok: false, error: "Only staff can log payments." };
+  if (!uuid.safeParse(leadId).success) return { ok: false, error: "That request was not valid." };
 
   const parsed = paymentProofSchema.safeParse(formToObject(formData));
   if (!parsed.success) return { ok: false, error: firstError(parsed.error) };
@@ -152,6 +165,9 @@ export async function uploadPaymentProof(leadId: string, formData: FormData): Pr
   const file = formData.get("proof");
   if (!(file instanceof File) || file.size === 0) return { ok: false, error: "Attach the payment screenshot." };
   if (file.size > 10 * 1024 * 1024) return { ok: false, error: "The screenshot must be under 10 MB." };
+  if (!/^(image\/(png|jpe?g|webp|heic)|application\/pdf)$/i.test(file.type)) {
+    return { ok: false, error: "Attach a photo (PNG, JPG, WebP) or a PDF." };
+  }
 
   const supabase = await createClient();
   const { data: lead } = await supabase
@@ -164,12 +180,35 @@ export async function uploadPaymentProof(leadId: string, formData: FormData): Pr
     return { ok: false, error: "Set the status to Interested or Enrolled before logging a payment." };
   }
 
-  const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+  const { data: course } = await supabase
+    .from("courses")
+    .select("id, title, price, offer_price, offer_ends_at, status")
+    .eq("id", parsed.data.course_id)
+    .maybeSingle();
+  if (!course) return { ok: false, error: "That course was not found." };
+
+  const fee = getOfferPricing(course).current;
+  const { data: logged } = await supabase
+    .from("payments")
+    .select("purpose, amount, status, created_at")
+    .eq("lead_id", leadId)
+    .eq("course_id", course.id);
+
+  const { options } = paymentOptions(fee, logged ?? []);
+  const chosen = options.find((o) => o.kind === parsed.data.kind);
+  if (!chosen) {
+    return {
+      ok: false,
+      error: options.length === 0 ? "Nothing more is due for this course." : "That payment is not allowed now. Reload the lead and choose again.",
+    };
+  }
+
+  const ext = (file.name.split(".").pop() ?? "").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5) || "png";
   const path = `${leadId}/${Date.now()}.${ext}`;
   const { error: upErr } = await supabase.storage.from(BUCKETS.paymentProofs).upload(path, file, {
     contentType: file.type || undefined,
   });
-  if (upErr) return { ok: false, error: `Upload failed: ${upErr.message}` };
+  if (upErr) return { ok: false, error: "The screenshot could not be uploaded. Try again." };
 
   let enrollment: { id: string; user_id: string } | null = null;
   if (lead.converted_enrollment_id) {
@@ -179,10 +218,11 @@ export async function uploadPaymentProof(leadId: string, formData: FormData): Pr
 
   const { error } = await supabase.from("payments").insert({
     lead_id: leadId,
+    course_id: course.id,
     enrollment_id: enrollment?.id ?? null,
     user_id: enrollment?.user_id ?? null,
-    amount: parsed.data.amount,
-    purpose: parsed.data.purpose,
+    amount: chosen.amount,
+    purpose: PURPOSE_OF[chosen.kind],
     provider: "manual_upi",
     status: "pending",
     method: "upi",
@@ -190,7 +230,7 @@ export async function uploadPaymentProof(leadId: string, formData: FormData): Pr
     proof_path: path,
     created_by: user.id,
   });
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError(error) };
 
   revalidateLeads();
   revalidatePath("/admin/payments");
@@ -201,12 +241,14 @@ export async function uploadPaymentProof(leadId: string, formData: FormData): Pr
 export async function assignLeads(leadIds: string[], employeeIds: string[]): Promise<ActionResult<{ count: number }>> {
   const user = await currentUserWithRole(["admin", "hr"]);
   if (!user) return { ok: false, error: "Only admins and HR can assign leads." };
-  if (leadIds.length === 0) return { ok: false, error: "Select at least one lead." };
-  if (employeeIds.length === 0) return { ok: false, error: "Pick at least one counsellor." };
+  const ids = leadIdList.safeParse(leadIds);
+  if (!ids.success) return { ok: false, error: firstError(ids.error) };
+  const people = z.array(uuid).min(1, "Pick at least one counsellor.").max(200).safeParse(employeeIds);
+  if (!people.success) return { ok: false, error: firstError(people.error) };
 
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("assign_leads", { p_lead_ids: leadIds, p_employee_ids: employeeIds });
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError(error) };
   revalidateLeads();
   return { ok: true, data: { count: data ?? 0 } };
 }
@@ -226,49 +268,88 @@ export async function findExistingPhones(
       .select("phone, interested_course_text")
       .in("phone", part)
       .is("deleted_at", null);
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: dbError(error) };
     found.push(...(data ?? []));
   }
   return { ok: true, data: found };
 }
 
-export type ImportSummary = { batch_id: string; inserted: number; duplicates: number; skipped: number; lead_ids: string[] };
+export type ImportSummary = { batch_id: string; inserted: number; duplicates: number; skipped: number; assigned: number };
 
-/** One transaction in import_leads(): batch row, dedupe, insert. */
+/** Who gets which rows: phones are the raw sheet values, the database normalises them. */
+export type ImportPlan = { employee_id: string; phones: string[] }[];
+
+/** One transaction in import_leads_assigned(): batch row, dedupe, insert, then hand the leads out. */
 export async function importLeads(input: {
   fileName: string;
   fileType: "csv" | "xlsx";
   mapping: Record<string, string>;
   detectedColumns: string[];
   rows: Record<string, string>[];
+  plan: ImportPlan;
 }): Promise<ActionResult<ImportSummary>> {
   const user = await currentUserWithRole(["admin", "hr"]);
   if (!user) return { ok: false, error: "Only admins and HR can import leads." };
   if (input.rows.length === 0) return { ok: false, error: "There are no rows to import." };
+  if (input.rows.length > 20000) return { ok: false, error: "Import at most 20,000 rows at a time. Split the file." };
+  const plan = importPlanSchema.safeParse(input.plan);
+  if (!plan.success) return { ok: false, error: "The assignment plan was not valid. Go back and choose again." };
 
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("import_leads", {
+  const { data, error } = await supabase.rpc("import_leads_assigned", {
     p_file_name: input.fileName,
     p_file_type: input.fileType,
     p_column_mapping: input.mapping as Json,
     p_detected_columns: input.detectedColumns,
     p_rows: input.rows as Json,
+    p_plan: input.plan as Json,
   });
-  if (error) return { ok: false, error: error.message };
-
-  const summary = data as { batch_id: string; inserted: number; duplicates: number; skipped: number };
-  const { data: ids } = await supabase.from("student_leads").select("id").eq("batch_id", summary.batch_id);
+  if (error) return { ok: false, error: dbError(error) };
 
   revalidateLeads();
-  return { ok: true, data: { ...summary, lead_ids: (ids ?? []).map((r) => r.id) } };
+  const summary = data as { batch_id: string; inserted: number; duplicates: number; skipped: number; assigned?: number };
+  return { ok: true, data: { ...summary, assigned: summary.assigned ?? 0 } };
+}
+
+/** Admin or HR: put leads back to unassigned. */
+export async function unassignLeads(leadIds: string[]): Promise<ActionResult<{ count: number }>> {
+  const user = await currentUserWithRole(["admin", "hr"]);
+  if (!user) return { ok: false, error: "Only admins and HR can unassign leads." };
+  const ids = leadIdList.safeParse(leadIds);
+  if (!ids.success) return { ok: false, error: firstError(ids.error) };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("unassign_leads", { p_lead_ids: leadIds });
+  if (error) return { ok: false, error: dbError(error) };
+  revalidateLeads();
+  return { ok: true, data: { count: data ?? 0 } };
+}
+
+/** Admin: set one status on many leads. Each change is logged to the lead's history by the trigger. */
+export async function setLeadsStatus(leadIds: string[], status: LeadStatus): Promise<ActionResult<{ count: number }>> {
+  const user = await currentUserWithRole("admin");
+  if (!user) return { ok: false, error: "Only admins can change status in bulk." };
+  const ids = leadIdList.safeParse(leadIds);
+  if (!ids.success) return { ok: false, error: firstError(ids.error) };
+  if (!LEAD_STATUSES.some((s) => s.value === status)) return { ok: false, error: "Choose a valid status." };
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("student_leads")
+    .update({ status })
+    .in("id", leadIds)
+    .is("deleted_at", null)
+    .select("id");
+  if (error) return { ok: false, error: dbError(error) };
+  revalidateLeads();
+  return { ok: true, data: { count: data?.length ?? 0 } };
 }
 
 export async function softDeleteLead(leadId: string): Promise<ActionResult> {
   const user = await currentUserWithRole("admin");
   if (!user) return { ok: false, error: "Only admins can remove leads." };
+  if (!uuid.safeParse(leadId).success) return { ok: false, error: "That request was not valid." };
   const supabase = await createClient();
   const { error } = await supabase.from("student_leads").update({ deleted_at: new Date().toISOString() }).eq("id", leadId);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError(error) };
   revalidateLeads();
   return { ok: true, data: undefined };
 }

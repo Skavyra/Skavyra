@@ -2,6 +2,7 @@
 //
 // POST /functions/v1/deactivate-staff
 // { "user_id": "uuid", "reassign_to": "uuid | null", "ban": false }
+// { "action": "reactivate", "user_id": "uuid" }   switches access back on and lifts any login ban
 //
 // ban: true also blocks the login in Supabase Auth. Leave it false to keep
 // the account for audit purposes but switch off access in the app.
@@ -42,7 +43,7 @@ Deno.serve(async (req) => {
     return json({ error: "forbidden: admin or HR only" }, 403);
   }
 
-  const { user_id, reassign_to, ban } = await req.json();
+  const { user_id, reassign_to, ban, action } = await req.json();
   if (!user_id) return json({ error: "user_id is required" }, 400);
 
   const admin = createClient(url, serviceKey, { auth: { persistSession: false } });
@@ -53,6 +54,14 @@ Deno.serve(async (req) => {
     if ((targetRoles ?? []).some((r: { role: string }) => r.role === "admin" || r.role === "hr")) {
       return json({ error: "HR cannot deactivate admin or HR accounts" }, 403);
     }
+  }
+
+  if (action === "reactivate") {
+    const { data, error } = await admin.rpc("reactivate_staff", { p_user_id: user_id, p_actor_id: user.id });
+    if (error) return json({ error: error.message }, 400);
+    // "Also block them from logging in" bans the auth user, so lift that too.
+    await admin.auth.admin.updateUserById(user_id, { ban_duration: "none" });
+    return json({ reactivated: true, ...data });
   }
 
   const { data, error } = await admin.rpc("deactivate_staff", {

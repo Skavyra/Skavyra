@@ -18,7 +18,7 @@ export async function ImportLeadsView({ base, roles }: PanelProps) {
       <Link href={`${base}/leads`} className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ChevronLeft className="size-4" /> Leads
       </Link>
-      <PageHeader title="Import leads" description="Upload a spreadsheet, check the columns, then import." />
+      <PageHeader title="Import leads" description="Upload a spreadsheet, check the rows, choose who gets them, then confirm. Nothing is saved until you confirm." />
       <ImportWizard counsellors={counsellors} />
     </>
   );

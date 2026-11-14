@@ -120,3 +120,11 @@ export function savingsPercent(price: number, mrp: number | null) {
   if (mrp == null || mrp <= price) return 0;
   return Math.round(((mrp - price) / mrp) * 100);
 }
+
+/**
+ * A search box value made safe for a PostgREST `.or(...)` filter, where a comma, bracket or quote would otherwise
+ * end the clause and let someone add their own filters. Only letters, digits, spaces and . @ + - are kept.
+ */
+export function sanitizeSearchTerm(value: string | null | undefined, max = 60) {
+  return (value ?? "").replace(/[^\p{L}\p{N}\s.@+\-]/gu, "").replace(/\s+/g, " ").trim().slice(0, max);
+}

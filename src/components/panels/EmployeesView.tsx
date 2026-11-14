@@ -115,10 +115,9 @@ export async function EmployeesView({ base, roles }: PanelProps) {
           <DeactivateDialog
             employee={{ id: r.id, name: fullName(r) || r.email, is_active: r.is_active }}
             openLeads={r.openLeads}
-            others={managers.filter((m) => m.id !== r.id)}
-            canReactivate={actorIsAdmin}
+            others={inheritors.filter((m) => m.id !== r.id)}
           />
-          {!r.is_admin && r.id !== user.id && <RemoveEmployeeDialog employee={{ id: r.id, name: fullName(r) || r.email }} others={inheritors.filter((m) => m.id !== r.id)} />}
+          {actorIsAdmin && !r.is_admin && r.id !== user.id && <RemoveEmployeeDialog employee={{ id: r.id, name: fullName(r) || r.email }} others={inheritors.filter((m) => m.id !== r.id)} />}
         </span>
         );
       },

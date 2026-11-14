@@ -1,13 +1,13 @@
 "use client";
 
-import { Phone } from "lucide-react";
+import { Eye, Pencil, Phone } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { DataTable, type Column } from "@/components/dashboard/DataTable";
 import { LeadStatusBadge } from "@/components/dashboard/StatusBadge";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { IconAction } from "@/components/ui/icon-action";
 import { cn, formatDate, formatPhone } from "@/lib/utils";
 import type { LeadStatus } from "@/types";
 
@@ -31,19 +31,23 @@ export function LeadTable({
   selected,
   onSelect,
   showAssignee = false,
+  canEdit = true,
 }: {
   leads: LeadRow[];
   selected?: Set<string>;
   onSelect?: (id: string, checked: boolean) => void;
   showAssignee?: boolean;
+  /** False for roles that may look at a lead but not change it (HR). */
+  canEdit?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
 
-  const open = (id: string) => {
+  const open = (id: string, mode: "view" | "edit" = "view") => {
     const next = new URLSearchParams(params.toString());
     next.set("lead", id);
+    next.set("mode", mode);
     router.push(`${pathname}?${next.toString()}`, { scroll: false });
   };
 
@@ -88,11 +92,19 @@ export function LeadTable({
       header: "",
       className: "text-right",
       cell: (row) => (
-        <Button asChild size="sm" variant="outline" onClick={(e) => e.stopPropagation()}>
-          <a href={`tel:+91${row.phone}`}>
-            <Phone /> Call
-          </a>
-        </Button>
+        <div className="flex items-center justify-end gap-2">
+          <IconAction label="View" onClick={() => open(row.id, "view")}>
+            <Eye />
+          </IconAction>
+          {canEdit && (
+            <IconAction label="Edit" onClick={() => open(row.id, "edit")}>
+              <Pencil />
+            </IconAction>
+          )}
+          <IconAction label="Call" href={`tel:+91${row.phone}`} external>
+            <Phone />
+          </IconAction>
+        </div>
       ),
     },
   ];

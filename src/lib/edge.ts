@@ -30,10 +30,18 @@ export async function callEdgeFunction<T = Record<string, unknown>>(
     const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
     if (!res.ok || json.error) {
       if (res.status === 404) return { ok: false, error: `The ${name} function is not deployed yet.` };
-      return { ok: false, error: String(json.error ?? `The ${name} function failed (${res.status}).`) };
+      if (res.status === 401) return { ok: false, error: "Your session has ended. Log in again." };
+      if (res.status === 403) return { ok: false, error: "You do not have permission to do that." };
+      // 4xx messages are written for people; a 5xx is a fault, so log it and say something plain
+      if (res.status >= 500) {
+        console.error(`[edge:${name}]`, res.status, json.error);
+        return { ok: false, error: "The server had a problem. Please try again in a moment." };
+      }
+      return { ok: false, error: String(json.error ?? "That request could not be completed.") };
     }
     return { ok: true, data: json as T };
-  } catch {
-    return { ok: false, error: `Could not reach the ${name} function.` };
+  } catch (error) {
+    console.error(`[edge:${name}] unreachable`, error);
+    return { ok: false, error: "Could not reach the server. Check your connection and try again." };
   }
 }

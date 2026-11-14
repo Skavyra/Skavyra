@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 
-/** Employees add a lead to their own list; admins add it unassigned. */
+/** Admin and HR add a lead; it stays unassigned until it is given to a counsellor. */
 export function AddLeadForm({ redirectTo }: { redirectTo: string }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -28,7 +28,7 @@ export function AddLeadForm({ redirectTo }: { redirectTo: string }) {
             return;
           }
           toast.success("Lead added");
-          router.push(`${redirectTo}?lead=${result.data.id}`);
+          router.push(`${redirectTo}?lead=${result.data.id}&mode=edit`);
         });
       }}
     >

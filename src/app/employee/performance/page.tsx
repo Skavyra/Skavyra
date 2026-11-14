@@ -59,11 +59,11 @@ export default async function PerformancePage() {
             {LEAD_STATUSES.map((s) => {
               const n = counts.get(s.value) ?? 0;
               return (
-                <li key={s.value} className="flex items-center gap-3">
-                  <span className="w-40 shrink-0">
+                <li key={s.value} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 sm:flex-nowrap">
+                  <span className="w-full shrink-0 sm:w-40">
                     <LeadStatusBadge status={s.value} />
                   </span>
-                  <Progress value={percent(n, list.length)} className="flex-1" />
+                  <Progress value={percent(n, list.length)} className="min-w-0 flex-1" />
                   <span className="w-8 text-right text-sm font-semibold">{n}</span>
                 </li>
               );

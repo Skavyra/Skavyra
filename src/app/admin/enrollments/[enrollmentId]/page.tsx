@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { requireRole } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
+import { effectiveInstallmentStatus } from "@/lib/payment-plan";
 import { formatDate, formatInr, fullName } from "@/lib/utils";
 
 export default async function EnrollmentPage({ params }: { params: Promise<{ enrollmentId: string }> }) {
@@ -93,8 +94,8 @@ export default async function EnrollmentPage({ params }: { params: Promise<{ enr
                     <TableCell>{formatInr(i.amount)}</TableCell>
                     <TableCell>{formatDate(i.due_date)}</TableCell>
                     <TableCell>
-                      <Badge tone={i.status === "paid" ? "success" : i.status === "overdue" ? "danger" : "neutral"}>
-                        {i.status === "paid" ? "Paid" : i.status === "overdue" ? "Overdue" : "Pending"}
+                      <Badge tone={i.status === "paid" ? "success" : effectiveInstallmentStatus(i.status, i.due_date) === "overdue" ? "danger" : "neutral"}>
+                        {i.status === "paid" ? "Paid" : effectiveInstallmentStatus(i.status, i.due_date) === "overdue" ? "Overdue" : "Pending"}
                       </Badge>
                     </TableCell>
                     <TableCell>{formatDate(i.paid_at)}</TableCell>

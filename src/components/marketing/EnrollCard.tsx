@@ -126,7 +126,7 @@ export function EnrollCard({
         <ul className="enroll__list">
           {course.duration_weeks && <li><Clock className="ic" strokeWidth={1.75} />{course.duration_weeks} weeks</li>}
           {course.language && <li><Globe className="ic" strokeWidth={1.75} />Taught in {course.language}</li>}
-          {course.allows_partial && <li><Check className="ic" strokeWidth={1.75} />Installment plans available</li>}
+          {course.allows_partial && <li><Check className="ic" strokeWidth={1.75} />Pay in full, or 30% now and the rest within 10 days</li>}
           <li><Award className="ic" strokeWidth={1.75} />Certificate on completion</li>
         </ul>
         {state === "guest" && (

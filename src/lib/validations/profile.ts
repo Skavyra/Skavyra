@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { passwordSchema as strongPassword } from "./password";
 import { optionalPhone, optionalText, optionalYear } from "./common";
 
 export const profileSchema = z.object({
@@ -17,7 +18,7 @@ export const profileSchema = z.object({
 
 export const passwordSchema = z
   .object({
-    password: z.string().min(8, "Use at least 8 characters"),
+    password: strongPassword,
     confirm: z.string(),
   })
   .refine((v) => v.password === v.confirm, { message: "Passwords do not match", path: ["confirm"] });

@@ -1,4 +1,4 @@
-import { CalendarClock, CheckCircle2, PhoneCall, Users } from "lucide-react";
+import { CalendarClock, CheckCircle2, Eye, Pencil, PhoneCall, Users } from "lucide-react";
 import Link from "next/link";
 
 import { EmptyState } from "@/components/dashboard/EmptyState";
@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { LeadStatusBadge } from "@/components/dashboard/StatusBadge";
 import { Button } from "@/components/ui/button";
+import { IconAction } from "@/components/ui/icon-action";
 import { requireRole } from "@/lib/auth/require-role";
 import { OPEN_LEAD_STATUSES } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
@@ -51,11 +52,6 @@ export default async function EmployeeDashboard() {
       <PageHeader
         title={`Good to see you, ${user.profile?.first_name || "there"}`}
         description="Your leads and the calls due today."
-        actions={
-          <Button asChild>
-            <Link href="/employee/leads/new">Add lead</Link>
-          </Button>
-        }
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -91,7 +87,7 @@ export default async function EmployeeDashboard() {
             {callbacks.map((lead) => (
               <li key={lead.id} className="flex flex-wrap items-center gap-3 rounded-xl border bg-card p-4">
                 <div className="min-w-0 flex-1">
-                  <Link href={`/employee/leads?lead=${lead.id}`} className="font-semibold hover:underline">
+                  <Link href={`/employee/leads?lead=${lead.id}&mode=view`} className="font-semibold hover:underline">
                     {lead.full_name}
                   </Link>
                   <p className="truncate text-sm text-muted-foreground">
@@ -100,11 +96,17 @@ export default async function EmployeeDashboard() {
                   </p>
                 </div>
                 <LeadStatusBadge status={lead.status} />
-                <Button asChild size="sm">
-                  <a href={`tel:+91${lead.phone}`}>
-                    <PhoneCall /> Call
-                  </a>
-                </Button>
+                <div className="flex items-center gap-2">
+                  <IconAction label="View" href={`/employee/leads?lead=${lead.id}&mode=view`}>
+                    <Eye />
+                  </IconAction>
+                  <IconAction label="Edit" href={`/employee/leads?lead=${lead.id}&mode=edit`}>
+                    <Pencil />
+                  </IconAction>
+                  <IconAction label="Call" href={`tel:+91${lead.phone}`} external>
+                    <PhoneCall />
+                  </IconAction>
+                </div>
               </li>
             ))}
           </ul>

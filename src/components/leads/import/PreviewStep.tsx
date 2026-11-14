@@ -37,7 +37,7 @@ export function PreviewStep({
     (acc, f) => ({ ...acc, [f]: acc[f] + 1 }),
     { ok: 0, duplicate: 0, new_interest: 0, invalid: 0 },
   );
-  const shown = fields.slice(0, 6);
+  const shown = fields;
 
   return (
     <div className="flex flex-col gap-4">
@@ -48,8 +48,9 @@ export function PreviewStep({
         {counts.invalid > 0 && <Badge tone="muted">{counts.invalid} incomplete</Badge>}
       </div>
       <p className="text-sm text-muted-foreground">
-        Only new rows are imported. Fix a phone number here and the row turns green. Rows in red are already with a
-        counsellor, so they are left alone.
+        Nothing is saved yet. Only new rows are imported. Fix a phone number here and the row turns green. Rows in red
+        are already leads, so they are left alone. Amber rows are existing leads with a new course interest; they are
+        not imported either.
       </p>
 
       <div className="max-h-[28rem] overflow-auto rounded-xl border bg-card">
@@ -91,7 +92,7 @@ export function PreviewStep({
           Back
         </Button>
         <Button onClick={onImport} loading={importing} disabled={counts.ok === 0}>
-          Import {counts.ok} {counts.ok === 1 ? "lead" : "leads"}
+          Next: assign {counts.ok} {counts.ok === 1 ? "lead" : "leads"}
         </Button>
       </div>
     </div>

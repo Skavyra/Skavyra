@@ -16,16 +16,18 @@ import { LEAD_STATUSES, PAYMENT_PROOF_STATUSES } from "@/lib/constants";
 import { toDateTimeInput } from "@/lib/utils";
 import type { StudentLead } from "@/types";
 
-import { PaymentProofUpload } from "./PaymentProofUpload";
+import { PaymentProofUpload, type LeadPayment, type PayCourse } from "./PaymentProofUpload";
 
 export function LeadDetailForm({
   lead,
   courses,
   selectedCourseIds,
+  payments,
 }: {
   lead: StudentLead;
-  courses: { id: string; title: string }[];
+  courses: PayCourse[];
   selectedCourseIds: string[];
+  payments: LeadPayment[];
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -149,7 +151,7 @@ export function LeadDetailForm({
         </Button>
       </form>
 
-      {showPayment && <PaymentProofUpload leadId={lead.id} />}
+      {showPayment && <PaymentProofUpload leadId={lead.id} courses={courses} preferredCourseIds={selectedCourseIds} payments={payments} />}
     </div>
   );
 }

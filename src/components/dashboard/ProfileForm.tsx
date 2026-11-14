@@ -91,7 +91,7 @@ export function PasswordForm() {
       }}
     >
       <h2 className="font-display text-base font-bold">Change password</h2>
-      <Field label="New password" htmlFor="new_password" hint="At least 8 characters.">
+      <Field label="New password" htmlFor="new_password" hint="At least 10 characters, with a letter and a number.">
         <Input id="new_password" name="password" type="password" autoComplete="new-password" required />
       </Field>
       <Field label="Confirm new password" htmlFor="confirm_password">

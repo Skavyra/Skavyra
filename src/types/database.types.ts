@@ -668,6 +668,7 @@ export type Database = {
           installment_id: string | null
           user_id: string | null
           lead_id: string | null
+          course_id: string | null
           amount: number
           currency: string
           purpose: Database["public"]["Enums"]["payment_purpose"]
@@ -694,6 +695,7 @@ export type Database = {
           installment_id?: string | null
           user_id?: string | null
           lead_id?: string | null
+          course_id?: string | null
           amount: number
           currency?: string
           purpose?: Database["public"]["Enums"]["payment_purpose"]
@@ -720,6 +722,7 @@ export type Database = {
           installment_id?: string | null
           user_id?: string | null
           lead_id?: string | null
+          course_id?: string | null
           amount?: number
           currency?: string
           purpose?: Database["public"]["Enums"]["payment_purpose"]
@@ -1411,6 +1414,8 @@ export type Database = {
       issue_certificate: { Args: { p_enrollment_id: string; p_pdf_path?: string }; Returns: Database["public"]["Tables"]["certificates"]["Row"] }
       import_leads: { Args: { p_file_name: string; p_file_type: Database["public"]["Enums"]["upload_file_type"]; p_column_mapping: Json; p_detected_columns: string[]; p_rows: Json }; Returns: Json }
       assign_leads: { Args: { p_lead_ids: string[]; p_employee_ids: string[] }; Returns: number }
+      import_leads_assigned: { Args: { p_file_name: string; p_file_type: Database["public"]["Enums"]["upload_file_type"]; p_column_mapping: Json; p_detected_columns: string[]; p_rows: Json; p_plan?: Json }; Returns: Json }
+      unassign_leads: { Args: { p_lead_ids: string[] }; Returns: number }
       import_offer_letters: { Args: { p_file_name: string; p_source_type: string; p_column_mapping: Json; p_detected_columns: string[]; p_rows: Json; p_template_id?: string }; Returns: Json }
       apply_payment: { Args: { p_payment_id: string; p_provider_payment_id?: string; p_method?: string }; Returns: Database["public"]["Tables"]["payments"]["Row"] }
       recalc_enrollment: { Args: { p_enrollment_id: string }; Returns: undefined }

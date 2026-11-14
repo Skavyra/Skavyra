@@ -80,7 +80,7 @@ export function DeactivateDialog({
         <DialogHeader>
           <DialogTitle>Deactivate {employee.name}</DialogTitle>
           <DialogDescription>
-            They lose access to the counsellor panel. Their record and history stay for audit.
+            They lose access to their panel and cannot sign in to it. Their staff record, role and history are kept, and you can reactivate them later. To delete the staff record instead, use Remove.
           </DialogDescription>
         </DialogHeader>
 

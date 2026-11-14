@@ -10,6 +10,8 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
+import { PAYMENT_RULES } from "@/lib/payment-plan";
+import { formatInr } from "@/lib/utils";
 import type { Course } from "@/types";
 
 function toLocalInput(iso: string | null) {
@@ -23,7 +25,6 @@ function toLocalInput(iso: string | null) {
 export function CourseForm({ course }: { course: Course }) {
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [partial, setPartial] = useState(course.allows_partial);
   const [isFlagship, setIsFlagship] = useState(course.is_flagship);
   const [showCountdown, setShowCountdown] = useState(course.show_countdown);
 
@@ -32,7 +33,6 @@ export function CourseForm({ course }: { course: Course }) {
       className="flex flex-col gap-5"
       action={(formData) => {
         setError(null);
-        formData.set("allows_partial", partial ? "on" : "");
         formData.set("is_flagship", isFlagship ? "on" : "");
         formData.set("show_countdown", showCountdown ? "on" : "");
         const offerEndsAt = formData.get("offer_ends_at");
@@ -156,19 +156,13 @@ export function CourseForm({ course }: { course: Course }) {
         </div>
       </section>
 
-      <div className="flex flex-col gap-4 rounded-xl border p-4">
-        <label className="flex items-center justify-between gap-4">
-          <span>
-            <span className="block text-sm font-semibold">Allow installments</span>
-            <span className="block text-xs text-muted-foreground">Counsellors can set up a payment plan for this course.</span>
-          </span>
-          <Switch checked={partial} onCheckedChange={setPartial} />
-        </label>
-        {partial && (
-          <Field label="Smallest first payment" htmlFor="min_first_payment" hint="Leave empty for no minimum.">
-            <Input id="min_first_payment" name="min_first_payment" inputMode="decimal" defaultValue={course.min_first_payment ?? ""} className="max-w-xs" />
-          </Field>
-        )}
+      <div className="rounded-xl border p-4 text-sm">
+        <p className="font-semibold">How students pay</p>
+        <p className="mt-1 text-muted-foreground">
+          Fees below {formatInr(PAYMENT_RULES.splitFromFee)} are paid in full. Fees of {formatInr(PAYMENT_RULES.splitFromFee)} or more can be paid in
+          full, or {PAYMENT_RULES.firstPercent}% now and the other {100 - PAYMENT_RULES.firstPercent}% within {PAYMENT_RULES.balanceDays} days of the first
+          payment. This follows the price automatically.
+        </p>
       </div>
 
       {error && (

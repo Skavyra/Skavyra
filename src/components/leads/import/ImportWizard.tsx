@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-import { findExistingPhones, importLeads } from "@/actions/leads";
-import { DistributeDialog, type Counsellor } from "@/components/leads/DistributeDialog";
+import { findExistingPhones, importLeads, type ImportPlan, type ImportSummary } from "@/actions/leads";
+import type { Counsellor } from "@/components/leads/DistributeDialog";
 import { Button } from "@/components/ui/button";
 import { usePanelBase } from "@/hooks/use-panel-base";
 import { toast } from "@/hooks/use-toast";
@@ -15,11 +15,12 @@ import { applyMapping, LEAD_FIELDS, matchHeaders } from "@/lib/excel/header-matc
 import type { ParsedSheet } from "@/lib/excel/parse";
 import { cn } from "@/lib/utils";
 
+import { AssignStep } from "./AssignStep";
 import { MappingStep } from "./MappingStep";
 import { PreviewStep } from "./PreviewStep";
 import { UploadStep } from "./UploadStep";
 
-const STEPS = ["Upload", "Match columns", "Check and import"];
+const STEPS = ["Upload", "Match columns", "Check", "Assign and confirm"];
 
 export function ImportWizard({ counsellors }: { counsellors: Counsellor[] }) {
   const base = usePanelBase();
@@ -30,7 +31,7 @@ export function ImportWizard({ counsellors }: { counsellors: Counsellor[] }) {
   const [rows, setRows] = useState<Record<string, string>[]>([]);
   const [flags, setFlags] = useState<RowFlag[]>([]);
   const [existing, setExisting] = useState<{ phone: string; interested_course_text: string | null }[]>([]);
-  const [done, setDone] = useState<{ inserted: number; duplicates: number; skipped: number; lead_ids: string[] } | null>(null);
+  const [done, setDone] = useState<ImportSummary | null>(null);
   const [pending, start] = useTransition();
 
   function onParsed(parsed: ParsedSheet) {
@@ -58,16 +59,18 @@ export function ImportWizard({ counsellors }: { counsellors: Counsellor[] }) {
     setFlags(flagLeadRows(next, existing));
   }
 
-  function runImport() {
+  const importable = rows.filter((_, i) => flags[i] === "ok");
+
+  function runImport(plan: ImportPlan) {
     if (!sheet) return;
-    const payload = rows.filter((_, i) => flags[i] === "ok");
     start(async () => {
       const result = await importLeads({
         fileName: sheet.fileName,
         fileType: sheet.fileType,
         mapping,
         detectedColumns: sheet.headers,
-        rows: payload,
+        rows: importable,
+        plan,
       });
       if (!result.ok) {
         toast.error(result.error);
@@ -85,15 +88,16 @@ export function ImportWizard({ counsellors }: { counsellors: Counsellor[] }) {
         <CheckCircle2 className="size-8 text-success" />
         <h2 className="font-display text-xl font-bold">{done.inserted} leads imported</h2>
         <p className="text-sm text-muted-foreground">
+          {done.assigned} assigned{done.inserted - done.assigned > 0 ? `, ${done.inserted - done.assigned} left unassigned` : ""}.{" "}
           {done.duplicates} already existed and {done.skipped} were missing a name or a valid phone number. They were
           left out.
         </p>
         <div className="flex flex-wrap gap-2">
-          {done.lead_ids.length > 0 && (
-            <DistributeDialog leadIds={done.lead_ids} counsellors={counsellors} mode="distribute" />
-          )}
+          <Button asChild>
+            <Link href={`${base}/leads?batch=${done.batch_id}`}>View these leads</Link>
+          </Button>
           <Button asChild variant="outline">
-            <Link href={`${base}/leads`}>Go to leads</Link>
+            <Link href={`${base}/leads`}>All leads</Link>
           </Button>
           <Button
             variant="ghost"
@@ -147,8 +151,17 @@ export function ImportWizard({ counsellors }: { counsellors: Counsellor[] }) {
           flags={flags}
           onEdit={edit}
           onBack={() => setStep(1)}
-          onImport={runImport}
+          onImport={() => setStep(3)}
           importing={pending}
+        />
+      )}
+      {step === 3 && (
+        <AssignStep
+          rows={importable}
+          counsellors={counsellors}
+          onBack={() => setStep(2)}
+          onConfirm={runImport}
+          confirming={pending}
         />
       )}
     </div>

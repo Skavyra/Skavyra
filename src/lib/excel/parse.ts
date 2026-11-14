@@ -62,6 +62,17 @@ export function toIsoDate(value: string) {
   return Number.isNaN(parsed.getTime()) ? "" : parsed.toISOString().slice(0, 10);
 }
 
+/** One workbook with several named sheets. Empty sheets are skipped. */
+export function downloadWorkbook(fileName: string, sheets: { name: string; rows: Record<string, unknown>[] }[]) {
+  const wb = XLSX.utils.book_new();
+  for (const s of sheets) {
+    if (s.rows.length === 0) continue;
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(s.rows), s.name.slice(0, 31));
+  }
+  if (wb.SheetNames.length === 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["No data for this report"]]), "Report");
+  XLSX.writeFile(wb, fileName);
+}
+
 export function downloadSheet(fileName: string, sheetName: string, rows: Record<string, unknown>[]) {
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();

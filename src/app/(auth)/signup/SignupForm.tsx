@@ -8,6 +8,7 @@ import { useRef, useState } from "react";
 import { GoogleButton } from "@/components/marketing/GoogleButton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { createClient } from "@/lib/supabase/client";
+import { passwordProblem } from "@/lib/validations/password";
 import { normalizePhone } from "@/lib/utils";
 import { safeNextPath } from "@/lib/auth/redirect";
 
@@ -33,8 +34,9 @@ export function SignupForm({ next }: { next?: string }) {
       return;
     }
     const password = String(formData.get("password") ?? "");
-    if (password.length < 8) {
-      setError("Use a password of at least 8 characters.");
+    const passwordIssue = passwordProblem(password);
+    if (passwordIssue) {
+      setError(passwordIssue);
       return;
     }
     const phone = normalizePhone(String(formData.get("phone") ?? ""));
@@ -69,7 +71,7 @@ export function SignupForm({ next }: { next?: string }) {
         setError(message.includes("already registered") || message.includes("already exists")
           ? "An account with this email already exists. Log in instead."
           : message.includes("password")
-            ? "That password doesn’t meet the account requirements. Use at least 8 characters and try again."
+            ? "That password doesn’t meet the account requirements. Use at least 10 characters with a letter and a number, then try again."
             : message.includes("email")
               ? "Check the email address and try again."
               : message.includes("network") || message.includes("fetch")
@@ -120,7 +122,7 @@ export function SignupForm({ next }: { next?: string }) {
         </div>
         <label className="field" htmlFor="email">Email<input id="email" name="email" type="email" autoComplete="email" required /></label>
         <label className="field" htmlFor="phone">Mobile number<small>Your counsellor uses this to reach you.</small><input id="phone" name="phone" type="tel" inputMode="numeric" autoComplete="tel" required /></label>
-        <label className="field" htmlFor="password">Password<small>At least 8 characters.</small><span className="pw"><input id="password" name="password" type={showPassword ? "text" : "password"} autoComplete="new-password" required /><button type="button" aria-label="Show password" onClick={() => setShowPassword((shown) => !shown)}>{showPassword ? <EyeOff className="ic" strokeWidth={1.75} /> : <Eye className="ic" strokeWidth={1.75} />}</button></span></label>
+        <label className="field" htmlFor="password">Password<small>At least 10 characters, with a letter and a number.</small><span className="pw"><input id="password" name="password" type={showPassword ? "text" : "password"} autoComplete="new-password" required /><button type="button" aria-label="Show password" onClick={() => setShowPassword((shown) => !shown)}>{showPassword ? <EyeOff className="ic" strokeWidth={1.75} /> : <Eye className="ic" strokeWidth={1.75} />}</button></span></label>
 
         <label className="flex items-start gap-3 text-sm">
           <Checkbox checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} className="mt-0.5" />

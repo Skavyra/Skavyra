@@ -24,7 +24,7 @@ export function RemoveEmployeeDialog({ employee, others }: {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Remove {employee.name}?</DialogTitle>
-          <DialogDescription>Delete their staff record and revoke employee access. Their login, profile, student access, and historical records remain. This does not reactivate a blocked account.</DialogDescription>
+          <DialogDescription>Permanently deletes their staff record and staff role. This cannot be undone from here. Their login, profile and historical records remain, but they lose access to every staff panel. If you only want to switch access off for now, use Deactivate instead.</DialogDescription>
         </DialogHeader>
         <Field label="Move any open leads to" htmlFor={`remove-inheritor-${employee.id}`}>
           <NativeSelect id={`remove-inheritor-${employee.id}`} value={inheritor} onChange={(event) => setInheritor(event.target.value)} disabled={pending}>

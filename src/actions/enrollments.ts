@@ -2,11 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 
+import { dbError } from "@/lib/errors";
+
 import { getUser } from "@/lib/auth/get-user";
 import { currentUserWithRole } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
 import { enrollmentSchema, type EnrollmentInput } from "@/lib/validations/enrollment";
-import { fullName } from "@/lib/utils";
+import { fullName, sanitizeSearchTerm } from "@/lib/utils";
 import { firstError } from "@/lib/validations/common";
 import type { AccessStatus, ActionResult, Json } from "@/types";
 
@@ -25,13 +27,14 @@ export async function createEnrollment(input: EnrollmentInput): Promise<ActionRe
     p_course_id: v.course_id,
     p_plan: v.plan,
     p_total_amount: v.total_amount,
-    p_installments: (v.plan === "partial" ? v.installments : []) as Json,
+    // the database builds the 30% / 70% split itself; nothing typed here is trusted
+    p_installments: [] as Json,
     ...(v.lead_id ? { p_lead_id: v.lead_id } : {}),
     p_source: user.roles.includes("admin") ? "admin" : "employee",
   });
   if (error) {
     if (error.code === "23505") return { ok: false, error: "This student is already enrolled in this course." };
-    return { ok: false, error: error.message };
+    return { ok: false, error: dbError(error) };
   }
   revalidatePath("/admin/students");
   return { ok: true, data: { id: data.id } };
@@ -43,7 +46,7 @@ export async function setAccessStatus(enrollmentId: string, status: AccessStatus
   if (!user) return { ok: false, error: "Only admins can change access." };
   const supabase = await createClient();
   const { error } = await supabase.from("enrollments").update({ access_status: status }).eq("id", enrollmentId);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError(error) };
   revalidatePath(`/admin/enrollments/${enrollmentId}`);
   revalidatePath("/admin/students");
   return { ok: true, data: undefined };
@@ -74,7 +77,7 @@ export async function issueCertificate(enrollmentId: string): Promise<ActionResu
   const { data: cert, error } = await supabase.rpc("issue_certificate", { p_enrollment_id: enrollmentId, p_pdf_path: pdfPath });
   if (error) {
     if (error.code === "23505") return { ok: false, error: "A certificate has already been issued for this enrolment." };
-    return { ok: false, error: error.message };
+    return { ok: false, error: dbError(error) };
   }
 
   const [{ data: enr }, { data: setting }] = await Promise.all([
@@ -149,7 +152,7 @@ export async function searchStudents(
 ): Promise<ActionResult<{ id: string; name: string; email: string; phone: string | null }[]>> {
   const user = await currentUserWithRole(["admin", "employee"]);
   if (!user) return { ok: false, error: "Only staff can search students." };
-  const q = query.trim().replace(/[%,()]/g, "");
+  const q = sanitizeSearchTerm(query);
   if (q.length < 2) return { ok: true, data: [] };
 
   const supabase = await createClient();
@@ -163,7 +166,7 @@ export async function searchStudents(
     .in("id", ids)
     .or(`first_name.ilike.%${q}%,last_name.ilike.%${q}%,email.ilike.%${q}%,phone.ilike.%${q}%`)
     .limit(10);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError(error) };
   return {
     ok: true,
     data: (data ?? []).map((p) => ({ id: p.id, name: fullName(p) || p.email, email: p.email, phone: p.phone })),

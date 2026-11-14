@@ -16,7 +16,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
         <Mark className="w-20" seam="#FBF9F4" />
         <h1 className="text-fluid-2xl">This page could not load</h1>
         <p className="text-sm text-muted-foreground">
-          {error.message || "A request to the server failed."} Try again, and if it keeps happening, check your connection.
+          Something went wrong on our side. Try again, and if it keeps happening, check your connection{error.digest ? ` and quote reference ${error.digest}` : ""}.
         </p>
         <Button onClick={reset}>Try again</Button>
       </div>

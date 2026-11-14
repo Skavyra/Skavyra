@@ -52,7 +52,6 @@ export const STUDENT_NAV: NavItem[] = [
 export const EMPLOYEE_NAV: NavItem[] = [
   { href: "/employee", label: "Dashboard", icon: "LayoutDashboard" },
   { href: "/employee/leads", label: "My leads", icon: "PhoneCall" },
-  { href: "/employee/leads/new", label: "Add lead", icon: "UserPlus" },
   { href: "/employee/courses", label: "Courses", icon: "BookOpen" },
   { href: "/employee/performance", label: "My performance", icon: "TrendingUp" },
 ];

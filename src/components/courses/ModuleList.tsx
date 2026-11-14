@@ -7,6 +7,7 @@ import { useState, useTransition } from "react";
 import { deleteLesson, deleteModule, reorder, saveModule } from "@/actions/courses";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +41,21 @@ export function ModuleList({ courseId, modules }: { courseId: string; modules: M
     lesson: null,
   });
   const [dragging, setDragging] = useState<{ moduleId: string; lessonId: string } | null>(null);
+  const [toDelete, setToDelete] = useState<{ kind: "module" | "lesson"; id: string; title: string; text: string } | null>(null);
+
+  function confirmDelete() {
+    if (!toDelete) return;
+    const target = toDelete;
+    start(async () => {
+      const result = target.kind === "module" ? await deleteModule(courseId, target.id) : await deleteLesson(courseId, target.id);
+      setToDelete(null);
+      if (!result.ok) toast.error(result.error);
+      else {
+        toast.success(target.kind === "module" ? "Module deleted" : "Lesson deleted");
+        router.refresh();
+      }
+    });
+  }
 
   function move(moduleId: string, lessonId: string, direction: -1 | 1) {
     const target = modules.find((m) => m.id === moduleId);
@@ -130,17 +146,14 @@ export function ModuleList({ courseId, modules }: { courseId: string; modules: M
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => {
-                    if (!confirm(`Delete "${mod.title}" and its ${mod.lessons.length} lessons?`)) return;
-                    start(async () => {
-                      const result = await deleteModule(courseId, mod.id);
-                      if (!result.ok) toast.error(result.error);
-                      else {
-                        toast.success("Module deleted");
-                        router.refresh();
-                      }
-                    });
-                  }}
+                  onClick={() =>
+                    setToDelete({
+                      kind: "module",
+                      id: mod.id,
+                      title: `Delete "${mod.title}"?`,
+                      text: `This also deletes its ${mod.lessons.length} ${mod.lessons.length === 1 ? "lesson" : "lessons"}.`,
+                    })
+                  }
                 >
                   <Trash2 />
                 </Button>
@@ -188,17 +201,7 @@ export function ModuleList({ courseId, modules }: { courseId: string; modules: M
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => {
-                            if (!confirm(`Delete "${lesson.title}"?`)) return;
-                            start(async () => {
-                              const result = await deleteLesson(courseId, lesson.id);
-                              if (!result.ok) toast.error(result.error);
-                              else {
-                                toast.success("Lesson deleted");
-                                router.refresh();
-                              }
-                            });
-                          }}
+                          onClick={() => setToDelete({ kind: "lesson", id: lesson.id, title: `Delete "${lesson.title}"?`, text: "This can't be undone." })}
                         >
                           <Trash2 />
                         </Button>
@@ -218,6 +221,17 @@ export function ModuleList({ courseId, modules }: { courseId: string; modules: M
       <Button variant="outline" className="self-start" onClick={() => setModuleDialog({ open: true, module: null })}>
         <Plus /> Add module
       </Button>
+
+      <ConfirmDialog
+        open={toDelete !== null}
+        onOpenChange={(open) => !open && setToDelete(null)}
+        title={toDelete?.title ?? ""}
+        description={toDelete?.text}
+        confirmLabel="Delete"
+        destructive
+        loading={pending}
+        onConfirm={confirmDelete}
+      />
 
       <Dialog open={moduleDialog.open} onOpenChange={(open) => setModuleDialog((d) => ({ ...d, open }))}>
         <DialogContent>

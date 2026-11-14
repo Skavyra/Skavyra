@@ -33,10 +33,11 @@ export const leadUpdateSchema = leadCreateSchema.extend({
   follow_up_on: optionalDate,
 });
 
+/** No amount here on purpose: the server works it out from the course fee and what is already logged. */
 export const paymentProofSchema = z.object({
-  amount: z.coerce.number().positive("Enter the amount received"),
+  course_id: z.string().uuid("Choose the course this payment is for"),
+  kind: z.enum(["full", "first", "balance"], { errorMap: () => ({ message: "Choose what the payment is for" }) }),
   transaction_ref: z.string().trim().min(4, "Enter the UPI reference or UTR"),
-  purpose: z.enum(["registration", "installment", "full", "balance"]),
 });
 
 export type LeadCreateInput = z.infer<typeof leadCreateSchema>;

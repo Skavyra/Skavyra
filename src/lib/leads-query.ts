@@ -3,10 +3,10 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { LEAD_STATUSES, PAGE_SIZE } from "@/lib/constants";
-import { fullName } from "@/lib/utils";
+import { fullName, sanitizeSearchTerm } from "@/lib/utils";
 import type { Database, LeadStatus, StudentLead } from "@/types";
 
-export type LeadQuery = { q?: string; status?: string; assignee?: string; follow?: string; page?: string };
+export type LeadQuery = { q?: string; status?: string; assignee?: string; follow?: string; page?: string; batch?: string };
 
 export const LEAD_STATUS_FILTER = {
   key: "status",
@@ -59,9 +59,10 @@ export async function fetchLeads(
   else if (params.assignee) query = query.eq("assigned_employee_id", params.assignee);
 
   if (params.status) query = query.eq("status", params.status as LeadStatus);
+  if (params.batch) query = query.eq("batch_id", params.batch);
 
-  if (params.q) {
-    const term = params.q.replace(/[%,()]/g, "");
+  if (sanitizeSearchTerm(params.q)) {
+    const term = sanitizeSearchTerm(params.q);
     query = query.or(`full_name.ilike.%${term}%,phone.ilike.%${term}%,college_name.ilike.%${term}%,email.ilike.%${term}%`);
   }
 
@@ -97,7 +98,7 @@ export async function fetchLeadDetail(supabase: SupabaseClient<Database>, leadId
   const { data: lead } = await supabase.from("student_leads").select("*").eq("id", leadId).maybeSingle();
   if (!lead) return null;
 
-  const [{ data: activities }, { data: picked }, { data: courses }, { data: assignee }] = await Promise.all([
+  const [{ data: activities }, { data: picked }, { data: courses }, { data: assignee }, paymentsRes] = await Promise.all([
     supabase
       .from("lead_activities")
       .select("id, action, old_status, new_status, notes, created_at, actor:profiles(first_name, last_name)")
@@ -105,10 +106,16 @@ export async function fetchLeadDetail(supabase: SupabaseClient<Database>, leadId
       .order("created_at", { ascending: false })
       .limit(30),
     supabase.from("lead_courses").select("course_id").eq("lead_id", leadId),
-    supabase.from("courses").select("id, title").eq("status", "published").order("sort_order"),
+    supabase
+      .from("courses")
+      .select("id, title, price, offer_price, offer_ends_at")
+      .eq("status", "published")
+      .order("sort_order"),
     lead.assigned_employee_id
       ? supabase.from("profiles").select("first_name, last_name").eq("id", lead.assigned_employee_id).maybeSingle()
       : Promise.resolve({ data: null }),
+    // logged payments for this lead; empty (not an error) until the course_id migration has run
+    supabase.from("payments").select("course_id, purpose, amount, status, created_at").eq("lead_id", leadId),
   ]);
 
   return {
@@ -123,7 +130,8 @@ export async function fetchLeadDetail(supabase: SupabaseClient<Database>, leadId
       actor_name: fullName(a.actor) || null,
     })),
     selectedCourseIds: (picked ?? []).map((p) => p.course_id),
-    courses: courses ?? [],
+    courses: (courses ?? []).map((c) => ({ id: c.id, title: c.title, price: Number(c.price), offer_price: c.offer_price == null ? null : Number(c.offer_price), offer_ends_at: c.offer_ends_at })),
+    payments: (paymentsRes.data ?? []) as { course_id: string | null; purpose: string; amount: number; status: string; created_at: string }[],
     assigneeName: fullName(assignee) || null,
   };
 }

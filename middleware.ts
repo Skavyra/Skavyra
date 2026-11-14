@@ -48,6 +48,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // The HR panel is the restricted view. An admin (even one who also holds hr) belongs in the admin panel,
+  // at the matching page, so they never see HR's read-only screens.
+  if (panel?.prefix === "/hr" && roles.includes("admin")) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/admin${pathname.slice("/hr".length)}`;
+    return NextResponse.redirect(url);
+  }
+
   if (panel && !panel.roles.some((r) => roles.includes(r))) {
     const url = request.nextUrl.clone();
     url.pathname = homeFor(roles);

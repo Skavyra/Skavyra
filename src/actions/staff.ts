@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
+import { dbError } from "@/lib/errors";
+
 import { currentUserWithRole } from "@/lib/auth/require-role";
 import { callEdgeFunction } from "@/lib/edge";
 import { createClient } from "@/lib/supabase/server";
@@ -66,9 +68,9 @@ export async function updateEmployee(employeeId: string, formData: FormData): Pr
 
   const supabase = await createClient();
   const { error: pErr } = await supabase.from("profiles").update({ first_name, last_name, phone }).eq("id", employeeId);
-  if (pErr) return { ok: false, error: pErr.message };
+  if (pErr) return { ok: false, error: dbError(pErr) };
   const { error: eErr } = await supabase.from("employees").update(emp).eq("id", employeeId);
-  if (eErr) return { ok: false, error: eErr.code === "23505" ? "That employee code is already in use." : eErr.message };
+  if (eErr) return { ok: false, error: eErr.code === "23505" ? "That employee code is already in use." : dbError(eErr) };
 
   revalidatePath("/admin/employees");
   revalidatePath("/hr/employees");
@@ -100,8 +102,8 @@ export async function deactivateStaff(
 
 /** Removes staff membership through one audited database transaction. */
 export async function removeEmployee(userId: string, reassignTo: string | null): Promise<ActionResult> {
-  const user = await currentUserWithRole([...MANAGERS]);
-  if (!user || !user.profile?.is_active) return { ok: false, error: "Only active admins and HR can remove employees." };
+  const user = await currentUserWithRole(["admin"]);
+  if (!user || !user.profile?.is_active) return { ok: false, error: "Only active admins can remove employees." };
   if (!z.string().uuid().safeParse(userId).success || (reassignTo !== null && !z.string().uuid().safeParse(reassignTo).success)) {
     return { ok: false, error: "Invalid employee selection." };
   }
@@ -109,22 +111,27 @@ export async function removeEmployee(userId: string, reassignTo: string | null):
   if (await hrBlockedTarget(user.roles, userId)) return { ok: false, error: "HR cannot remove admin or HR accounts." };
   const supabase = await createClient();
   const { error } = await supabase.rpc("remove_employee", { p_user_id: userId, ...(reassignTo ? { p_reassign_to: reassignTo } : {}) });
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError(error) };
   revalidatePath("/admin", "layout");
   revalidatePath("/hr", "layout");
   revalidatePath("/employee", "layout");
   return { ok: true, data: undefined };
 }
 
-/** Switch a deactivated employee back on. Admin only: guard_profile_flags() blocks HR from changing profiles.is_active. */
+/**
+ * Switch a deactivated employee back on and lift any login ban. Goes through the edge function because only it can
+ * unban. An edge function deployed before this change ignores `action` and would deactivate instead, so the reply is checked.
+ */
 export async function reactivateStaff(userId: string): Promise<ActionResult> {
-  const user = await currentUserWithRole("admin");
-  if (!user) return { ok: false, error: "Only admins can reactivate staff." };
-  const supabase = await createClient();
-  const { error: e1 } = await supabase.from("employees").update({ is_active: true, deactivated_at: null }).eq("id", userId);
-  if (e1) return { ok: false, error: e1.message };
-  const { error: e2 } = await supabase.from("profiles").update({ is_active: true }).eq("id", userId);
-  if (e2) return { ok: false, error: e2.message };
-  revalidatePath("/admin/employees");
+  const user = await currentUserWithRole([...MANAGERS]);
+  if (!user) return { ok: false, error: "Only admins and HR can reactivate staff." };
+  if (await hrBlockedTarget(user.roles, userId)) return { ok: false, error: "HR cannot reactivate admin or HR accounts." };
+
+  const result = await callEdgeFunction<{ reactivated?: boolean }>("deactivate-staff", { action: "reactivate", user_id: userId });
+  if (!result.ok) return result;
+  if (!result.data.reactivated) return { ok: false, error: "The deactivate-staff function needs redeploying before Reactivate can work." };
+
+  revalidatePath("/admin", "layout");
+  revalidatePath("/hr", "layout");
   return { ok: true, data: undefined };
 }

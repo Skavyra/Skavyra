@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
+import { dbError } from "@/lib/errors";
+
 import { currentUserWithRole } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult, Json } from "@/types";
@@ -26,7 +28,7 @@ export async function saveSetting(key: (typeof KEYS)[number], formData: FormData
   const { error } = await supabase
     .from("app_settings")
     .upsert({ key, value: merged, updated_by: user.id, updated_at: new Date().toISOString() });
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError(error) };
   revalidatePath("/admin/settings");
   return { ok: true, data: undefined };
 }
@@ -57,7 +59,7 @@ export async function saveLetterTemplate(input: {
   const version = (latest?.version ?? 0) + 1;
 
   const { error: offErr } = await supabase.from("offer_letter_templates").update({ is_active: false }).eq("is_active", true);
-  if (offErr) return { ok: false, error: offErr.message };
+  if (offErr) return { ok: false, error: dbError(offErr) };
 
   const { error } = await supabase.from("offer_letter_templates").insert({
     name: input.name,
@@ -66,7 +68,7 @@ export async function saveLetterTemplate(input: {
     created_by: user.id,
     body: { intro: input.intro.trim(), clauses, closing: input.closing.trim() },
   });
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError(error) };
   revalidatePath("/admin/settings");
   return { ok: true, data: { version } };
 }
