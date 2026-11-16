@@ -10,7 +10,7 @@ export default async function HrAddLeadPage() {
   await requireRole(["hr", "admin"]);
   return (
     <>
-      <PageHeader title="Add lead" description="The lead stays unassigned until you give it to a counsellor." />
+      <PageHeader title="Add lead" description="The lead stays unassigned until you give it to an employee." />
       <AddLeadForm redirectTo="/hr/leads" />
     </>
   );

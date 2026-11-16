@@ -243,7 +243,7 @@ export async function assignLeads(leadIds: string[], employeeIds: string[]): Pro
   if (!user) return { ok: false, error: "Only admins and HR can assign leads." };
   const ids = leadIdList.safeParse(leadIds);
   if (!ids.success) return { ok: false, error: firstError(ids.error) };
-  const people = z.array(uuid).min(1, "Pick at least one counsellor.").max(200).safeParse(employeeIds);
+  const people = z.array(uuid).min(1, "Pick at least one employee.").max(200).safeParse(employeeIds);
   if (!people.success) return { ok: false, error: firstError(people.error) };
 
   const supabase = await createClient();

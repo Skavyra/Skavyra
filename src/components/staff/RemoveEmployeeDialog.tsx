@@ -38,6 +38,9 @@ export function RemoveEmployeeDialog({ employee, others }: {
             const result = await removeEmployee(employee.id, inheritor || null);
             if (!result.ok) { toast.error(result.error); return; }
             toast.success("Employee removed");
+            if (!result.data.released) {
+              toast.warning("Their email could not be freed for a new sign-up. Redeploy the deactivate-staff function, or ask for help.");
+            }
             setOpen(false);
             router.refresh();
           })}>Remove employee</Button>

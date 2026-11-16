@@ -7,6 +7,7 @@ import { useRef, useState } from "react";
 
 import { GoogleButton } from "@/components/marketing/GoogleButton";
 import { Checkbox } from "@/components/ui/checkbox";
+import { authError } from "@/lib/auth/feedback";
 import { createClient } from "@/lib/supabase/client";
 import { passwordProblem } from "@/lib/validations/password";
 import { normalizePhone } from "@/lib/utils";
@@ -20,7 +21,6 @@ const GOOGLE_LOGIN_ENABLED = process.env.NEXT_PUBLIC_GOOGLE_LOGIN === "on";
  */
 export function SignupForm({ next }: { next?: string }) {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
   const [agreed, setAgreed] = useState(false);
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -28,20 +28,19 @@ export function SignupForm({ next }: { next?: string }) {
 
   async function onSubmit(formData: FormData) {
     if (submitting.current) return;
-    setError(null);
     if (!agreed) {
-      setError("Tick the box to accept the terms and privacy policy.");
+      authError("Tick the box to accept the terms and privacy policy.");
       return;
     }
     const password = String(formData.get("password") ?? "");
     const passwordIssue = passwordProblem(password);
     if (passwordIssue) {
-      setError(passwordIssue);
+      authError(passwordIssue);
       return;
     }
     const phone = normalizePhone(String(formData.get("phone") ?? ""));
     if (phone.length !== 10) {
-      setError("Enter a 10 digit mobile number.");
+      authError("Enter a 10 digit mobile number.");
       return;
     }
 
@@ -53,7 +52,7 @@ export function SignupForm({ next }: { next?: string }) {
       const redirect = new URL("/auth/callback", window.location.origin);
       if (next) redirect.searchParams.set("next", next);
 
-      const { data, error: authError } = await supabase.auth.signUp({
+      const { data, error: authFailure } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -66,9 +65,9 @@ export function SignupForm({ next }: { next?: string }) {
         },
       });
 
-      if (authError) {
-        const message = authError.message.toLowerCase();
-        setError(message.includes("already registered") || message.includes("already exists")
+      if (authFailure) {
+        const message = authFailure.message.toLowerCase();
+        authError(message.includes("already registered") || message.includes("already exists")
           ? "An account with this email already exists. Log in instead."
           : message.includes("password")
             ? "That password doesn’t meet the account requirements. Use at least 10 characters with a letter and a number, then try again."
@@ -77,6 +76,12 @@ export function SignupForm({ next }: { next?: string }) {
               : message.includes("network") || message.includes("fetch")
                 ? "We couldn’t reach the sign-up service. Check your connection and try again."
                 : "We couldn’t create your account. Please try again.");
+        return;
+      }
+
+      // With email confirmation on, Supabase hides "already registered" by returning a user with no identities
+      if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+        authError("An account with this email already exists. Log in instead.");
         return;
       }
 
@@ -91,7 +96,7 @@ export function SignupForm({ next }: { next?: string }) {
       if (next) checkEmail.set("next", safeNextPath(next) ?? "");
       router.push(`/check-email?${checkEmail.toString()}`);
     } catch {
-      setError("We couldn’t reach the sign-up service. Check your connection and try again.");
+      authError("We couldn’t reach the sign-up service. Check your connection and try again.");
     } finally {
       setPending(false);
       submitting.current = false;
@@ -138,12 +143,6 @@ export function SignupForm({ next }: { next?: string }) {
             .
           </span>
         </label>
-
-        {error && (
-          <p role="alert" className="rounded-xl border border-destructive/20 bg-destructive/5 px-3.5 py-3 text-sm font-medium leading-relaxed text-destructive">
-            {error}
-          </p>
-        )}
         <button className="btn btn--ink btn--block btn--lg" type="submit" disabled={pending}>Create account <ArrowRight className="ic" strokeWidth={1.75} /></button>
       </form>
 

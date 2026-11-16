@@ -97,7 +97,7 @@ export async function DashboardView({ base, roles }: PanelProps) {
         </div>
 
         <div className="rounded-xl border bg-card p-5">
-          <h2 className="font-display text-base font-bold">Top counsellors</h2>
+          <h2 className="font-display text-base font-bold">Top employees</h2>
           {top.length === 0 ? (
             <p className="mt-4 text-sm text-muted-foreground">
               No counsellors yet.{" "}

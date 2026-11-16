@@ -34,7 +34,7 @@ export function VerifyQueue({ payments }: { payments: PendingPayment[] }) {
       <EmptyState
         icon={Check}
         title="Nothing waiting"
-        description="Payments logged by counsellors appear here for you to check against the bank."
+        description="Payments logged by employees appear here for you to check against the bank."
       />
     );
   }

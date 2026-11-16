@@ -82,7 +82,7 @@ export async function LeadsView({ base, roles, params }: PanelProps & { params: 
           FOLLOW_UP_FILTER,
           {
             key: "assignee",
-            label: "Any counsellor",
+            label: "Any employee",
             options: [{ value: "unassigned", label: "Unassigned" }, ...counsellors.map((c) => ({ value: c.id, label: c.name }))],
           },
         ]}

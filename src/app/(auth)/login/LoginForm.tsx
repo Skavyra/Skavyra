@@ -3,9 +3,10 @@
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { GoogleButton } from "@/components/marketing/GoogleButton";
+import { authError, authSuccess } from "@/lib/auth/feedback";
 import { createClient } from "@/lib/supabase/client";
 
 const GOOGLE_LOGIN_ENABLED = process.env.NEXT_PUBLIC_GOOGLE_LOGIN === "on";
@@ -18,8 +19,14 @@ const NOTICES: Record<string, string> = {
 
 export function LoginForm({ next, notice }: { next?: string; notice?: string }) {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(notice ? (NOTICES[notice] ?? null) : null);
   const [pending, setPending] = useState(false);
+
+  useEffect(() => {
+    const text = notice ? NOTICES[notice] : null;
+    if (!text) return;
+    if (notice === "reset") authSuccess(text);
+    else authError(text);
+  }, [notice]);
   const [showPassword, setShowPassword] = useState(false);
   const submitting = useRef(false);
 
@@ -27,29 +34,35 @@ export function LoginForm({ next, notice }: { next?: string; notice?: string }) 
     if (submitting.current) return;
     submitting.current = true;
     setPending(true);
-    setError(null);
     try {
       const supabase = createClient();
-      const { error: authError } = await supabase.auth.signInWithPassword({
+      const { error: authFailure } = await supabase.auth.signInWithPassword({
         email: String(formData.get("email") ?? "").trim(),
         password: String(formData.get("password") ?? ""),
       });
-      if (authError) {
-        const message = authError.message.toLowerCase();
-        setError(message.includes("invalid") || message.includes("credentials")
-          ? "That email and password do not match. Check them and try again."
-          : message.includes("confirm") || message.includes("verified")
-            ? "Confirm your email before signing in. Check your inbox for the confirmation link."
-            : message.includes("network") || message.includes("fetch")
-              ? "We couldn’t reach the sign-in service. Check your connection and try again."
-              : "We couldn’t sign you in. Please try again.");
+      if (authFailure) {
+        const message = authFailure.message.toLowerCase();
+        const code = (authFailure as { code?: string }).code ?? "";
+        authError(
+          code === "over_request_rate_limit" || message.includes("rate limit") || message.includes("too many")
+            ? "Too many attempts. Wait a few minutes and try again."
+            : code === "user_banned" || message.includes("banned")
+              ? NOTICES.inactive
+              : message.includes("confirm") || message.includes("verified")
+                ? "Confirm your email before signing in. Check your inbox for the confirmation link."
+                : message.includes("invalid") || message.includes("credentials")
+                  ? "That email and password do not match. Check them and try again."
+                  : message.includes("network") || message.includes("fetch")
+                    ? "We couldn’t reach the sign-in service. Check your connection and try again."
+                    : "We couldn’t sign you in. Please try again.",
+        );
         return;
       }
       // middleware sends each role to its own home
       router.push(next || "/dashboard");
       router.refresh();
     } catch {
-      setError("We couldn’t reach the sign-in service. Check your connection and try again.");
+      authError("We couldn’t reach the sign-in service. Check your connection and try again.");
     } finally {
       setPending(false);
       submitting.current = false;
@@ -76,11 +89,6 @@ export function LoginForm({ next, notice }: { next?: string; notice?: string }) 
       <form action={onSubmit} className="flex flex-col gap-4">
         <label className="field" htmlFor="email">Email<input id="email" name="email" type="email" autoComplete="email" required /></label>
         <label className="field" htmlFor="password">Password<span className="pw"><input id="password" name="password" type={showPassword ? "text" : "password"} autoComplete="current-password" required /><button type="button" aria-label="Show password" onClick={() => setShowPassword((shown) => !shown)}>{showPassword ? <EyeOff className="ic" strokeWidth={1.75} /> : <Eye className="ic" strokeWidth={1.75} />}</button></span></label>
-        {error && (
-          <p role="alert" className="rounded-xl border border-destructive/20 bg-destructive/5 px-3.5 py-3 text-sm font-medium leading-relaxed text-destructive">
-            {error}
-          </p>
-        )}
         <button className="btn btn--ink btn--block btn--lg" type="submit" disabled={pending}>Log in <ArrowRight className="ic" strokeWidth={1.75} /></button>
       </form>
 

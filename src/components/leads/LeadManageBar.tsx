@@ -41,7 +41,7 @@ export function LeadManageBar({
         toast.error(result.error);
         return;
       }
-      toast.success(next ? "Counsellor changed" : "Lead unassigned");
+      toast.success(next ? "Employee changed" : "Lead unassigned");
       router.refresh();
     });
   }
@@ -63,7 +63,7 @@ export function LeadManageBar({
   return (
     <div className="mt-4 flex flex-wrap items-end gap-3 rounded-xl border bg-muted/40 p-3">
       <label className="flex min-w-[12rem] flex-1 flex-col gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Counsellor
+        Employee
         <NativeSelect value={value} disabled={pending} onChange={(e) => save(e.target.value)} className="text-sm normal-case">
           <option value="">Unassigned</option>
           {counsellors.map((c) => (

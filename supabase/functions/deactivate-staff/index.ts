@@ -3,6 +3,8 @@
 // POST /functions/v1/deactivate-staff
 // { "user_id": "uuid", "reassign_to": "uuid | null", "ban": false }
 // { "action": "reactivate", "user_id": "uuid" }   switches access back on and lifts any login ban
+// { "action": "release_login", "user_id": "uuid" }   after an employee is removed: frees their email so it can sign
+//                                                    up again (admin only, and only when they hold no role at all)
 //
 // ban: true also blocks the login in Supabase Auth. Leave it false to keep
 // the account for audit purposes but switch off access in the app.
@@ -54,6 +56,38 @@ Deno.serve(async (req) => {
     if ((targetRoles ?? []).some((r: { role: string }) => r.role === "admin" || r.role === "hr")) {
       return json({ error: "HR cannot deactivate admin or HR accounts" }, 403);
     }
+  }
+
+  if (action === "release_login") {
+    if (!callerIsAdmin) return json({ error: "forbidden: admins only" }, 403);
+
+    // a login that still has any role (staff or student) is in use, so it is never touched
+    const { data: remaining } = await admin.from("user_roles").select("role").eq("user_id", user_id);
+    if ((remaining ?? []).length > 0) return json({ error: "That person still has a role, so their login stays." }, 409);
+
+    const { data: found, error: findErr } = await admin.auth.admin.getUserById(user_id);
+    if (findErr || !found?.user) return json({ error: "user not found" }, 404);
+
+    const previous = found.user.email ?? "";
+    const freed = `removed-${user_id}@removed.invalid`;
+    if (previous === freed) return json({ released: true, already: true });
+
+    const { error: updErr } = await admin.auth.admin.updateUserById(user_id, {
+      email: freed,
+      email_confirm: true,
+      ban_duration: "876000h",
+    });
+    if (updErr) return json({ error: updErr.message }, 400);
+
+    await admin.from("profiles").update({ email: freed }).eq("id", user_id);
+    await admin.from("audit_logs").insert({
+      actor_id: user.id,
+      entity_type: "user",
+      entity_id: user_id,
+      action: "login_released",
+      after: { previous_email: previous },
+    });
+    return json({ released: true });
   }
 
   if (action === "reactivate") {

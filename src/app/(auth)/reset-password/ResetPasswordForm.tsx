@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { authError } from "@/lib/auth/feedback";
 import { createClient } from "@/lib/supabase/client";
 import { passwordProblem } from "@/lib/validations/password";
 
@@ -16,7 +17,6 @@ export function ResetPasswordForm() {
   const router = useRouter();
   const [ready, setReady] = useState<boolean | null>(null);
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -29,16 +29,15 @@ export function ResetPasswordForm() {
   async function onSubmit(formData: FormData) {
     const password = String(formData.get("password") ?? "");
     const confirm = String(formData.get("confirm") ?? "");
-    setError(null);
     const issue = passwordProblem(password);
-    if (issue) return setError(issue);
-    if (password !== confirm) return setError("The two passwords do not match.");
+    if (issue) return authError(issue);
+    if (password !== confirm) return authError("The two passwords do not match.");
 
     setPending(true);
     const supabase = createClient();
-    const { error: authError } = await supabase.auth.updateUser({ password });
-    if (authError) {
-      setError(authError.message);
+    const { error: failure } = await supabase.auth.updateUser({ password });
+    if (failure) {
+      authError(failure.message);
       setPending(false);
       return;
     }
@@ -65,11 +64,6 @@ export function ResetPasswordForm() {
       <form action={onSubmit} className="flex flex-col gap-4">
         <label className="field" htmlFor="password">New password<small>At least 10 characters, with a letter and a number.</small><span className="pw"><input id="password" name="password" type={showPassword ? "text" : "password"} autoComplete="new-password" required /><button type="button" aria-label="Show password" onClick={() => setShowPassword((shown) => !shown)}>{showPassword ? <EyeOff className="ic" strokeWidth={1.75} /> : <Eye className="ic" strokeWidth={1.75} />}</button></span></label>
         <label className="field" htmlFor="confirm">Confirm new password<span className="pw"><input id="confirm" name="confirm" type={showConfirm ? "text" : "password"} autoComplete="new-password" required /><button type="button" aria-label="Show password" onClick={() => setShowConfirm((shown) => !shown)}>{showConfirm ? <EyeOff className="ic" strokeWidth={1.75} /> : <Eye className="ic" strokeWidth={1.75} />}</button></span></label>
-        {error && (
-          <p role="alert" className="text-sm font-medium text-destructive">
-            {error}
-          </p>
-        )}
         <button className="btn btn--ink btn--block btn--lg" type="submit" disabled={pending || ready === null}>Save new password <ArrowRight className="ic" strokeWidth={1.75} /></button>
       </form>
     </div>

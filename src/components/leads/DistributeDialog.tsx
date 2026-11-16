@@ -67,16 +67,16 @@ export function DistributeDialog({
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{mode === "assign" ? "Assign to a counsellor" : "Distribute evenly"}</DialogTitle>
+          <DialogTitle>{mode === "assign" ? "Assign to an employee" : "Distribute evenly"}</DialogTitle>
           <DialogDescription>
             {mode === "assign"
-              ? `All ${leadIds.length} selected leads go to one counsellor.`
-              : "Pick the counsellors to share these leads between."}
+              ? `All ${leadIds.length} selected leads go to one employee.`
+              : "Pick the employees to share these leads between."}
           </DialogDescription>
         </DialogHeader>
 
         {counsellors.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No active counsellors yet. Add one under Employees first.</p>
+          <p className="text-sm text-muted-foreground">No active employees yet. Add one under Employees first.</p>
         ) : (
           <ul className="flex max-h-64 flex-col gap-1 overflow-y-auto">
             {counsellors.map((c) => (
@@ -102,7 +102,7 @@ export function DistributeDialog({
           <p className="rounded-lg bg-muted p-3 text-sm">
             {mode === "assign"
               ? `${leadIds.length} leads to ${counsellors.find((c) => c.id === chosen[0])?.name}.`
-              : `${leadIds.length} leads across ${chosen.length} counsellors, ${each}${remainder ? ` or ${each + 1}` : ""} each.`}
+              : `${leadIds.length} leads across ${chosen.length} employees, ${each}${remainder ? ` or ${each + 1}` : ""} each.`}
           </p>
         )}
 

@@ -77,7 +77,7 @@ export function LeadTable({
       ? [
           {
             key: "assignee",
-            header: "Counsellor",
+            header: "Employee",
             cell: (row: LeadRow) =>
               row.assignee_name ? (
                 <span>{row.assignee_name}</span>

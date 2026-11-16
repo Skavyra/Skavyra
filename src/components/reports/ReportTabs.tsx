@@ -116,7 +116,7 @@ export function ReportTabs({ report, statusFilter, initialTab }: { report: Repor
   }
 
   const statuses = LEAD_STATUSES.filter((s) => !statusFilter || s.value === statusFilter);
-  const who = report.employeeName ?? "all counsellors";
+  const who = report.employeeName ?? "all employees";
 
   /* counsellors */
   const empBody = report.employees.map((e) => [
@@ -133,11 +133,11 @@ export function ReportTabs({ report, statusFilter, initialTab }: { report: Repor
     e.collected,
   ]);
   const employees: Sheet = {
-    head: ["Counsellor", "Leads held", "Updates", "Active days", "Updates per active day", "Marked interested", "Marked follow up", "Marked not interested", "Enrolments", "Conversion % (all time)", "Collected"],
+    head: ["Employee", "Leads held", "Updates", "Active days", "Updates per active day", "Marked interested", "Marked follow up", "Marked not interested", "Enrolments", "Conversion % (all time)", "Collected"],
     body: empBody,
     foot: [
       ["Total", ...[1, 2, 3, 4, 5, 6, 7, 8].map((c) => (c === 4 ? "" : sum(empBody, c))), "", sum(empBody, 10)],
-      ["Average per counsellor", ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((c) => avg(empBody, c))],
+      ["Average per employee", ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((c) => avg(empBody, c))],
     ],
     money: [10],
   };
@@ -145,11 +145,11 @@ export function ReportTabs({ report, statusFilter, initialTab }: { report: Repor
   /* status changes in the period */
   const changeBody = report.employees.map((e) => [e.name, ...statuses.map((s) => e.changes[s.value]), statuses.reduce((n, s) => n + e.changes[s.value], 0)]);
   const changes: Sheet = {
-    head: ["Counsellor", ...statuses.map((s) => s.label), "Total"],
+    head: ["Employee", ...statuses.map((s) => s.label), "Total"],
     body: changeBody,
     foot: [
       ["Total", ...statuses.map((_, i) => sum(changeBody, i + 1)), sum(changeBody, statuses.length + 1)],
-      ["Average per counsellor", ...statuses.map((_, i) => avg(changeBody, i + 1)), avg(changeBody, statuses.length + 1)],
+      ["Average per employee", ...statuses.map((_, i) => avg(changeBody, i + 1)), avg(changeBody, statuses.length + 1)],
     ],
   };
 
@@ -159,18 +159,18 @@ export function ReportTabs({ report, statusFilter, initialTab }: { report: Repor
   const pipeAll = [...pipeBody];
   if (!report.employeeName) pipeAll.push(["Unassigned", ...statuses.map((s) => un[s.value]), statuses.reduce((n, s) => n + un[s.value], 0)]);
   const pipeline: Sheet = {
-    head: ["Counsellor", ...statuses.map((s) => s.label), "Total"],
+    head: ["Employee", ...statuses.map((s) => s.label), "Total"],
     body: pipeAll,
     foot: [
       ["Total", ...statuses.map((_, i) => sum(pipeAll, i + 1)), sum(pipeAll, statuses.length + 1)],
-      ["Average per counsellor", ...statuses.map((_, i) => avg(pipeBody, i + 1)), avg(pipeBody, statuses.length + 1)],
+      ["Average per employee", ...statuses.map((_, i) => avg(pipeBody, i + 1)), avg(pipeBody, statuses.length + 1)],
     ],
   };
 
   /* day / week / month */
   const sheets = { daily: periodic(report.daily, "Day"), weekly: periodic(report.weekly, "Week"), monthly: periodic(report.monthly, "Month") };
   const monthlyByEmployee: Sheet = {
-    head: ["Counsellor", "Month", "Updates", "Enrolments", "Collected"],
+    head: ["Employee", "Month", "Updates", "Enrolments", "Collected"],
     body: report.employeeMonthly.map((r) => [r.employee, r.month, r.updates, r.enrolments, r.collected]),
     money: [4],
   };
@@ -184,20 +184,20 @@ export function ReportTabs({ report, statusFilter, initialTab }: { report: Repor
     money: [1, 4, 5, 6],
   };
   const chosen = report.courses.find((c) => c.id === courseId);
-  const studentHead = ["Student", "Email", "Enrolled on", "Fee", "Paid", "Balance", "Payment", "Counsellor"];
+  const studentHead = ["Student", "Email", "Enrolled on", "Fee", "Paid", "Balance", "Payment", "Employee"];
   const studentRows = (list: Report["courses"][number]["list"]) => list.map((s) => [s.name, s.email, s.enrolledOn, s.total, s.paid, s.balance, s.status, s.counsellor]);
   const students: Sheet = { head: studentHead, body: chosen ? studentRows(chosen.list) : [], money: [3, 4, 5] };
 
   function downloadAll() {
     const stamp = new Date().toISOString().slice(0, 10);
     downloadWorkbook(`skavyra-performance-${stamp}.xlsx`, [
-      { name: "Counsellors", rows: asObjects(employees) },
+      { name: "Employees", rows: asObjects(employees) },
       { name: "Status changes", rows: asObjects(changes) },
       { name: "Pipeline now", rows: asObjects(pipeline) },
       { name: "Daily", rows: asObjects(sheets.daily) },
       { name: "Weekly", rows: asObjects(sheets.weekly) },
       { name: "Monthly", rows: asObjects(sheets.monthly) },
-      { name: "Counsellor by month", rows: asObjects(monthlyByEmployee) },
+      { name: "Employee by month", rows: asObjects(monthlyByEmployee) },
       { name: "Courses", rows: asObjects(courses) },
       {
         name: "Course students",
@@ -231,7 +231,7 @@ export function ReportTabs({ report, statusFilter, initialTab }: { report: Repor
         <Tabs value={tab} onValueChange={changeTab}>
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="employees">Counsellors</TabsTrigger>
+            <TabsTrigger value="employees">Employees</TabsTrigger>
             <TabsTrigger value="status">Status</TabsTrigger>
             <TabsTrigger value="sheets">Day, week, month</TabsTrigger>
             <TabsTrigger value="courses">Courses</TabsTrigger>
@@ -276,14 +276,14 @@ export function ReportTabs({ report, statusFilter, initialTab }: { report: Repor
             </div>
             <p className="mt-4 text-sm text-muted-foreground">
               Money and enrolments are credited to the counsellor who holds the lead (or who enrolled the student). Updates are the status
-              changes and notes a counsellor saves on a lead. Dates follow the Indian calendar day.
+              changes and notes an employee saves on a lead. Dates follow the Indian calendar day.
             </p>
           </TabsContent>
 
           <TabsContent value="employees">
-            <SheetView title={`Counsellor performance, ${report.range.label}`} file={`skavyra-counsellors-${stamp}`} t={employees} empty="No counsellors yet." />
+            <SheetView title={`Employee performance, ${report.range.label}`} file={`skavyra-employees-${stamp}`} t={employees} empty="No employees yet." />
             <p className="mt-3 text-sm text-muted-foreground">
-              Pick a counsellor in the filter above for their individual report across every tab.
+              Pick an employee in the filter above for their individual report across every tab.
             </p>
           </TabsContent>
 
@@ -309,8 +309,8 @@ export function ReportTabs({ report, statusFilter, initialTab }: { report: Repor
               ))}
             </div>
             <SheetView title={`${sheetKind} report`} file={`skavyra-${sheetKind}-report`} t={sheets[sheetKind]} />
-            <h3 className="mb-2 mt-8 font-display text-base font-bold">Each counsellor, month by month (for pay)</h3>
-            <SheetView title="Counsellor by month" file="skavyra-counsellor-by-month" t={monthlyByEmployee} empty="No activity in the last 12 months." />
+            <h3 className="mb-2 mt-8 font-display text-base font-bold">Each employee, month by month (for pay)</h3>
+            <SheetView title="Employee by month" file="skavyra-employee-by-month" t={monthlyByEmployee} empty="No activity in the last 12 months." />
           </TabsContent>
 
           <TabsContent value="courses">

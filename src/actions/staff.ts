@@ -32,7 +32,7 @@ export async function createUserAccount(
   const parsed = createStaffSchema.safeParse(formToObject(formData));
   if (!parsed.success) return { ok: false, error: firstError(parsed.error) };
   if (!user.roles.includes("admin") && parsed.data.role !== "employee") {
-    return { ok: false, error: "HR can only create counsellor accounts." };
+    return { ok: false, error: "HR can only create employee accounts." };
   }
 
   const body = Object.fromEntries(Object.entries(parsed.data).filter(([, v]) => v !== null && v !== undefined && v !== ""));
@@ -101,7 +101,7 @@ export async function deactivateStaff(
 }
 
 /** Removes staff membership through one audited database transaction. */
-export async function removeEmployee(userId: string, reassignTo: string | null): Promise<ActionResult> {
+export async function removeEmployee(userId: string, reassignTo: string | null): Promise<ActionResult<{ released: boolean }>> {
   const user = await currentUserWithRole(["admin"]);
   if (!user || !user.profile?.is_active) return { ok: false, error: "Only active admins can remove employees." };
   if (!z.string().uuid().safeParse(userId).success || (reassignTo !== null && !z.string().uuid().safeParse(reassignTo).success)) {
@@ -112,10 +112,16 @@ export async function removeEmployee(userId: string, reassignTo: string | null):
   const supabase = await createClient();
   const { error } = await supabase.rpc("remove_employee", { p_user_id: userId, ...(reassignTo ? { p_reassign_to: reassignTo } : {}) });
   if (error) return { ok: false, error: dbError(error) };
+
+  // Free the email so the person can sign up again later. The removal above is already saved, so a failure here is
+  // reported as a warning, not as a failed removal.
+  const freed = await callEdgeFunction<{ released?: boolean }>("deactivate-staff", { action: "release_login", user_id: userId });
+  if (!freed.ok) console.error("[removeEmployee] could not free the email:", freed.error);
+
   revalidatePath("/admin", "layout");
   revalidatePath("/hr", "layout");
   revalidatePath("/employee", "layout");
-  return { ok: true, data: undefined };
+  return { ok: true, data: { released: freed.ok && freed.data.released === true } };
 }
 
 /**

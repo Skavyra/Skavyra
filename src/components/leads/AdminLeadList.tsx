@@ -48,7 +48,7 @@ export function AdminLeadList({ leads, counsellors, isAdmin = false }: { leads: 
                 College: l.college_name ?? "",
                 Status: l.status,
                 "Follow up": formatDate(l.follow_up_on),
-                Counsellor: l.assignee_name ?? "Unassigned",
+                Employee: l.assignee_name ?? "Unassigned",
               })),
             )
           }

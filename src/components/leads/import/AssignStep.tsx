@@ -15,9 +15,9 @@ import type { Counsellor } from "../DistributeDialog";
 type Mode = "even" | "counts" | "manual" | "none";
 
 const MODES: { value: Mode; label: string; hint: string }[] = [
-  { value: "even", label: "Split evenly", hint: "Share the leads equally between the counsellors you tick." },
+  { value: "even", label: "Split evenly", hint: "Share the leads equally between the employees you tick." },
   { value: "counts", label: "Set a number each", hint: "For example 40 to one, 30 to another. Any left over stay unassigned." },
-  { value: "manual", label: "Pick by hand", hint: "Tick leads yourself and give them to a counsellor." },
+  { value: "manual", label: "Pick by hand", hint: "Tick leads yourself and give them to an employee." },
   { value: "none", label: "Leave unassigned", hint: "Import now and assign later from the Leads page." },
 ];
 
@@ -111,9 +111,9 @@ export function AssignStep({
 
       {mode !== "none" && mode !== "manual" && (
         <div className="rounded-xl border bg-card p-3">
-          <p className="mb-2 text-sm font-semibold">Counsellors</p>
+          <p className="mb-2 text-sm font-semibold">Employees</p>
           {counsellors.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No active counsellors yet. Add one under Employees first.</p>
+            <p className="text-sm text-muted-foreground">No active employees yet. Add one under Employees first.</p>
           ) : (
             <ul className="flex max-h-64 flex-col gap-1 overflow-y-auto">
               {counsellors.map((c) => (
@@ -144,8 +144,8 @@ export function AssignStep({
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-3 text-sm">
             <span className="font-semibold">{ticked.size} ticked</span>
-            <NativeSelect value={target} onChange={(e) => setTarget(e.target.value)} className="h-9 w-56 text-sm" aria-label="Counsellor for the ticked leads">
-              <option value="">Choose counsellor…</option>
+            <NativeSelect value={target} onChange={(e) => setTarget(e.target.value)} className="h-9 w-56 text-sm" aria-label="Employee for the ticked leads">
+              <option value="">Choose employee…</option>
               {counsellors.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -166,7 +166,7 @@ export function AssignStep({
                   <TableHead className="w-10" />
                   <TableHead>Name</TableHead>
                   <TableHead>Phone</TableHead>
-                  <TableHead>Counsellor</TableHead>
+                  <TableHead>Employee</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

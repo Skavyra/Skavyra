@@ -27,7 +27,7 @@ export async function ReportsView({ roles, params }: PanelProps & { params: Repo
     <>
       <PageHeader
         title="Reports"
-        description="Counsellor performance, status breakdowns, day, week and month sheets, and money and students by course."
+        description="Employee performance, status breakdowns, day, week and month sheets, and money and students by course."
       />
       <ReportFilters employees={data.employees.map((e) => ({ id: e.id, name: e.name })).sort((a, b) => a.name.localeCompare(b.name))} />
       <ReportTabs report={report} statusFilter={params.status ?? ""} initialTab={initialTab} />

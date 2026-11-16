@@ -111,7 +111,7 @@ export function EmployeeDialog({
                 </Field>
                 <Field label="Role" htmlFor="role">
                   <NativeSelect id="role" name="role" defaultValue="employee">
-                    <option value="employee">Counsellor</option>
+                    <option value="employee">Employee</option>
                     {canGrantStaffRoles && <option value="student">Student</option>}
                     {canGrantStaffRoles && <option value="hr">HR</option>}
                     {canGrantStaffRoles && <option value="admin">Admin</option>}

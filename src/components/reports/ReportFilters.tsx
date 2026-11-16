@@ -54,7 +54,7 @@ export function ReportFilters({ employees }: { employees: { id: string; name: st
       )}
 
       <label className="flex flex-col gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Counsellor
+        Employee
         <NativeSelect value={params.get("employee") ?? ""} onChange={(e) => push({ employee: e.target.value })} className="w-52 text-sm normal-case">
           <option value="">Everyone</option>
           {employees.map((e) => (

@@ -100,7 +100,7 @@ export async function EmployeesView({ base, roles }: PanelProps) {
             employee={r}
             name={fullName(r) || r.email}
             isActive={r.is_active}
-            roleLabels={[r.is_admin ? "Admin" : null, r.is_hr ? "HR" : null, !r.is_admin && !r.is_hr ? "Counsellor" : null].filter(Boolean) as string[]}
+            roleLabels={[r.is_admin ? "Admin" : null, r.is_hr ? "HR" : null, !r.is_admin && !r.is_hr ? "Employee" : null].filter(Boolean) as string[]}
             openLeads={r.openLeads}
             reportingManager={reportingOptions.find((m) => m.id === r.reporting_manager_id)?.name ?? null}
             leadsHref={`${base}/leads?assignee=${r.id}`}
@@ -128,7 +128,7 @@ export async function EmployeesView({ base, roles }: PanelProps) {
     <>
       <PageHeader
         title="Employees"
-        description={actorIsAdmin ? "Counsellors, HR and admins, and the leads they hold." : "Counsellors and the leads they hold."}
+        description={actorIsAdmin ? "Employees, HR and admins, and the leads they hold." : "Employees and the leads they hold."}
         actions={<EmployeeDialog managers={reportingOptions} canGrantStaffRoles={actorIsAdmin} />}
       />
       <DataTable
@@ -140,7 +140,7 @@ export async function EmployeesView({ base, roles }: PanelProps) {
           <EmptyState
             icon={Users}
             title="No employees yet"
-            description="Add your first counsellor and they can start working leads straight away."
+            description="Add your first employee and they can start working leads straight away."
             action={<EmployeeDialog managers={reportingOptions} canGrantStaffRoles={actorIsAdmin} />}
           />
         }

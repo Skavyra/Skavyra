@@ -21,7 +21,7 @@ function describe(row: ActivityRow) {
     case "status_changed":
       return `Status changed from ${label(row.old_status)} to ${label(row.new_status)}`;
     case "reassigned":
-      return "Reassigned to another counsellor";
+      return "Reassigned to another employee";
     case "updated":
       return "Details updated";
     default:

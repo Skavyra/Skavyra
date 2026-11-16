@@ -136,14 +136,24 @@ export async function fetchLeadDetail(supabase: SupabaseClient<Database>, leadId
   };
 }
 
-/** Active counsellors with their open lead counts, for the assign dialogs. */
+/**
+ * Active employees with their open lead counts, for the assign dialogs. HR-only accounts are left out: HR manages
+ * leads but cannot work them, so a lead given to HR would have nobody to call it. (An admin may still hold leads.)
+ */
 export async function fetchCounsellors(supabase: SupabaseClient<Database>) {
   const { data: employees } = await supabase
     .from("employees")
     .select("id, is_active, profile:profiles!employees_id_fkey(first_name, last_name)")
     .eq("is_active", true);
 
-  const active = employees ?? [];
+  const { data: roleRows } = await supabase
+    .from("user_roles")
+    .select("user_id, role")
+    .in("role", ["employee", "admin"])
+    .in("user_id", (employees ?? []).map((e) => e.id));
+  const canHoldLeads = new Set((roleRows ?? []).map((r) => r.user_id));
+
+  const active = (employees ?? []).filter((e) => canHoldLeads.has(e.id));
   if (active.length === 0) return [];
 
   const { data: openLeads } = await supabase

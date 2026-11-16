@@ -72,6 +72,7 @@ export const HR_NAV: NavItem[] = [
   { href: "/hr", label: "Dashboard", icon: "LayoutDashboard" },
   { href: "/hr/employees", label: "Employees", icon: "Users" },
   { href: "/hr/leads", label: "Leads", icon: "PhoneCall" },
+  { href: "/hr/courses", label: "Courses", icon: "BookOpen" },
   { href: "/hr/offer-letters", label: "Offer letters", icon: "FileSignature" },
   { href: "/hr/reports", label: "Reports", icon: "BarChart3" },
 ];
